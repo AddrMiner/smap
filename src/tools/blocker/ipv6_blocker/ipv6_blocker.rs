@@ -276,7 +276,7 @@ impl Ipv6Blocker {
             return
         }
 
-        let right_index = (self.len - 1) as i32;
+        let right_index = self.len - 1;
 
         // 按照 右移大小 对 右移数量向量 和 前缀值向量 进行同步排序
         quick_sort_reverse_v6(&mut self.right_move_len, &mut self.prefix_val,
@@ -485,15 +485,14 @@ impl Ipv6Blocker {
 
 /// 按照 arr 的顺序 对 index哈希向量 进行排序
 /// 排序算法为按照 右移位数 的大小进行 从大到小 的排序
-/// 注意:两个向量的最大长度为 128, 这里使用i32是考虑性能因素
-fn quick_sort_reverse_v6(arr:&mut Vec<u32>,index:&mut Vec<AHashSet<u128>>,left:i32, right:i32){
+fn quick_sort_reverse_v6(arr:&mut Vec<u32>,index:&mut Vec<AHashSet<u128>>,left:usize, right:usize){
 
     if left < right {
 
-        let mut i = left as usize;
-        let mut j = right as usize;
+        let mut i = left;
+        let mut j = right;
 
-        let pivot = arr[ (i+j) / 2 ];
+        let pivot = arr[ (left+right) / 2 ];
 
         loop {
             while arr[i] > pivot {
@@ -513,8 +512,8 @@ fn quick_sort_reverse_v6(arr:&mut Vec<u32>,index:&mut Vec<AHashSet<u128>>,left:i
             j -= 1;
         }
 
-        quick_sort_reverse_v6(arr, index, left, (i as i32)-1);
-        quick_sort_reverse_v6(arr, index, (j as i32)+1, right);
+        quick_sort_reverse_v6(arr, index, left, i-1);
+        quick_sort_reverse_v6(arr, index, j+1, right);
     }
 }
 
