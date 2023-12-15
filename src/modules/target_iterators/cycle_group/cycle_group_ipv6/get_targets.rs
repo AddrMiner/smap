@@ -119,15 +119,15 @@ impl CycleIpv6 {
         // 地址的范围为 0 .. 2^(bits_num) - 1
         let target_val = tar_val - 1;
 
-        //   [ 0.. | ip | port ]  => [ 0.. | ip ]
-        let ip_val = target_val >> self.bits_for_port;
-
         // [ 0.. | ip | port ] => [ 0.. | port ]
         let port_val = ((target_val << self.port_move_len) >> self.port_move_len) as usize;
 
         // 如果 ip 值 小于 地址数量时才为合法, 比如地址数量为 8, ip值的范围应为 0..7 < 8
         // 由于 对ip值的限制包含在valid_range中, 所以这里可以不做检查
         if port_val < self.tar_port_num {
+
+            //   [ 0.. | ip | port ]  => [ 0.. | ip ]
+            let ip_val = target_val >> self.bits_for_port;
 
             // 注意 ip_val 的范围 0 .. < tar_ip_num , 其实是相对于起始地址的偏移量
             let real_ip = self.start_ip + ip_val;
