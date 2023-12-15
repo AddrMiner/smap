@@ -1,15 +1,17 @@
-
 mod get_targets;
+
+
 
 use std::process::exit;
 use log::error;
 use rand::rngs::StdRng;
 use crate::modules::target_iterators::cycle_group::cyclic::Cyclic;
+use crate::modules::target_iterators::cycle_group::cyclic_without_port::CyclicNoPort;
 use crate::SYS;
 
 /// ipv4 乘法循环群
 #[derive(Clone)]
-pub struct CycleIpv4 {
+pub struct CycleIpv4NoPort {
 
     p:u64,
     prim_root:u64,
@@ -19,35 +21,22 @@ pub struct CycleIpv4 {
     current:u64,
     last:u64,
 
-    // ip(省略) 和 port 分别占的位数,   [ 0..0 | ip | port ]
-    bits_for_port:u32,
-
-    // 取得port时的移动位数, 加速计算
-    port_move_len:u32,
-
-    // 根据 ip 和 port 计算得到的 目标值有效范围
+    // 目标值有效范围
     valid_range:u64,
-
-    // 保存目标端口总数, 用于 筛选乘法群 生成的无效值
-    tar_port_num:usize,
 
     // 起始地址
     start_ip:u32,
-
-    // 目的端口数组
-    pub tar_ports:Vec<u16>,
-
 }
 
 
-impl CycleIpv4 {
 
-    /// 以<u>整体探测范围</u>创建乘法群, 适用于 ipv4
-    pub fn new(start_ip:u32,tar_ip_num:u64,
-               tar_ports:Vec<u16>, rng:&mut StdRng) -> Self {
+impl CycleIpv4NoPort {
+
+
+    pub fn new(start_ip:u32, tar_ip_num:u64, rng:&mut StdRng) -> Self {
 
         // 获得 乘法循环群
-        let cycle = Cyclic::new(tar_ip_num, tar_ports.len(), rng, u64::MAX as u128);
+        let cycle = CyclicNoPort::new(tar_ip_num, rng, u64::MAX as u128);
 
         Self {
             p: Cyclic::get_val_with_check_u64(cycle.p),
@@ -58,22 +47,12 @@ impl CycleIpv4 {
             current: 0,
             last: 0,
 
-            bits_for_port: cycle.bits_for_port,
-            port_move_len: 64 - cycle.bits_for_port,
 
-            // // 使得乘法群生成的值始终在 [1, 2^( ip 和 port 占的总位数)]
-            // valid_range: ((1 << cycle.bits_num) + 1),
-
-            // 注意该项必须仔细检查
-            valid_range:Self::get_valid_range(tar_ip_num, cycle.bits_for_port),
-
-            tar_port_num:tar_ports.len(),
-
+            valid_range: tar_ip_num + 1,
             start_ip,
-            tar_ports,
         }
-
     }
+
 
     /// 从<u>整体循环群</u>为每个发送线程创建<u>扫描范围</u>   index:[1..p-1]
     /// 这里的 start_index, end_index 为指数顺序范围, 比如 2->4 就是 3^2≡2(mod 7)，3^3≡6(mod 7)，3^4≡4(mod 7)
@@ -103,15 +82,8 @@ impl CycleIpv4 {
             current:Cyclic::parse_big_num_to_u64(big_first),
             last:Cyclic::parse_big_num_to_u64(big_last),
 
-            bits_for_port: self.bits_for_port,
-            port_move_len: self.port_move_len,
-
             valid_range: self.valid_range,
-
-            tar_port_num: self.tar_port_num,
-
             start_ip: self.start_ip,
-            tar_ports: self.tar_ports.clone(),
         }
 
     }
@@ -122,31 +94,6 @@ impl CycleIpv4 {
     pub fn init_whole(&self) -> Self {
         self.init(1, self.p_sub_one)
     }
-
-
-    /// 获得乘法循环群输出刚好得不到的值
-
-    pub fn get_valid_range(tar_ip_num:u64, bits_for_port:u32) -> u64 {
-
-        let mut mask:u64 = 0;
-        let mut left_bit = bits_for_port;
-
-        while left_bit != 0 {
-
-            mask = mask << 1;
-            mask = mask | 1;
-
-            left_bit -= 1;
-        }
-
-        // 注意: 检查到这里的时候必须小心验证
-        // 乘法群输出的最大值应为        [    0..   |   tar_ip_num - 1  |  1..   ]  + 1
-        // 小于号运算下, 限制条件应为    [    0..   |   tar_ip_num - 1  |   1..  ]  + 1 + 1
-
-        let ip_val:u64 = (tar_ip_num - 1) << bits_for_port;
-        let ip_val = ip_val | mask;
-
-        ip_val + 2
-    }
-
 }
+
+

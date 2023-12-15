@@ -126,7 +126,7 @@ impl CycleIpv6Pattern {
         // 如果 port值 合法
         if port_val < self.tar_port_num {
 
-            let real_ip = self.get_real_ip_from_tar_val(tar_val);
+            let real_ip = self.get_real_ip_from_tar_val(target_val);
 
             // 注意 port_val 的范围 0 .. < tar_port_num, 其实是 端口数组的下标
             let real_port = self.tar_ports[port_val];

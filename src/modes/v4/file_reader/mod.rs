@@ -15,10 +15,10 @@ use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
 
 
 pub struct V4FileReader {
-    pub(crate) base_conf:Arc<BaseConf>,
-    pub(crate) target_iter:TargetFileReader,
-    pub(crate) sender_conf:Arc<SenderBaseConf>,
-    pub(crate) receiver_conf:Arc<ReceiverBaseConf>,
+    pub base_conf:Arc<BaseConf>,
+    pub target_iter:TargetFileReader,
+    pub sender_conf:Arc<SenderBaseConf>,
+    pub receiver_conf:Arc<ReceiverBaseConf>,
 
     pub tar_num:Option<u64>,
 

@@ -1,6 +1,6 @@
 use crate::create_fields;
 
-pub(crate) struct IcmpV6Fields {
+pub struct IcmpV6Fields {
 
     pub source_addr:bool,
     pub outer_source_addr:bool,

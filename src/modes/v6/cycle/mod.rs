@@ -14,10 +14,10 @@ use crate::tools::blocker::ipv6_blocker::BlackWhiteListV6;
 
 /// zmap_v6
 pub struct CycleV6 {
-    pub(crate) base_conf:Arc<BaseConf>,
-    pub(crate) target_iter:CycleIpv6,
-    pub(crate) sender_conf:Arc<SenderBaseConf>,
-    pub(crate) receiver_conf:Arc<ReceiverBaseConf>,
+    pub base_conf:Arc<BaseConf>,
+    pub target_iter:CycleIpv6,
+    pub sender_conf:Arc<SenderBaseConf>,
+    pub receiver_conf:Arc<ReceiverBaseConf>,
 
     pub probe:Arc<ProbeModV6>,
 

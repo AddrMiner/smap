@@ -10,13 +10,13 @@ use crate::SYS;
 
 pub struct Cyclic {
 
-    pub(crate) p:u128,
-    pub(crate) prim_root:u128,
-    pub(crate) p_sub_one:u128,
+    pub p:u128,
+    pub prim_root:u128,
+    pub p_sub_one:u128,
 
 
-    pub(crate) bits_for_port:u32,
-    pub(crate) bits_num:u32,
+    pub bits_for_port:u32,
+    pub bits_num:u32,
 
 }
 
@@ -32,7 +32,6 @@ impl Cyclic {
         // 计算 乘法群模数的最小值
         // 最小值为  [ 0 .. 1 | ip 位数 | 端口 位数 ]
         let bits_num = bits_for_ip + bits_for_port;
-
         let group_min_size = 1u128 << bits_num;
 
         // 获得大于 最小元素 的 质数乘法群
@@ -43,9 +42,9 @@ impl Cyclic {
 
         Self {
             p:group.prime,
-            prim_root:Self::get_prim_root(&group, rng,
-                                          Self::get_max_root(p_sub_one, type_max)),
+            prim_root:Self::get_prim_root(&group, rng, Self::get_max_root(p_sub_one, type_max)),
             p_sub_one,
+
             bits_for_port,
             bits_num,
         }
@@ -128,7 +127,7 @@ impl Cyclic {
     /// 计算最大根
     /// max_root 选定规则    max_root * (p-1) <= 类型所能表示的最大值
     /// 考虑可能面临的计算问题, 再限制为 它 和 1 << 22 中的较小值
-    pub(crate) fn get_max_root(p_sub_one:u128, type_max:u128) -> u128{
+    pub fn get_max_root(p_sub_one:u128, type_max:u128) -> u128{
         let max_root = type_max / p_sub_one;
         min(max_root, 1u128 << 22 )
     }

@@ -15,10 +15,10 @@ use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
 
 /// zmap_v4
 pub struct CycleV4 {
-    pub(crate) base_conf:Arc<BaseConf>,
-    pub(crate) target_iter:CycleIpv4,
-    pub(crate) sender_conf:Arc<SenderBaseConf>,
-    pub(crate) receiver_conf:Arc<ReceiverBaseConf>,
+    pub base_conf:Arc<BaseConf>,
+    pub target_iter:CycleIpv4,
+    pub sender_conf:Arc<SenderBaseConf>,
+    pub receiver_conf:Arc<ReceiverBaseConf>,
 
     pub probe:Arc<ProbeModV4>,
 

@@ -19,14 +19,14 @@ pub struct CycleIpv6Pattern {
     current:u128,
     last:u128,
 
-    // ip(省略) 和 port 分别占的位数,   [ 0..0 | ip | port ]
-    bits_for_port:u32,
-
     // 基础ip值   把模式字符串中的 模式字符 置换为0后的 ip值
     base_ip_val:u128,
     // ip 片段的位移量
     // (0: 第一次左移位数, 1: 右移位数, 2: 第二次左移位数)
     ip_move_len:Vec<(u32,u32,u32)>,
+
+    // ip(省略) 和 port 分别占的位数,   [ 0..0 | ip | port ]
+    bits_for_port:u32,
 
     // 取得port时的移动位数, 加速计算
     port_move_len:u32,
@@ -51,6 +51,7 @@ impl CycleIpv6Pattern {
 
         let bits_for_port = TarIterBaseConf::bits_needed_usize(tar_ports.len());
 
+        // 获取片段移动位数
         let ip_move_len = Self::get_move_len(bits_for_ip, bits_for_port, parts);
 
         // 获得乘法循环群
@@ -65,18 +66,18 @@ impl CycleIpv6Pattern {
             current: 0,
             last: 0,
 
-            bits_for_port: cycle.bits_for_port,
             base_ip_val,
             ip_move_len,
+
+            bits_for_port: cycle.bits_for_port,
             port_move_len: 128 - cycle.bits_for_port,
 
             // 使得乘法群生成的值始终在 [1, 2^( ip 和 port 占的总位数)]
-            valid_range: ((1 << cycle.bits_num) + 1),
+            valid_range: (1 << cycle.bits_num) + 1,
 
             tar_port_num:tar_ports.len(),
             tar_ports,
         }
-
     }
 
     /// 从<u>整体循环群</u>为每个发送线程创建<u>扫描范围</u>   index:[1..p-1]
@@ -131,7 +132,7 @@ impl CycleIpv6Pattern {
 
     /// 获取片段移动位数
     /// 返回值: (0: 第一次左移位数, 1: 右移位数, 2: 第二次左移位数)
-    fn get_move_len(bits_for_ip:u32, bits_for_ports:u32, parts:Vec<(u32, u32)>) -> Vec<(u32, u32, u32)> {
+    pub fn get_move_len(bits_for_ip:u32, bits_for_ports:u32, parts:Vec<(u32, u32)>) -> Vec<(u32, u32, u32)> {
 
         // [  0..  ( 位数 : 128 - bits_for_ip - bits_for_ports)  |    part1 ( 位数: parts.0 )   |   part2 ( 位数: parts.0 )  |  part3 ( 位数: parts.0 )  |  port  ]
         // =>
