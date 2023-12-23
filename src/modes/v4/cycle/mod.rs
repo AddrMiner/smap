@@ -9,14 +9,14 @@ use crate::core::conf::set_conf::receiver_conf::ReceiverBaseConf;
 use crate::core::conf::set_conf::sender_conf::SenderBaseConf;
 use crate::modes::{Helper};
 use crate::modules::probe_modules::probe_mod_v4::ProbeModV4;
-use crate::modules::target_iterators::CycleIpv4;
+use crate::modules::target_iterators::CycleIpv4Type;
 use crate::SYS;
 use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
 
 /// zmap_v4
 pub struct CycleV4 {
     pub base_conf:Arc<BaseConf>,
-    pub target_iter:CycleIpv4,
+    pub target_iter:CycleIpv4Type,
     pub sender_conf:Arc<SenderBaseConf>,
     pub receiver_conf:Arc<ReceiverBaseConf>,
 

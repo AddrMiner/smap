@@ -1,13 +1,11 @@
 mod method;
 
 use std::sync::Arc;
-use std::process::exit;
-use log::error;
 use crate::core::conf::modules_config::ModuleConf;
 use crate::modes::Helper;
 use crate::modules::probe_modules::probe_mod_v4::{ProbeMethodV4, ProbeModV4};
 use crate::modules::probe_modules::tools::payload::get_payload;
-use crate::SYS;
+use crate::{not_use_port_check, SYS};
 use crate::tools::net_handle::packet::v4::icmp_v4::fields::IcmpV4Fields;
 
 
@@ -26,17 +24,8 @@ impl IcmpEchoV4 {   // 定义构造方法和初始化方法
 
     pub fn new(mod_conf:ModuleConf, tar_ports:&Vec<u16>, seed:u64, fields:&Vec<String>) -> ProbeModV4 {         // 输出模块创建， 用于初始化参数配置
 
-        if tar_ports.len() != 1 {
-            // 如果有 多个端口 或 没有输入端口
-            error!("{}", SYS.get_info("err", "tar_ports_not_match_net_layer"));
-            exit(1)
-        } else {
-            if tar_ports[0] != 0 {
-                // 如果输出的目标端口不为0
-                error!("{}", SYS.get_info("err", "tar_ports_not_match_net_layer"));
-                exit(1)
-            }
-        }
+        // 不使用端口的模块, 强制目标端口为 0
+        not_use_port_check!(tar_ports);
 
         // 根据自定义参数 payload, 得到具体的 payload字节向量
         let payload = get_payload(mod_conf.get_info(&"payload".to_string()),
@@ -49,6 +38,8 @@ impl IcmpEchoV4 {   // 定义构造方法和初始化方法
             max_packet_length_v4: 42 + payload.len(),                       // 数据链路层报头(14字节) + ipv4报头(20字节) + icmp_v4报头(8字节) + icmp载荷 = 42字节 +
             snap_len_v4: 96,
             filter_v4: "icmp and icmp[0]!=8".to_string(),
+
+            use_tar_ports: false,
 
             // 运输层选项字段
             option: vec![],

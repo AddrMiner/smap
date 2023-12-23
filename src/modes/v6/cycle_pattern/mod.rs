@@ -8,14 +8,14 @@ use crate::core::conf::set_conf::receiver_conf::ReceiverBaseConf;
 use crate::core::conf::set_conf::sender_conf::SenderBaseConf;
 use crate::modes::{Helper};
 use crate::modules::probe_modules::probe_mod_v6::ProbeModV6;
-use crate::modules::target_iterators::{CycleIpv6Pattern};
+use crate::modules::target_iterators::{CycleIpv6PatternType};
 use crate::SYS;
 use crate::tools::blocker::ipv6_blocker::BlackWhiteListV6;
 
 /// zmap_v6
 pub struct CycleV6Pattern {
     pub base_conf:Arc<BaseConf>,
-    pub target_iter:CycleIpv6Pattern,
+    pub target_iter:CycleIpv6PatternType,
     pub sender_conf:Arc<SenderBaseConf>,
     pub receiver_conf:Arc<ReceiverBaseConf>,
 

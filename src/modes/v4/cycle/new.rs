@@ -1,4 +1,3 @@
-use chrono::Local;
 use crate::core::conf::args::Args;
 use crate::core::conf::modules_config::ModuleConf;
 use crate::core::conf::set_conf::base_conf::BaseConf;
@@ -8,9 +7,9 @@ use crate::core::conf::tools::args_parse::ip::ipv4::parse_ipv4_cycle_group;
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::modes::v4::cycle::CycleV4;
 use crate::modules::probe_modules::probe_mod_v4::ProbeModV4;
-use crate::modules::target_iterators::CycleIpv4;
+use crate::modules::target_iterators::{CycleIpv4, CycleIpv4Port, CycleIpv4Type};
 use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
-use crate::tools::file::write_to_file::write_record;
+use crate::write_to_summary;
 
 
 impl CycleV4 {
@@ -21,14 +20,15 @@ impl CycleV4 {
         // 获取 探测目标
         let (start_ip, end_ip, tar_ip_num) = parse_ipv4_cycle_group(
             &TarIterBaseConf::parse_tar_ip(&args.tar_ips));
-        let tar_ports = TarIterBaseConf::parse_tar_port(&args.tar_ports);
+        let tar_ports = TarIterBaseConf::parse_tar_port(&args.tar_ports, "default_ports");
 
         // 基础配置
         let mut base_conf = BaseConf::new(args);
 
         // ipv4 探测模块
         let probe = ProbeModV4::new(
-            &SenderBaseConf::parse_probe_v4(&args.probe_v4), ModuleConf::new_from_vec_args(&args.probe_args),
+            &SenderBaseConf::parse_probe_v4(&args.probe_v4, "default_probe_mod_v4"),
+            ModuleConf::new_from_vec_args(&args.probe_args, vec![]),
             &tar_ports, base_conf.aes_rand.seed, &args.fields);
 
 
@@ -38,8 +38,17 @@ impl CycleV4 {
                                              probe.max_packet_length_v4, true, false);
 
         // 创建目标迭代器
-        let target_iter = CycleIpv4::new(start_ip, tar_ip_num, tar_ports,
-                                         &mut base_conf.aes_rand.rng);
+        let p_sub_one;
+        let target_iter = if probe.use_tar_ports {
+            let c4p = CycleIpv4Port::new(start_ip, tar_ip_num, tar_ports, &mut base_conf.aes_rand.rng);
+            p_sub_one = c4p.p_sub_one;
+            CycleIpv4Type::CycleIpv4Port(c4p)
+        } else {
+            let c4 = CycleIpv4::new(start_ip,tar_ip_num, &mut base_conf.aes_rand.rng);
+            p_sub_one = c4.p_sub_one;
+            CycleIpv4Type::CycleIpv4(c4)
+        };
+
 
         // 定义全局 黑白名单拦截器
         let blocker = BlackWhiteListV4::new(
@@ -48,17 +57,9 @@ impl CycleV4 {
         // 接收模块基础配置
         let receiver_conf= ReceiverBaseConf::new(args, vec![probe.filter_v4.clone()]);
 
+        // 将 所有输入参数 写入记录文件
+        write_to_summary!(base_conf; "CycleV4"; "args"; args;);
 
-        if let Some(summary_path) = &base_conf.summary_file {
-            // 将 所有输入参数 写入记录文件
-            let header = vec!["time", "args"];
-            let val = vec![ Local::now().to_string(), format!("{:?}", args).replace(",", " ")];
-
-            write_record("CycleV4", "args", summary_path, header, val);
-        }
-
-
-        let p_sub_one = target_iter.p_sub_one;
         let send_thread_num = sender_conf.send_thread_num as u64;
         Self {
             base_conf: base_conf.into(),

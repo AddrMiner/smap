@@ -71,9 +71,10 @@ pub trait ProbeMethodV4 {
 
     fn make_packet_v4(&self, source_ip:u32, dest_ip:u32, dest_port:u16, ttl:Option<u8>, aes_rand:&AesRand) -> Vec<u8>;
 
+    fn is_successful(&self, data_link_header:&[u8], ipv4_header:&Ipv4PacketU32, net_layer_data:&[u8], aes_rand:&AesRand) -> bool;
+
     /// 验证ipv4数据包
-    fn validate_packet_v4(&self, data_link_header:&[u8], ipv4_header:&Ipv4PacketU32, net_layer_data:&[u8],
-                          aes_rand:&AesRand) -> (bool, u16, Option<u32>);
+    fn validate_packet_v4(&self, data_link_header:&[u8], ipv4_header:&Ipv4PacketU32, net_layer_data:&[u8], aes_rand:&AesRand) -> (bool, u16, Option<u32>);
 
     /// 打印出首部字段
     fn print_header(&self) -> Vec<String>;
@@ -91,6 +92,8 @@ pub struct ProbeModV4 {
     pub max_packet_length_v4:usize,
     pub snap_len_v4:usize,
     pub filter_v4:String,
+
+    pub use_tar_ports:bool,
 
     pub option:Vec<u8>,
     pub payload:Vec<u8>,

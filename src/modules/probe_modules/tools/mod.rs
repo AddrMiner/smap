@@ -1,6 +1,4 @@
 
-mod output_macros;
-
+mod macros;
 pub mod ethernet;
-
 pub mod payload;

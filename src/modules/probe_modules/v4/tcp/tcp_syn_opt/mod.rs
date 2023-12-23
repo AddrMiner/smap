@@ -45,6 +45,8 @@ impl TcpSynOptV4 {
             snap_len_v4: 136,                                                   // 以太网头(14字节) + ipv4报头(20字节) + tcp基本首部(20字节) + tcp选项字段(40字节) = 94
             filter_v4: "tcp && tcp[13] & 4 != 0 || tcp[13] == 18".to_string(),
 
+            use_tar_ports: true,
+
             option: opt_payload,
             payload: vec![],
 

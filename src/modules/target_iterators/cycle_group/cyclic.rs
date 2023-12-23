@@ -1,11 +1,11 @@
 use std::cmp::min;
 use std::process::exit;
 use log::error;
-use num_traits::{ToPrimitive};
+use num_traits::ToPrimitive;
+use rand::prelude::StdRng;
 use rand::Rng;
-use rand::rngs::StdRng;
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
-use crate::modules::target_iterators::cycle_group::cyclic_group::{CYCLE_GROUP, CyclicGroup};
+use crate::modules::target_iterators::cycle_group::cyclic_groups::{CYCLE_GROUP, CyclicGroup};
 use crate::SYS;
 
 pub struct Cyclic {
@@ -14,42 +14,35 @@ pub struct Cyclic {
     pub prim_root:u128,
     pub p_sub_one:u128,
 
-
-    pub bits_for_port:u32,
     pub bits_num:u32,
-
 }
-
 
 impl Cyclic {
 
-    pub fn new(tar_ip_num:u64, tar_port_num:usize, rng:&mut StdRng, type_max:u128) -> Self {
+    pub fn new(tar_ip_num:u64, rng:&mut StdRng, type_max:u128) -> Self {
 
-        // 计算 ip 和 port 所需要的位数
+        // 计算 ip 需要的位数
         let bits_for_ip = TarIterBaseConf::bits_needed_u64(tar_ip_num);
-        let bits_for_port = TarIterBaseConf::bits_needed_usize(tar_port_num);
 
         // 计算 乘法群模数的最小值
-        // 最小值为  [ 0 .. 1 | ip 位数 | 端口 位数 ]
-        let bits_num = bits_for_ip + bits_for_port;
-        let group_min_size = 1u128 << bits_num;
+        // 最小值为  [ 0 .. 1 | ip 位数 ]
+        let group_min_size = 1u128 << bits_for_ip;
 
         // 获得大于 最小元素 的 质数乘法群
-        let group = Self::get_group(group_min_size);
+        let group = Cyclic::get_group(group_min_size);
 
         // 计算 p - 1
         let p_sub_one = group.prime - 1;
 
         Self {
-            p:group.prime,
-            prim_root:Self::get_prim_root(&group, rng, Self::get_max_root(p_sub_one, type_max)),
+            p: group.prime,
+            prim_root: Cyclic::get_prim_root(&group, rng, Cyclic::get_max_root(p_sub_one, type_max)),
             p_sub_one,
 
-            bits_for_port,
-            bits_num,
+            bits_num: bits_for_ip,
         }
-
     }
+
 
     /// 找出和<u>最小元素</u>相匹配的<u>乘法群</u>
     pub fn get_group(min_size:u128) -> CyclicGroup {
@@ -83,7 +76,6 @@ impl Cyclic {
 
                 let q = group.prime_factors[i];             // 依次取出 对应因子
                 let k = (group.prime - 1) / q;              // k = ( p - 1 ) / 因子
-
 
                 let base = Self::parse_u128_to_big_num(candidate);
                 let power = Self::parse_u128_to_big_num(k);
@@ -132,3 +124,5 @@ impl Cyclic {
         min(max_root, 1u128 << 22 )
     }
 }
+
+

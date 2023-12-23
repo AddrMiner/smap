@@ -91,6 +91,24 @@ impl ProbeMethodV6 for IcmpEchoV6 {
         packet
     }
 
+    fn is_successful(&self, _data_link_header:&[u8], ipv6_header:&Ipv6PacketU128, net_layer_data:&[u8], aes_rand:&AesRand) -> bool {
+
+        if ipv6_header.next_header != 58 || net_layer_data.len() < 16 || net_layer_data[0] < 128 { return false }
+
+        // 使用目的地址, 源地址 生成验证信息, 注意不包含 源端口
+        let validation = aes_rand.validate_gen_v6_u128_without_sport(
+            ipv6_header.dest_addr, ipv6_header.source_addr);
+
+        // id 字段是由 验证信息的第10, 11位生成的
+        if net_layer_data[4] != validation[10] || net_layer_data[5] != validation[11] {
+            // 如果有一个字节不相等, 直接返回false, 否则进行后续判断
+            return false
+        }
+
+        let icmp6_data = &net_layer_data[8..16];
+        icmp6_data.eq(&validation[0..8])
+    }
+
     fn validate_packet_v6(&self, _data_link_header: &[u8], ipv6_header: &Ipv6PacketU128,
                           net_layer_data: &[u8], aes_rand:&AesRand) -> (bool, u16, Option<u128>) {
 

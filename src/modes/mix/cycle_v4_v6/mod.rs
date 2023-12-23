@@ -8,7 +8,7 @@ use crate::core::conf::set_conf::sender_conf::SenderBaseConf;
 use crate::modes::{Helper};
 use crate::modules::probe_modules::probe_mod_v4::ProbeModV4;
 use crate::modules::probe_modules::probe_mod_v6::ProbeModV6;
-use crate::modules::target_iterators::{CycleIpv4, CycleIpv6};
+use crate::modules::target_iterators::{CycleIpv4Port, CycleIpv6Port};
 use crate::SYS;
 use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
 use crate::tools::blocker::ipv6_blocker::BlackWhiteListV6;
@@ -17,8 +17,8 @@ use crate::tools::blocker::ipv6_blocker::BlackWhiteListV6;
 pub struct CycleV4V6 {
     pub base_conf:Arc<BaseConf>,
 
-    pub target_iters_v4:Vec<CycleIpv4>,
-    pub target_iters_v6:Vec<CycleIpv6>,
+    pub target_iters_v4:Vec<CycleIpv4Port>,
+    pub target_iters_v6:Vec<CycleIpv6Port>,
 
     pub v4_ranges:Vec<(u32, u32, u64)>,
     pub v6_ranges:Vec<(u128, u128, u64)>,

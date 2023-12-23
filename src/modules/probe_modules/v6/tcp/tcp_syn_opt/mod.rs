@@ -43,6 +43,8 @@ impl TcpSynOptV6 {
             snap_len_v6: 156,                                         //  数据链路层报头(14字节) + ipv6报头(40字节) + tcp报头(20字节) + tcp选项字段最大长度(40字节) = 114
             filter_v6: "ip6 proto 6 && (ip6[53] & 4 != 0 || ip6[53] == 18)".to_string(),
 
+            use_tar_ports: true,
+
             option: opt_payload,
             payload: vec![],
 

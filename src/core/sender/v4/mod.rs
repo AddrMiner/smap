@@ -2,26 +2,19 @@
 
 
 
-#[cfg(not(windows))]
-mod cycle_group;
-
-#[cfg(not(windows))]
-pub use cycle_group::send_cycle_group_v4;
-
-#[cfg(not(windows))]
-mod file_reader;
-
-#[cfg(not(windows))]
-pub use file_reader::send_file_reader_v4;
-
-#[cfg(windows)]
-mod windows_pcap;
+mod base;
+mod pmap;
 
 
-#[cfg(windows)]
-pub use windows_pcap::cycle_group::send_cycle_group_v4;
+pub use base::send_v4;
+pub use base::send_v4_port;
+pub use base::send_file_v4;
+pub use base::send_file_v4_port;
 
-#[cfg(windows)]
-pub use windows_pcap::file_reader::send_file_reader_v4;
+
+pub use pmap::pmap_full_scan_send_v4;
+pub use pmap::pmap_recommend_scan_send_v4_port;
+
+
 
 

@@ -37,13 +37,13 @@ impl TarIterBaseConf {
     }
 
     /// 解析目标端口
-    pub fn parse_tar_port(tar_port_str:&Option<String>) -> Vec<u16> {
+    pub fn parse_tar_port(tar_port_str:&Option<String>, default_tar_ports:&str) -> Vec<u16> {
 
         if let Some(t) = tar_port_str {
             parse_ports_vec(t)
         } else {
             // 未设置 目标端口, 提示警告后, 使用默认端口
-            let tar_ports_str = SYS.get_info("conf", "default_ports");
+            let tar_ports_str = SYS.get_info("conf", default_tar_ports);
             warn!("{} {}", SYS.get_info("warn","target_ports_not_exist"), tar_ports_str);
             parse_ports_vec(&tar_ports_str)
         }
@@ -158,6 +158,45 @@ impl TarIterBaseConf {
 
         targets_ranges
     }
+
+
+    /// 注意: 第一个参数是 起始索引减一
+    pub fn cycle_group_assign_targets_u64_part(mut pre_last:u64, end_index:u64, thread_num:u64) -> Vec<(u64, u64, u64)> {
+
+        let mut targets_ranges = vec![];
+
+        let total_num = end_index - pre_last;
+
+        let base_num = total_num / thread_num;
+        let mut remain_num = total_num % thread_num;
+
+        for _ in 0..thread_num {
+
+            let tar_num;
+            if remain_num > 0 {
+                tar_num = base_num + 1;
+                remain_num -= 1;
+            } else {
+                tar_num = base_num;
+            }
+
+            if tar_num < 1 {
+                return targets_ranges
+            }
+
+            let start = pre_last + 1;
+            let end = start + tar_num - 1;
+
+            targets_ranges.push((start, end, tar_num));
+
+            pre_last = end;
+        }
+
+        targets_ranges
+    }
+
+
+
 
 
     pub fn cycle_group_assign_targets_mix(p_sub_one_vec_v4:Vec<u64>, p_sub_one_vec_v6:Vec<u128>,

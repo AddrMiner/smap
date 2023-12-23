@@ -1,4 +1,3 @@
-use chrono::Local;
 use crate::core::conf::args::Args;
 use crate::core::conf::modules_config::ModuleConf;
 use crate::core::conf::set_conf::base_conf::BaseConf;
@@ -9,7 +8,7 @@ use crate::modes::v6::file_reader::V6FileReader;
 use crate::modules::probe_modules::probe_mod_v6::ProbeModV6;
 use crate::modules::target_iterators::{TargetFileReader};
 use crate::tools::blocker::ipv6_blocker::BlackWhiteListV6;
-use crate::tools::file::write_to_file::write_record;
+use crate::write_to_summary;
 
 
 impl V6FileReader {
@@ -18,7 +17,7 @@ impl V6FileReader {
     pub fn new(args:&Args) -> Self {
 
         // 获取 探测目标   文件迭代器不需要单独创建迭代器
-        let tar_ports = TarIterBaseConf::parse_tar_port(&args.tar_ports);
+        let tar_ports = TarIterBaseConf::parse_tar_port(&args.tar_ports, "default_ports");
         let mut targets = TargetFileReader::new(&TarIterBaseConf::parse_targets_file(&args.target_file));
         let (tar_ip_num, range_is_valid, first_tar, end_tar) = targets.parse_file_info_v6();
 
@@ -27,7 +26,8 @@ impl V6FileReader {
 
         // ipv6 探测模块
         let probe = ProbeModV6::new(
-            &SenderBaseConf::parse_probe_v6(&args.probe_v6),  ModuleConf::new_from_vec_args(&args.probe_args),
+            &SenderBaseConf::parse_probe_v6(&args.probe_v6, "default_probe_mod_v6"),
+            ModuleConf::new_from_vec_args(&args.probe_args, vec![]),
             &tar_ports, base_conf.aes_rand.seed, &args.fields);
 
         // 发送模块基础配置
@@ -44,13 +44,7 @@ impl V6FileReader {
         // 接收模块基础配置
         let receiver_conf= ReceiverBaseConf::new(args, vec![probe.filter_v6.clone()]);
 
-        if let Some(summary_path) = &base_conf.summary_file {
-            // 将 所有输入参数 写入记录文件
-            let header = vec!["time", "args"];
-            let val = vec![ Local::now().to_string(), format!("{:?}", args).replace(",", " ")];
-
-            write_record("V6FileReader", "args", summary_path, header, val);
-        }
+        write_to_summary!(base_conf; "V6FileReader"; "args"; args;);
 
         if range_is_valid {
 

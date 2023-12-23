@@ -29,6 +29,8 @@ impl TcpSynAckScanV6 {
             snap_len_v6: 116,
             filter_v6: "ip6 proto 6 && (ip6[53] & 4 != 0 || ip6[53] == 18) || icmp".to_string(),
 
+            use_tar_ports: true,
+
             option: vec![],
             payload: vec![],
 

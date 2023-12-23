@@ -1,4 +1,3 @@
-use chrono::Local;
 use crate::core::conf::args::Args;
 use crate::core::conf::modules_config::ModuleConf;
 use crate::core::conf::set_conf::base_conf::BaseConf;
@@ -8,9 +7,9 @@ use crate::core::conf::tools::args_parse::ip::ipv6::parse_ipv6_cycle_group;
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::modes::v6::cycle::CycleV6;
 use crate::modules::probe_modules::probe_mod_v6::ProbeModV6;
-use crate::modules::target_iterators::CycleIpv6;
+use crate::modules::target_iterators::{CycleIpv6, CycleIpv6Port, CycleIpv6Type};
 use crate::tools::blocker::ipv6_blocker::BlackWhiteListV6;
-use crate::tools::file::write_to_file::write_record;
+use crate::write_to_summary;
 
 
 impl CycleV6 {
@@ -22,14 +21,15 @@ impl CycleV6 {
         let (start_ip, end_ip, tar_ip_num) = parse_ipv6_cycle_group(
             &TarIterBaseConf::parse_tar_ip(&args.tar_ips));
 
-        let tar_ports = TarIterBaseConf::parse_tar_port(&args.tar_ports);
+        let tar_ports = TarIterBaseConf::parse_tar_port(&args.tar_ports, "default_ports");
 
         // 基础配置
         let mut base_conf = BaseConf::new(args);
 
         // ipv6 探测模块
         let probe = ProbeModV6::new(
-            &SenderBaseConf::parse_probe_v6(&args.probe_v6),  ModuleConf::new_from_vec_args(&args.probe_args),
+            &SenderBaseConf::parse_probe_v6(&args.probe_v6, "default_probe_mod_v6"),
+            ModuleConf::new_from_vec_args(&args.probe_args, vec![]),
             &tar_ports, base_conf.aes_rand.seed, &args.fields);
 
         // 发送模块基础配置
@@ -38,8 +38,16 @@ impl CycleV6 {
                                              probe.max_packet_length_v6, false, true);
 
         // 创建目标迭代器
-        let target_iter = CycleIpv6::new(start_ip, tar_ip_num, tar_ports,
-                                         &mut base_conf.aes_rand.rng);
+        let p_sub_one;
+        let target_iter = if probe.use_tar_ports {
+            let c6p = CycleIpv6Port::new(start_ip, tar_ip_num, tar_ports, &mut base_conf.aes_rand.rng);
+            p_sub_one = c6p.p_sub_one;
+            CycleIpv6Type::CycleIpv6Port(c6p)
+        } else {
+            let c6 = CycleIpv6::new(start_ip,tar_ip_num, &mut base_conf.aes_rand.rng);
+            p_sub_one = c6.p_sub_one;
+            CycleIpv6Type::CycleIpv6(c6)
+        };
 
         // 定义全局 黑白名单拦截器
         let blocker = BlackWhiteListV6::new(
@@ -48,15 +56,8 @@ impl CycleV6 {
         // 接收模块基础配置
         let receiver_conf= ReceiverBaseConf::new(args, vec![probe.filter_v6.clone()]);
 
-        if let Some(summary_path) = &base_conf.summary_file {
-            // 将 所有输入参数 写入记录文件
-            let header = vec!["time", "args"];
-            let val = vec![ Local::now().to_string(), format!("{:?}", args).replace(",", " ")];
+        write_to_summary!(base_conf; "CycleV6"; "args"; args;);
 
-            write_record("CycleV6", "args", summary_path, header, val);
-        }
-
-        let p_sub_one = target_iter.p_sub_one;
         let send_thread_num = sender_conf.send_thread_num as u128;
         Self {
             base_conf: base_conf.into(),
@@ -76,6 +77,4 @@ impl CycleV6 {
             blocker: blocker.gen_local_constraints(start_ip, end_ip),
         }
     }
-
-
 }

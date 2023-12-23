@@ -27,6 +27,8 @@ impl TcpSynScanV4 {
             snap_len_v4: 96,
             filter_v4: "(tcp && tcp[13] & 4 != 0 || tcp[13] == 18) || icmp".to_string(),
 
+            use_tar_ports: true,
+
             option: vec![],
             payload: vec![],
 

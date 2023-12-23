@@ -75,10 +75,12 @@ pub trait ProbeMethodV6 {
 
     fn make_packet_v6(&self, source_ip:u128, dest_ip:u128, dest_port:u16, hop_limit:Option<u8>, aes_rand:&AesRand) -> Vec<u8>;
 
+    fn is_successful(&self, data_link_header:&[u8], ipv6_header:&Ipv6PacketU128, net_layer_data:&[u8], aes_rand:&AesRand) -> bool;
+
+
     /// 验证ipv6数据包
     /// 注意:接收到的网络层数据包含 扩展首部
-    fn validate_packet_v6(&self, data_link_header:&[u8], ipv6_header:&Ipv6PacketU128, net_layer_data:&[u8],
-                          aes_rand:&AesRand) -> (bool, u16, Option<u128>);
+    fn validate_packet_v6(&self, data_link_header:&[u8], ipv6_header:&Ipv6PacketU128, net_layer_data:&[u8], aes_rand:&AesRand) -> (bool, u16, Option<u128>);
 
 
     /// 打印出首部字段
@@ -98,6 +100,8 @@ pub struct ProbeModV6 {
     pub max_packet_length_v6:usize,
     pub snap_len_v6:usize,
     pub filter_v6:String,
+
+    pub use_tar_ports:bool,
 
     pub option:Vec<u8>,
     pub payload:Vec<u8>,

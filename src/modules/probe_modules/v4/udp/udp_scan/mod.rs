@@ -1,14 +1,11 @@
 mod method;
 
-
-use std::process::exit;
 use std::sync::Arc;
-use log::error;
 use crate::core::conf::modules_config::ModuleConf;
 use crate::modes::Helper;
 use crate::modules::probe_modules::probe_mod_v4::{ProbeMethodV4, ProbeModV4};
 use crate::modules::probe_modules::tools::payload::get_payload;
-use crate::SYS;
+use crate::{parse_custom_args, SYS};
 use crate::tools::net_handle::packet::udp::fields::UdpFields;
 
 
@@ -43,6 +40,8 @@ impl UdpScanV4 {
             snap_len_v4: 1500,
             filter_v4: "udp || icmp".to_string(),
 
+            use_tar_ports: true,
+
             option: vec![],
             payload,
             fields: fields.clone(),
@@ -58,23 +57,9 @@ impl UdpScanV4 {
         let udp_len_u16 = 8 + (udp_payload_len as u16);
         let udp_len_bytes = udp_len_u16.to_be_bytes();
 
-        let not_check_sport:bool = match p.conf.clone() {
-            Some(c) => {
-                match c.get_info(&"not_check_sport".to_string()) {
-                    Some(val) => {
-                        val.trim().parse().map_err(|_|{
-                            // 解析 not_check_sport 参数失败
-                            error!("{}", SYS.get_info("err", "not_check_sport_parse_failed"));
-                            exit(1)
-                        }).unwrap()
-                    }
-                    // 没有该参数, 默认为不对源端口进行检查
-                    None => true,
-                }
-            }
-            // 没有该参数, 默认为不对源端口进行检查
-            None => true,
-        };
+        // 第一个参数是p指针, ()内的参数分别为 参数名称, 类型, 默认值, 从SYS中读取的错误提示的标签
+        // 可传入多个参数 如: parse_custom_args!(p; (a1, bool, true, "a1_info"), (a2, u32, 0, "a2_info"));
+        parse_custom_args!(p; (not_check_sport, bool, true, "not_check_sport_parse_failed"));
 
         UdpScanV4 {
             // 以太网头 14字节, 没有地址的ipv4首部 12字节       14 + 12 = 26

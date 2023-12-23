@@ -38,7 +38,7 @@ pub fn parse_ipv4_range(addrs:&str) -> (Ipv4Addr, Ipv4Addr){
 
 }
 
-/// 解析<u>ipv4地址范围</u>(按顺序, 适用于 循环群算法(zmap))
+/// 解析<u>ipv4地址范围</u>(按顺序)
 /// 返回值: 0: 起始地址 1: 最终地址 2: 目标范围ip地址总数
 /// a-b 或 f/10  => u32: (a, b)  或 u32: ( f子网第一个有效地址, f子网最后一个有效地址 )
 pub fn parse_ipv4_cycle_group(addrs_str:&str) -> (u32, u32, u64){

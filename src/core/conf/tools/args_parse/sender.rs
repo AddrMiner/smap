@@ -185,20 +185,20 @@ impl SenderBaseConf {
     }
 
     /// 解析<u>ipv4探测模块名称</u>
-    pub fn parse_probe_v4(probe_name: &Option<String>) -> String {
+    pub fn parse_probe_v4(probe_name: &Option<String>, default_probe_mod:&str) -> String {
         if let Some(p) = probe_name {
             p.to_string()
         } else {
-            SYS.get_conf("conf", "default_probe_mod_v4")
+            SYS.get_conf("conf", default_probe_mod)
         }
     }
 
     /// 解析<u>ipv6探测模块名称</u>
-    pub fn parse_probe_v6(probe_name: &Option<String>) -> String {
+    pub fn parse_probe_v6(probe_name: &Option<String>, default_probe_mod:&str) -> String {
         if let Some(p) = probe_name {
             p.to_string()
         } else {
-            SYS.get_conf("conf", "default_probe_mod_v6")
+            SYS.get_conf("conf", default_probe_mod)
         }
     }
 
@@ -211,16 +211,10 @@ impl SenderBaseConf {
                            target_num:Option<u64>, thread_num:usize, cool_time:i64)
     -> RateGlobalConf {
 
-    let batch_size = match batch_size_arg {
-        Some(b) => b,
-        None => SYS.get_conf("conf","default_batch_size")
-    };
+    let batch_size = batch_size_arg.unwrap_or_else(|| SYS.get_conf("conf", "default_batch_size"));
 
     // 设置每发送轮次的最短延迟时间, 以 微秒 计
-    let must_sleep = match must_sleep_arg {
-        Some(m) => m,
-        None => SYS.get_conf("conf","default_must_sleep")
-    };
+    let must_sleep = must_sleep_arg.unwrap_or_else(|| SYS.get_conf("conf", "default_must_sleep"));
 
     match rate {
         Some(r) => {

@@ -1,15 +1,15 @@
 use std::process::exit;
-use std::sync::mpsc;
 use std::thread;
-use chrono::{Local, Utc};
+use chrono::{Local};
 use log::error;
 use crate::core::receiver::pcap::PcapReceiver;
-use crate::core::sender::{send_cycle_group_v6_pattern};
+use crate::core::sender::{send_v6, send_v6_port};
 use crate::modes::ModeMethod;
 use crate::modes::v6::cycle_pattern::CycleV6Pattern;
-use crate::SYS;
-use crate::tools::file::write_to_file::write_record;
-use crate::tools::others::time::get_fmt_duration;
+use crate::modules::target_iterators::CycleIpv6PatternType;
+use crate::{computing_time, creat_channels, ending_the_receiving_thread, init_var, prepare_data, recv_ready, SYS, wait_sender_threads, write_to_summary};
+use crate::tools::check_duplicates::bit_map_v6_pattern::BitMapV6Pattern;
+use crate::tools::check_duplicates::bit_map_v6_pattern_port::BitMapV6PatternPort;
 
 impl ModeMethod for CycleV6Pattern {
 
@@ -17,35 +17,38 @@ impl ModeMethod for CycleV6Pattern {
     fn execute(&self){
 
         // 创建信息传递管道
-        let (recv_ready_sender, recv_ready_receiver) = mpsc::channel();
-        let (recv_close_time_sender, recv_close_time_receiver) = mpsc::channel();
+        creat_channels!((recv_ready_sender, recv_ready_receiver, bool),(recv_close_time_sender, recv_close_time_receiver, i64));
 
         // 执行接收线程
         let receiver_res;
         {
-            let ip_bits_num = self.ip_bits_num;
-            let base_ip_val = self.base_ip_val;
-            let mask = self.mask;
-            let parts = self.parts.clone();
+            prepare_data!(self; ip_bits_num, base_ip_val, mask);
+            prepare_data!(self; clone; parts, base_conf, receiver_conf, probe);
 
-            let base_conf = self.base_conf.clone();
-            let receiver_conf = self.receiver_conf.clone();
-            let probe = self.probe.clone();
-            let sports = self.sender_conf.source_ports.clone();
-            let tar_ports = self.target_iter.tar_ports.clone();
+            match &self.target_iter {
+                CycleIpv6PatternType::CycleIpv6Pattern(_) => {
+                    receiver_res = thread::spawn(move || {
+                        let bit_map = BitMapV6Pattern::new(ip_bits_num, base_ip_val, mask, parts);
 
-            receiver_res = thread::spawn(move || {
-                PcapReceiver::run_v6_pattern(0, base_conf, receiver_conf, probe,
-                                             ip_bits_num, base_ip_val, mask, parts, sports, tar_ports,
-                                             recv_ready_sender, recv_close_time_receiver)
-            });
+                        PcapReceiver::run_v6(0, base_conf, receiver_conf, probe, bit_map,
+                                                     recv_ready_sender, recv_close_time_receiver)
+                    });
+                }
+                CycleIpv6PatternType::CycleIpv6PatternPort(t) => {
+                    let sports = self.sender_conf.source_ports.clone();
+                    let tar_ports = t.tar_ports.clone();
+                    let bit_map = BitMapV6PatternPort::new(ip_bits_num, base_ip_val, mask, parts, tar_ports);
+
+                    receiver_res = thread::spawn(move || {
+                        PcapReceiver::run_v6_port(0, base_conf, receiver_conf, probe, sports, bit_map,
+                                                          recv_ready_sender, recv_close_time_receiver)
+                    });
+                }
+            }
         }
 
         // 只有接收线程准备完毕后，发送线程才能继续执行
-        if let Err(_) = recv_ready_receiver.recv() {
-            error!("{}", SYS.get_info("err", "recv_ready_receive_failed"));
-            exit(1)
-        }
+        recv_ready!(recv_ready_receiver);
 
         // 记录 开始发送的时间
         let start_time = Local::now();
@@ -54,84 +57,52 @@ impl ModeMethod for CycleV6Pattern {
         let mut sender_threads = vec![];
         for assigned_targets in self.assigned_target_range.iter() {
 
-            // 初始化 局部目标迭代器
-            let target_iter = self.target_iter.init(assigned_targets.0, assigned_targets.1);
-            let local_tar_ip_num = assigned_targets.2;
+            let local_tar_num = assigned_targets.2;
+            prepare_data!(self; clone; blocker, base_conf, sender_conf, probe);
 
-            // 为拦截器设置局部限制范围, 这里使用全局配置
-            let blocker = self.blocker.clone();
-            let base_conf = self.base_conf.clone();
-            let sender_conf = self.sender_conf.clone();
-            let probe = self.probe.clone();
-
-            let sender_thread = thread::spawn(move || {
-                send_cycle_group_v6_pattern(0, target_iter, local_tar_ip_num,
-                                    blocker,probe, None, base_conf, sender_conf)
-            });
-
+            let sender_thread;
+            match &self.target_iter {
+                CycleIpv6PatternType::CycleIpv6Pattern(t) => {
+                    // 初始化 局部目标迭代器
+                    let target_iter = t.init(assigned_targets.0, assigned_targets.1);
+                    sender_thread = thread::spawn(move || {
+                        send_v6(0, target_iter, local_tar_num, blocker, probe, None, base_conf, sender_conf)
+                    });
+                }
+                CycleIpv6PatternType::CycleIpv6PatternPort(t) => {
+                    let target_iter = t.init(assigned_targets.0, assigned_targets.1);
+                    sender_thread = thread::spawn(move || {
+                        send_v6_port(0, target_iter, local_tar_num, blocker, probe, None, base_conf, sender_conf)
+                    });
+                }
+            }
             sender_threads.push(sender_thread);
         }
 
         // 等待发送线程执行完成, 并收集汇总从各个发送线程传递回来的信息
-        let mut total_send_success:u64 = 0;
-        let mut total_send_failed:u64 = 0;
-        let mut total_blocked:u64 = 0;
-        for sender_thread in sender_threads {
-            let sender_res = sender_thread.join();
-
-            if let Ok((send_success, send_failed, blocked)) = sender_res {
-                total_send_success += send_success;
-                total_send_failed += send_failed;
-                total_blocked += blocked;
-            } else {
-                error!("{}", SYS.get_info("err", "send_thread_err"));
-                exit(1)
-            }
-        }
-
+        init_var!(u64; 0; total_send_success, total_send_failed, total_blocked);
+        wait_sender_threads!(sender_threads; send_success, send_failed, blocked; {
+            total_send_success += send_success;
+            total_send_failed += send_failed;
+            total_blocked += blocked;
+        });
         println!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
 
         // 计算终止时间 并向接收线程传递
-        let end_time = Utc::now().timestamp() + self.sender_conf.cool_seconds;
-        if let Err(_) = recv_close_time_sender.send(end_time){
-            // 向接收线程发送终止时间失败
-            error!("{}", SYS.get_info("err","send_recv_close_time_failed"));
-            exit(1)
-        }
+        ending_the_receiving_thread!(self; recv_close_time_sender);
 
         // 等待接收线程按照预定时间关闭
         if let Ok(receiver_info) = receiver_res.join() {
             // 处理接收线程返回的信息
 
-            // 记录结束发送的时间
-            let end_time = Local::now();
-            let running_time = (end_time - start_time).num_seconds();
-            let running_time = get_fmt_duration(running_time, SYS.get_info("print", "running_time_pattern"));
+            // 计算 结束时间 和 格式化后的运行时间 并显示
+            computing_time!(start_time; end_time, running_time);
+            println!("{} {} {} {}", SYS.get_info("print", "recv_finished_with_out_of_range"), receiver_info.recv_success, receiver_info.recv_repeat, receiver_info.recv_failed);
 
-            println!("{} {} {} {}", SYS.get_info("print", "recv_finished_with_out_of_range"), receiver_info.success_total, receiver_info.repeat_total, receiver_info.failed_total);
-            println!("{} {}", SYS.get_info("print", "show_running_time"), running_time);
-
-            if let Some(summary_path) = &self.base_conf.summary_file {
-                // 将所有信息写入记录文件
-
-                let header = vec!["start_time", "end_time", "running_time",
-                                  "send_success", "send_failed", "send_blocked",
-
-                                  "receive_success", "receive_failed",
-                                  "receive_repeat_and_out_of_range", "receive_validation_passed",
-                                  "receive_validation_failed"];
-                let val = vec![ start_time.to_string(), end_time.to_string(), running_time,
-                                total_send_success.to_string(), total_send_failed.to_string(), total_blocked.to_string(),
-
-                                receiver_info.success_total.to_string(), receiver_info.failed_total.to_string(),
-                                receiver_info.repeat_total.to_string(), receiver_info.validation_passed.to_string(),
-                                receiver_info.validation_failed.to_string()];
-
-                write_record("CycleV6Pattern", "result", summary_path, header, val);
-            }
-        } else {
-            error!("{}", SYS.get_info("err", "recv_thread_err"));
-            exit(1)
-        }
+            write_to_summary!(self; "CycleV6Pattern"; "result";
+                [start_time, end_time, running_time, total_send_success, total_send_failed, total_blocked;];
+                #[receiver_info; recv_success, recv_failed, recv_validation_passed, recv_validation_failed; ("receive_repeat_and_out_of_range", recv_repeat)]
+            );
+        } else { error!("{}", SYS.get_info("err", "recv_thread_err")); exit(1) }
     }
 }

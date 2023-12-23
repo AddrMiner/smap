@@ -8,6 +8,7 @@ use log::error;
 use crate::SYS;
 use crate::DNS;
 use crate::tools::file::parse_context::parse_line_with_annotation;
+use crate::tools::others::sort::quick_sort_from_big_to_small;
 
 /// ipv6 黑名单 或 白名单 生成器
 pub struct Ipv6Blocker {
@@ -279,9 +280,7 @@ impl Ipv6Blocker {
         let right_index = self.len - 1;
 
         // 按照 右移大小 对 右移数量向量 和 前缀值向量 进行同步排序
-        quick_sort_reverse_v6(&mut self.right_move_len, &mut self.prefix_val,
-                              0, right_index);
-
+        quick_sort_from_big_to_small(&mut self.right_move_len, &mut self.prefix_val, 0, right_index);
     }
 
 
@@ -476,44 +475,6 @@ impl Ipv6Blocker {
         // 说明 该ip 没有被标记
         false
 
-    }
-
-
-
-
-}
-
-/// 按照 arr 的顺序 对 index哈希向量 进行排序
-/// 排序算法为按照 右移位数 的大小进行 从大到小 的排序
-fn quick_sort_reverse_v6(arr:&mut Vec<u32>,index:&mut Vec<AHashSet<u128>>,left:usize, right:usize){
-
-    if left < right {
-
-        let mut i = left;
-        let mut j = right;
-
-        let pivot = arr[ (left+right) / 2 ];
-
-        loop {
-            while arr[i] > pivot {
-                i += 1;
-            }
-            while arr[j] < pivot {
-                j -= 1;
-            }
-            if i >= j {
-                break
-            }
-
-            arr.swap(i,j);
-            index.swap(i,j);
-
-            i += 1;
-            j -= 1;
-        }
-
-        quick_sort_reverse_v6(arr, index, left, i-1);
-        quick_sort_reverse_v6(arr, index, j+1, right);
     }
 }
 

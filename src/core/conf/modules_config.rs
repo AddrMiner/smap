@@ -31,8 +31,8 @@ impl ModuleConf {
         self.conf.insert(parameter, val);
     }
 
-
-    pub fn new_from_vec_args(args:&Vec<String>) -> Self {
+    /// 解析自定义参数, 注意: 如果附加参数中包含和传入参数中相同的键, 其值将被替换为附加参数中对应的值
+    pub fn new_from_vec_args(args:&Vec<String>, additional_parameter:Vec<String>) -> Self {
 
         let mut conf:AHashMap<String, String> = AHashMap::with_capacity(args.len());
 
@@ -49,10 +49,20 @@ impl ModuleConf {
             conf.insert(para_val[0].to_string(), para_val[1].to_string());
         }
 
-        Self {
-            conf,
+        for arg in additional_parameter {
+
+            let para_val:Vec<&str> = arg.split("=").collect();
+
+            if para_val.len() != 2 {
+                // 如果 参数 不合法, 即不符合  para=val
+                error!("{}", SYS.get_info("err", "mod_arg_invalid"));
+                exit(1)
+            }
+
+            conf.insert(para_val[0].to_string(), para_val[1].to_string());
         }
 
+        Self { conf }
     }
 
 
@@ -66,6 +76,34 @@ impl ModuleConf {
             None => {
                 error!("{} {}", SYS.get_info("err","get_parameter_failed"), parameter);
                 exit(1)
+            }
+            Some(v) => v.to_string()
+        };
+
+        let res = res_str.parse::<T>();
+
+        match res {
+            Ok(r) => r,
+            Err(_) => {
+                error!("{} {}", SYS.get_info("err","convert_parameter_failed"), parameter);
+                exit(1)
+            }
+        }
+
+    }
+
+    /// 先尝试从 自定义参数 中查找对应配置, 如果失败会 尝试从 系统配置 查找
+    pub fn get_conf_or_from_sys<T : FromStr>(&self, parameter:&String) -> T {
+
+        let res_str = match self.conf.get(parameter) {
+            None => {
+                match SYS.get_info_without_panic("conf", parameter) {
+                    None => {
+                        error!("{} {}", SYS.get_info("err","get_parameter_failed"), parameter);
+                        exit(1)
+                    }
+                    Some(v) => v
+                }
             }
             Some(v) => v.to_string()
         };

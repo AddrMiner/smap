@@ -91,6 +91,27 @@ impl ProbeMethodV6 for UdpScanV6 {
         packet
     }
 
+    fn is_successful(&self, _data_link_header:&[u8], ipv6_header:&Ipv6PacketU128, net_layer_data:&[u8], aes_rand:&AesRand) -> bool {
+        if ipv6_header.next_header != 17 || net_layer_data.len() < 8 { return false }
+
+        // 生成验证信息
+        let validation;
+        if self.not_check_sport {    // 如果 不对源端口进行检查
+            validation = aes_rand.validate_gen_v6_u128_without_sport(ipv6_header.dest_addr, ipv6_header.source_addr);
+        } else {                    // 对源端口进行检查
+            validation = aes_rand.validate_gen_v6_u128(ipv6_header.dest_addr, ipv6_header.source_addr, &net_layer_data[0..2]);
+        }
+
+        {   // 判断 接收到的数据包的 目的端口(本机源端口) 是否 正确
+            let dport = ((net_layer_data[2] as u16) << 8) | (net_layer_data[3] as u16);
+
+            let local_sport_index = ((validation[0] as usize) << 8) | (validation[1] as usize);
+            let local_sport = self.sports[ local_sport_index % self.sports_len ];
+
+            dport == local_sport
+        }
+    }
+
     fn validate_packet_v6(&self, _data_link_header: &[u8], ipv6_header: &Ipv6PacketU128, net_layer_data: &[u8], aes_rand: &AesRand) -> (bool, u16, Option<u128>) {
 
         match ipv6_header.next_header {

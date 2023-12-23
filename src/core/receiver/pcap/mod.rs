@@ -1,7 +1,6 @@
 pub mod init;
-pub mod v4;
-pub mod v6;
-pub mod mix;
+pub mod base;
+pub mod pmap;
 
 use pcap::{Active, Capture};
 

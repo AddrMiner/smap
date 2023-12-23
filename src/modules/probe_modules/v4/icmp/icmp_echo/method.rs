@@ -101,6 +101,19 @@ impl ProbeMethodV4 for IcmpEchoV4 {
         packet
     }
 
+    fn is_successful(&self, _data_link_header:&[u8], ipv4_header:&Ipv4PacketU32, net_layer_data:&[u8], aes_rand:&AesRand) -> bool {
+
+        // 如果 ipv4首部 中的 协议号 对应的不是 icmp_v4
+        // 网络层数据必须在 8字节及以上
+        // icmp类型必须为 ICMP_ECHO_REPLY
+        if ipv4_header.protocol != 1 || net_layer_data.len() < 8 || net_layer_data[0] != 0 { return false }
+
+        let validation = aes_rand.validate_gen_v4_u32_without_sport(ipv4_header.dest_addr, ipv4_header.source_addr);
+        if net_layer_data[4] != validation[6] || net_layer_data[5] != validation[7] { return false }
+        if net_layer_data[6] != validation[10] || net_layer_data[7] != validation[11] { return false }
+        true
+    }
+
     fn validate_packet_v4(&self, _data_link_header: &[u8], ipv4_header: &Ipv4PacketU32, net_layer_data: &[u8], aes_rand: &AesRand) -> (bool, u16, Option<u32>) {
 
         if ipv4_header.protocol != 1 || net_layer_data.len() < 8 {

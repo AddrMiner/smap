@@ -20,6 +20,8 @@ pub fn mode_help(mode_name:&str) -> String {
 
         "cycle_v4_v6" | "c46" => modes::mix::CycleV4V6::print_help(),
 
+        "pmap_v4" | "p4" => modes::v4::PmapV4::print_help(),
+
         _ => {
             "no mode help".to_string()
         }

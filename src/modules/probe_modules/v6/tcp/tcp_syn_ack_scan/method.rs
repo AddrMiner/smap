@@ -111,6 +111,48 @@ impl ProbeMethodV6 for TcpSynAckScanV6 {
         packet
     }
 
+    fn is_successful(&self, _data_link_header:&[u8], ipv6_header:&Ipv6PacketU128, net_layer_data:&[u8], aes_rand:&AesRand) -> bool {
+
+        if ipv6_header.next_header != 6 || net_layer_data.len() < 20 {
+            // 如果ipv6首部中的 下一首部 字段不是 6(tcp), 返回 验证失败
+            // 网络层数据必须至少为 20字节(tcp首部)
+            return false
+        }
+
+        let validation = aes_rand.validate_gen_v6_u128(ipv6_header.dest_addr, ipv6_header.source_addr, &net_layer_data[0..2]);
+        {   // 判断 接收到的数据包的 目的端口(本机源端口) 是否 正确
+            // 数据包的 源端口(探测的目标端口), 已在 验证字段 中进行检查, 验证字段的输入为 三元组(源地址, 目的地址, 目的端口)
+            let dport = ((net_layer_data[2] as u16) << 8) | (net_layer_data[3] as u16);
+
+            let local_sport_index = ((validation[0] as usize) << 8) | (validation[1] as usize);
+            let local_sport = self.sports[ local_sport_index % self.sports_len ];
+
+            // 如果 接收到的数据包的 目的端口, 与本机对应的源端口不一致
+            if dport != local_sport { return false }
+        }
+
+        let sent_seq = u32::from_be_bytes([validation[0], validation[1], validation[2], validation[3]]);
+        let ack = u32::from_be_bytes([net_layer_data[8], net_layer_data[9], net_layer_data[10], net_layer_data[11]]);
+        if ack != (sent_seq + 1) {
+            // 响应数据包 中的 确认号 应该为 (发送时的序列号 + 1), 也即 验证数据前四字节按照 大端顺序 得到的值
+            // 如果不一致
+
+            let res = (net_layer_data[13] >> 2) & 1;
+            if res == 1 {
+
+                let seq = u32::from_be_bytes([net_layer_data[4], net_layer_data[5], net_layer_data[6], net_layer_data[7]]);
+                let sent_ack = u32::from_be_bytes([validation[8], validation[9], validation[10], validation[11]]);
+
+                // 序列号 既不与发送时的 确认号 相等, 也不与发送时的 确认号+1 相等
+                if (seq != sent_ack) && (seq != (sent_ack + 1)) { return false }
+            } else {
+                // 如果 不一致, 直接返回 验证失败
+                return false
+            }
+        }
+        true
+    }
+
     fn validate_packet_v6(&self, _data_link_header: &[u8], ipv6_header: &Ipv6PacketU128, net_layer_data: &[u8], aes_rand: &AesRand) -> (bool, u16, Option<u128>) {
 
         match ipv6_header.next_header {

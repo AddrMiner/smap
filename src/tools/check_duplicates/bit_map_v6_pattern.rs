@@ -4,8 +4,8 @@ use bitvec::macros::internal::funty::Fundamental;
 use bitvec::vec::BitVec;
 use log::error;
 use crate::SYS;
+use crate::tools::check_duplicates::DuplicateCheckerV6;
 
-#[allow(dead_code)]
 pub struct BitMapV6Pattern {
     map:BitVec,
 
@@ -23,44 +23,9 @@ pub struct BitMapV6Pattern {
     max_val:u128,
 }
 
-
-impl BitMapV6Pattern {
-
-    #[allow(dead_code)]
-    pub fn new(bits_num:u32, base_ip_val:u128, mask:u128, parts:Vec<(u32, u32)>) -> Self {
-
-        if (u64::MAX as u128) > (usize::MAX as u128) {
-
-            // 不能安全地将 u64 转化为 usize
-            error!("{}", SYS.get_info("err", "bitmap_u64_to_usize_err"));
-            exit(1)
-        }
-
-        let capacity;
-        if bits_num < 64 {
-            capacity = 1usize << bits_num;
-        } else if bits_num == 64 {
-            // 如果模式字符达到64位
-            capacity = u64::MAX as usize;
-        } else {
-            error!("{}", SYS.get_info("err", "pattern_char_over_64"));
-            exit(1)
-        }
-
-        Self  {
-            map: bitvec![0; capacity],
-            last: false,
-            base_ip_val,
-            mask,
-            move_len: Self::get_move_len(parts),
-            max_val: u64::MAX as u128,
-        }
-    }
-
-    /// 对ip进行存在标记
-    #[allow(dead_code)]
+impl DuplicateCheckerV6 for BitMapV6Pattern {
     #[inline]
-    pub fn set(&mut self, ip:u128) {
+    fn set(&mut self, ip: u128) {
         let cur_base_ip = ip & self.mask;
         if self.base_ip_val != cur_base_ip {
             // 如果当前ip在模式字符串指定的范围之外
@@ -82,68 +47,8 @@ impl BitMapV6Pattern {
         }
     }
 
-    /// 检查ip是否被标记或有效
-    /// 如果被标记或者在目标范围之外, 直接返回true
-    /// 如果没被标记, 对ip进行标记后返回false
-    #[allow(dead_code)]
     #[inline]
-    pub fn check_invalid_repeat_and_set(&mut self, ip:u128) -> bool {
-
-        let cur_base_ip = ip & self.mask;
-        if self.base_ip_val != cur_base_ip {
-            // 如果当前ip在模式字符串指定的范围之外
-            return true
-        }
-
-        // 将 ip 转化为 ip索引, 起始地址的索引为0, 以后顺序加一
-        let ip_index = self.ip_to_val(ip);
-
-        if ip_index < self.max_val {
-
-            match self.map.get_mut(ip_index as usize) {
-                Some(mut tar) => {
-                    if tar.as_bool() {
-
-                        // 如果没被标记, 将目标标记后返回false
-                        *tar = true;
-                        false
-                    } else {
-
-                        // 如果存在, 直接返回true
-                        true
-                    }
-                }
-                None => {
-
-                    // 无法获取到目标
-                    error!("{} {}", SYS.get_info("err", "bitmap_get_target_failed"), ip_index);
-                    exit(1)
-                }
-            }
-
-        } else if ip_index == self.max_val {
-
-            if self.last {
-                // 如果被标记了,返回true
-                true
-            } else {
-                // 如果没被标记, 标记后返回false
-                self.last = true;
-                false
-            }
-
-        } else {
-            // 得到的ip值大于64位, 说明出错了
-            error!("{} {}", SYS.get_info("err", "bitmap_get_target_failed"), ip_index);
-            exit(1)
-        }
-    }
-
-    /// 如果没有被标记,返回true; 如果被标记或者不在目标范围内,返回false
-    #[allow(dead_code)]
-    #[inline]
-    pub fn not_marked_and_valid(&self, ip:u128) -> bool {
-
+    fn not_marked_and_valid(&self, ip: u128) -> bool {
         let cur_base_ip = ip & self.mask;
         if self.base_ip_val != cur_base_ip {
             // 如果当前ip在模式字符串指定的范围之外
@@ -177,10 +82,45 @@ impl BitMapV6Pattern {
             exit(1)
         }
     }
+}
+
+
+impl BitMapV6Pattern {
+
+    pub fn new(bits_num:u32, base_ip_val:u128, mask:u128, parts:Vec<(u32, u32)>) -> Self {
+
+        if (u64::MAX as u128) > (usize::MAX as u128) {
+
+            // 不能安全地将 u64 转化为 usize
+            error!("{}", SYS.get_info("err", "bitmap_u64_to_usize_err"));
+            exit(1)
+        }
+
+        let capacity;
+        if bits_num < 64 {
+            capacity = 1usize << bits_num;
+        } else if bits_num == 64 {
+            // 如果模式字符达到64位
+            capacity = u64::MAX as usize;
+        } else {
+            error!("{}", SYS.get_info("err", "pattern_char_over_64"));
+            exit(1)
+        }
+
+        Self  {
+            map: bitvec![0; capacity],
+            last: false,
+            base_ip_val,
+            mask,
+            move_len: Self::get_move_len(parts),
+            max_val: u64::MAX as u128,
+        }
+    }
+
+
 
 
     /// 将接收到的ip地址转化为对应的ip特征值
-    #[allow(dead_code)]
     #[inline]
     fn ip_to_val(&self, ip:u128) -> u128 {
 
@@ -209,7 +149,7 @@ impl BitMapV6Pattern {
     }
 
 
-    #[allow(dead_code)]
+
     fn get_move_len(mut parts:Vec<(u32, u32)>) -> Vec<(u32, u32, u32)> {
 
         // [       |  part1  |       |  part2  |       | part3 |  ]

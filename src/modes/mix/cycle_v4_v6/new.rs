@@ -1,4 +1,3 @@
-use chrono::Local;
 use crate::core::conf::args::Args;
 use crate::core::conf::modules_config::ModuleConf;
 use crate::core::conf::set_conf::base_conf::BaseConf;
@@ -9,10 +8,10 @@ use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::modes::mix::cycle_v4_v6::CycleV4V6;
 use crate::modules::probe_modules::probe_mod_v4::ProbeModV4;
 use crate::modules::probe_modules::probe_mod_v6::ProbeModV6;
-use crate::modules::target_iterators::{CycleIpv4, CycleIpv6};
+use crate::modules::target_iterators::{CycleIpv4Port, CycleIpv6Port};
 use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
 use crate::tools::blocker::ipv6_blocker::BlackWhiteListV6;
-use crate::tools::file::write_to_file::write_record;
+use crate::write_to_summary;
 
 impl CycleV4V6 {
 
@@ -23,7 +22,7 @@ impl CycleV4V6 {
         //  ips_v4, ips_v6: (min_ip, max_ip, 总数量),  total_ip_num: ipv4 和 ipv6的总数量之和
         let (v4_ranges, v6_ranges, ips_v4, ips_v6, total_ip_num) =
         parse_mix_v4_v6_cycle_group(&TarIterBaseConf::parse_tar_ip(&args.tar_ips));
-        let tar_ports = TarIterBaseConf::parse_tar_port(&args.tar_ports);
+        let tar_ports = TarIterBaseConf::parse_tar_port(&args.tar_ports, "default_ports");
 
         // 基础配置
         let mut base_conf = BaseConf::new(args);
@@ -33,21 +32,21 @@ impl CycleV4V6 {
         let probe_v6;
         let max_packet_length;
         {
-            let probe_args = ModuleConf::new_from_vec_args(&args.probe_args);
+            let probe_args = ModuleConf::new_from_vec_args(&args.probe_args, vec![]);
 
             probe_v4 = ProbeModV4::new(
-                &SenderBaseConf::parse_probe_v4(&args.probe_v4), probe_args.clone(),
+                &SenderBaseConf::parse_probe_v4(&args.probe_v4, "default_probe_mod_v4"),
+                probe_args.clone(),
                 &{
-                    if ips_v4.2 == 0 {
-                        // 如果不存在ipv4目标, 就将 ipv4探测模块的 目标地址强制设为 0, 绕过icmp模块合法性检查
-                        // 警告: 如果默认探测模块为 非网络层探测模块时, 此处会可能会报错
-                        // 此处的唯一作用是绕过探测模块合法性检查
-                        vec![0]
-                    } else { tar_ports.clone() }
+                    // 如果不存在ipv4目标, 就将 ipv4探测模块的 目标地址强制设为 0, 绕过icmp模块合法性检查
+                    // 警告: 如果默认探测模块为 非网络层探测模块时, 此处会可能会报错
+                    // 此处的唯一作用是绕过探测模块合法性检查
+                    if ips_v4.2 == 0 { vec![0] } else { tar_ports.clone() }
                 }, base_conf.aes_rand.seed,  &args.fields);
 
             probe_v6 = ProbeModV6::new(
-                &SenderBaseConf::parse_probe_v6(&args.probe_v6), probe_args,
+                &SenderBaseConf::parse_probe_v6(&args.probe_v6, "default_probe_mod_v6"),
+                probe_args,
                 &{
                     if ips_v6.2 == 0 { vec![0] } else { tar_ports.clone() }
                 }, base_conf.aes_rand.seed, &args.fields);
@@ -64,20 +63,18 @@ impl CycleV4V6 {
             }
         }
 
-
-
         // 生成 ipv4 目标迭代器群, 每个范围对应一个迭代器, 迭代器数量 = 对应范围数量
-        let mut target_iters_v4:Vec<CycleIpv4> = vec![];
+        let mut target_iters_v4:Vec<CycleIpv4Port> = vec![];
         let mut total_p_sub_one_v4:u128 = 0;
         let mut p_sub_one_vec_v4:Vec<u64> = vec![];
 
         // 生成 ipv6 目标迭代器群
-        let mut target_iters_v6:Vec<CycleIpv6> = vec![];
+        let mut target_iters_v6:Vec<CycleIpv6Port> = vec![];
         let mut total_p_sub_one_v6:u128 = 0;
         let mut p_sub_one_vec_v6:Vec<u128> = vec![];
         {
             for (start_ip, _, tar_ip_num) in v4_ranges.iter() {
-                let ipv4_iter = CycleIpv4::new(*start_ip, *tar_ip_num, tar_ports.clone(),
+                let ipv4_iter = CycleIpv4Port::new(*start_ip, *tar_ip_num, tar_ports.clone(),
                                                &mut base_conf.aes_rand.rng);
                 total_p_sub_one_v4 += ipv4_iter.p_sub_one as u128;
                 p_sub_one_vec_v4.push(ipv4_iter.p_sub_one);
@@ -85,7 +82,7 @@ impl CycleV4V6 {
             }
 
             for (start_ip, _, tar_ip_num) in v6_ranges.iter() {
-                let ipv6_iter = CycleIpv6::new(*start_ip, *tar_ip_num, tar_ports.clone(),
+                let ipv6_iter = CycleIpv6Port::new(*start_ip, *tar_ip_num, tar_ports.clone(),
                                                &mut base_conf.aes_rand.rng);
                 total_p_sub_one_v6 += ipv6_iter.p_sub_one;
                 p_sub_one_vec_v6.push(ipv6_iter.p_sub_one);
@@ -118,13 +115,7 @@ impl CycleV4V6 {
             ReceiverBaseConf::new(args, vec![probe_v4.filter_v4.clone()])
         } else { ReceiverBaseConf::new(args, vec![probe_v6.filter_v6.clone()]) };
 
-        if let Some(summary_path) = &base_conf.summary_file {
-            // 将 所有输入参数 写入记录文件
-            let header = vec!["time", "args"];
-            let val = vec![ Local::now().to_string(), format!("{:?}", args).replace(",", " ")];
-
-            write_record("CycleV4V6", "args", summary_path, header, val);
-        }
+        write_to_summary!(base_conf; "CycleV4V6"; "args"; args;);
 
         Self {
             base_conf: base_conf.into(),

@@ -30,6 +30,8 @@ impl TcpSynAckScanV4 {
             snap_len_v4: 114,                        // 以太网头(14字节) + 外层ipv4报头(20字节) + ipv4可选字段(40字节) + 外层icmp报头(8字节) + 内层ipv4报头(20字节) + mss(4字节) + 原始数据包前8字节(8字节) = 114
             filter_v4: "(tcp && tcp[13] & 4 != 0 || tcp[13] == 18) || icmp".to_string(),
 
+            use_tar_ports: true,
+
             option: vec![],
             payload: vec![],
 

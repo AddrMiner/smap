@@ -108,6 +108,27 @@ impl ProbeMethodV4 for UdpScanV4 {
         packet
     }
 
+    fn is_successful(&self, _data_link_header:&[u8], ipv4_header:&Ipv4PacketU32, net_layer_data:&[u8], aes_rand:&AesRand) -> bool {
+        if ipv4_header.protocol != 17 || net_layer_data.len() < 8 { return false }
+
+        // 生成验证信息
+        let validation;
+        if self.not_check_sport {    // 如果 不对源端口进行检查
+            validation = aes_rand.validate_gen_v4_u32_without_sport(ipv4_header.dest_addr, ipv4_header.source_addr);
+        } else {                    // 对源端口进行检查
+            validation = aes_rand.validate_gen_v4_u32(ipv4_header.dest_addr, ipv4_header.source_addr, &net_layer_data[0..2]);
+        }
+
+        {   // 判断 接收到的数据包的 目的端口(本机源端口) 是否 正确
+            let dport = ((net_layer_data[2] as u16) << 8) | (net_layer_data[3] as u16);
+
+            let local_sport_index = ((validation[0] as usize) << 8) | (validation[1] as usize);
+            let local_sport = self.sports[ local_sport_index % self.sports_len ];
+
+            dport == local_sport
+        }
+    }
+
     fn validate_packet_v4(&self, _data_link_header: &[u8], ipv4_header: &Ipv4PacketU32, net_layer_data: &[u8], aes_rand: &AesRand) -> (bool, u16, Option<u32>) {
 
         match ipv4_header.protocol {

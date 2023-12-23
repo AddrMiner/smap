@@ -29,12 +29,7 @@ impl AesRand {
 
     pub fn new(seed_arg:Option<u64>) -> Self {
 
-        let seed = match seed_arg {
-
-            Some(s) => s,
-            // 没有给定就生成随机种子
-            None => random()
-        };
+        let seed = seed_arg.unwrap_or_else(|| random());
 
         // 随机数生成器
         let mut rng = StdRng::seed_from_u64(seed);
