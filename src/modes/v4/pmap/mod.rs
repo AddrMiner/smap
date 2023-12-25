@@ -25,7 +25,13 @@ pub struct PmapV4 {
     pub full_scan_last_index:u64,
 
     // 预算
-    pub budget:u32,
+    pub pmap_budget:u32,
+    // 推荐轮次
+    pub pmap_batch_num:u64,
+    // 是否允许概率相关图进行迭代
+    pub pmap_allow_graph_iter:bool,
+    // 使用哈希集合而不是位图进行标记
+    pub pmap_use_hash_recorder:bool,
 
     pub sender_conf:Arc<SenderBaseConf>,
     pub receiver_conf:Arc<ReceiverBaseConf>,

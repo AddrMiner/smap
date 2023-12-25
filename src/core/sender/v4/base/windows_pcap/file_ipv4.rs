@@ -12,7 +12,7 @@ use crate::modules::target_iterators::{Ipv4IterF};
 use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
 
 #[allow(dead_code)]
-pub fn send_file_v4<T:Ipv4IterF>(interface_index:usize, mut target_iter:T, blocker:BlackWhiteListV4, probe_mod_v4: Arc<ProbeModV4>,
+pub fn send_file_v4<T:Ipv4IterF>(interface_index:usize, mut target_iter:T, local_tar_num:u64, blocker:BlackWhiteListV4, probe_mod_v4: Arc<ProbeModV4>,
                                  ttl:Option<u8>, base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>) -> (u64, u64, u64) {
 
     // 初始化 pcap 发包器
@@ -48,7 +48,7 @@ pub fn send_file_v4<T:Ipv4IterF>(interface_index:usize, mut target_iter:T, block
     let mut cur_target = target_iter.get_next_ip();
 
     // 初始化 PID速率控制器
-    let mut rate_controller = RateController::from_conf(&sender_conf.global_rate_conf, 0, batch_size as f64);
+    let mut rate_controller = RateController::from_conf(&sender_conf.global_rate_conf, local_tar_num, batch_size as f64);
 
     drop(base_conf);
     drop(sender_conf);

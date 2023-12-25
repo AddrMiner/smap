@@ -12,7 +12,7 @@ pub struct PmapIterV4 {
     iter_start_current_last:(u64, u64),
 
     // ipv4(u32) -> ip结构体
-    pub ip_map:Vec<IpStruct>,
+    pub ips_struct:Vec<IpStruct>,
 
 
 }
@@ -27,7 +27,7 @@ impl PmapIterV4 {
         Self {
             ipv4_guide_iter,
             iter_start_current_last,
-            ip_map: vec![IpStruct::new(); capacity],
+            ips_struct: Vec::with_capacity(capacity),
         }
     }
 

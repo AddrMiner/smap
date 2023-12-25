@@ -79,7 +79,7 @@ impl Graph {
 
 
     /// 将同一个ip的全部探活端口作为输入, 训练概率相关图
-    pub fn update_from_ip(&mut self, active_ports:Vec<u16>) {
+    pub fn update_from_ip(&mut self, active_ports:&Vec<u16>) {
 
         self.ip_cnt += 1;
 
@@ -191,6 +191,8 @@ impl Graph {
         }
 
         quick_sort_from_big_to_small(&mut self.recommend_ports_cnt, &mut self.recommend_ports, 0, self.port_cnt-1);
+
+        self.port_to_ab_probability = [0.0; 65536];
 
         let ip_cnt_f64 = self.ip_cnt as f64;
         for i in 0..self.port_cnt {

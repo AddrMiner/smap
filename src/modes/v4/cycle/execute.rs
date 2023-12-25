@@ -57,7 +57,6 @@ impl ModeMethod for CycleV4 {
         let mut sender_threads = vec![];
         for assigned_targets in self.assigned_target_range.iter() {
 
-            let local_tar_num = assigned_targets.2;
             prepare_data!(self; clone; blocker, base_conf, sender_conf, probe);
 
             let sender_thread;
@@ -67,7 +66,7 @@ impl ModeMethod for CycleV4 {
                     let target_iter = t.init(assigned_targets.0, assigned_targets.1);
 
                     sender_thread = thread::spawn(move || {
-                        send_v4(0, target_iter, local_tar_num,
+                        send_v4(0, target_iter, 0,
                                      blocker,probe, None, base_conf, sender_conf)
                     });
                 }
@@ -76,7 +75,7 @@ impl ModeMethod for CycleV4 {
                     let target_iter = t.init(assigned_targets.0, assigned_targets.1);
 
                     sender_thread = thread::spawn(move || {
-                        send_v4_port(0, target_iter, local_tar_num,
+                        send_v4_port(0, target_iter, 0,
                                      blocker,probe, None, base_conf, sender_conf)
                     });
                 }

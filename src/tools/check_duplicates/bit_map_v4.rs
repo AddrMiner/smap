@@ -4,7 +4,7 @@ use bitvec::macros::internal::funty::Fundamental;
 use bitvec::vec::BitVec;
 use log::error;
 use crate::SYS;
-use crate::tools::check_duplicates::DuplicateCheckerV4;
+use crate::tools::check_duplicates::{DuplicateCheckerV4, NotMarkedV4};
 
 pub struct BitMapV4 {
     start_ip:u32,
@@ -68,10 +68,11 @@ impl BitMapV4 {
             map: bitvec![0; tar_ip_num as usize],
         }
     }
+}
 
+impl NotMarkedV4 for BitMapV4 {
     #[inline]
-    pub fn is_not_marked(&self, ip: u32) -> bool {
-
+    fn is_not_marked(&self, ip: u32) -> bool {
         // 将 ip 转化为 ip索引, 起始地址的索引为0, 以后顺序加一
         let ip_index = (ip - self.start_ip) as usize;
 
@@ -87,6 +88,7 @@ impl BitMapV4 {
             }
         }
     }
+
 }
 
 

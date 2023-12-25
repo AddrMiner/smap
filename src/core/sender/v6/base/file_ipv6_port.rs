@@ -32,7 +32,7 @@ target_os = "openbsd",
 target_os = "macos",
 target_os = "ios",
 target_os = "linux"))]
-pub fn send_file_v6_port<T:Ipv6IterFP>(interface_index:usize, mut target_iter:T,
+pub fn send_file_v6_port<T:Ipv6IterFP>(interface_index:usize, mut target_iter:T, local_tar_num:u64,
                            blocker:BlackWhiteListV6, probe_mod_v6: Arc<ProbeModV6>, hop_limit:Option<u8>,
                            base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>) -> (u64, u64, u64) {
 
@@ -73,7 +73,7 @@ pub fn send_file_v6_port<T:Ipv6IterFP>(interface_index:usize, mut target_iter:T,
     let mut cur_target = target_iter.get_next_ip_port();
 
     // 初始化 PID速率控制器
-    let mut rate_controller = RateController::from_conf(&sender_conf.global_rate_conf, 0, batch_size as f64);
+    let mut rate_controller = RateController::from_conf(&sender_conf.global_rate_conf, local_tar_num, batch_size as f64);
 
     drop(base_conf);
     drop(sender_conf);

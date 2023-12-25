@@ -8,10 +8,9 @@ use crate::core::conf::set_conf::sender_conf::SenderBaseConf;
 use crate::core::conf::tools::args_parse::ip::ipv4::parse_ipv4_cycle_group;
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::modes::v4::pmap::PmapV4;
-use crate::modes::v4::pmap::tools::get_sample_last_index;
 use crate::modules::probe_modules::probe_mod_v4::ProbeModV4;
 use crate::modules::target_iterators::CycleIpv4;
-use crate::{SYS, write_to_summary};
+use crate::{get_conf_from_mod_or_sys, SYS, write_to_summary};
 use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
 
 impl PmapV4 {
@@ -34,9 +33,12 @@ impl PmapV4 {
         let tar_iter_without_port = CycleIpv4::new(start_ip, tar_ip_num, &mut base_conf.aes_rand.rng);
 
         // 计算 完全扫描(预扫描)最终索引
-        let full_scan_last_index = get_sample_last_index(&module_conf, tar_ip_num, tar_iter_without_port.p_sub_one,
+        let full_scan_last_index = Self::get_sample_last_index(&module_conf, tar_ip_num, tar_iter_without_port.p_sub_one,
                                                         // 自定义参数名称
-                                                        "sampling_pro", "min_sample_num");
+                                                        "pmap_sampling_pro", "pmap_min_sample_num");
+
+        // 从 自定义参数 或 系统配置 中读取 预算 和 推荐轮次, 是否允许概率相关图迭代
+        get_conf_from_mod_or_sys!(module_conf; pmap_budget, pmap_batch_num, pmap_allow_graph_iter, pmap_use_hash_recorder);
 
         // ipv4 探测模块
         let probe = ProbeModV4::new(                            // 一般默认为 tcp_syn
@@ -65,7 +67,11 @@ impl PmapV4 {
             tar_iter_without_port,
             full_scan_last_index,
 
-            budget: 0,
+            pmap_budget,
+            pmap_batch_num,
+            pmap_allow_graph_iter,
+            pmap_use_hash_recorder,
+
             sender_conf: sender_conf.into(),
             receiver_conf: receiver_conf.into(),
             probe: probe.into(),

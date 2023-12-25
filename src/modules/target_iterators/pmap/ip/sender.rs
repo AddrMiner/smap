@@ -7,6 +7,7 @@ use crate::SYS;
 
 impl IpStruct {
 
+    #[inline]
     pub fn send_port(&mut self, graph:&Arc<Graph>) -> u16 {
 
         if let Some(s) = &self.state {

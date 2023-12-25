@@ -149,7 +149,7 @@ impl TarIterBaseConf {
             }
 
             let start = pre_last + 1;
-            let end = start + tar_num - 1;
+            let end = pre_last + tar_num;
 
             targets_ranges.push((start, end, tar_num));
 
@@ -185,7 +185,7 @@ impl TarIterBaseConf {
             }
 
             let start = pre_last + 1;
-            let end = start + tar_num - 1;
+            let end = pre_last + tar_num;
 
             targets_ranges.push((start, end, tar_num));
 

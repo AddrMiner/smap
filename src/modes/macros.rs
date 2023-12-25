@@ -148,4 +148,13 @@ macro_rules! write_to_summary {
 
 }
 
+#[macro_export]
+macro_rules! get_conf_from_mod_or_sys {
+    ($mod_conf:ident; $($field:ident),*) => (
+        $(
+            let $field = $mod_conf.get_conf_or_from_sys(&String::from(stringify!($field)));
+        )*
+    );
+}
+
 

@@ -50,7 +50,7 @@ impl ModeMethod for V4FileReader {
                     prepare_data!(self; clone; blocker, base_conf, sender_conf, probe);
 
                     let sender_thread = thread::spawn(move || {
-                        send_file_v4_port(0, target_iter, blocker, probe, None, base_conf, sender_conf)
+                        send_file_v4_port(0, target_iter, 0, blocker, probe, None, base_conf, sender_conf)
                     });
                     sender_threads.push(sender_thread);
                 }

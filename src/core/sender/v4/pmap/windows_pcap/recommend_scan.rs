@@ -1,8 +1,6 @@
 
 
 
-
-
 use std::sync::Arc;
 use log::debug;
 use crate::SYS;
@@ -50,6 +48,7 @@ pub fn pmap_recommend_scan_send_v4_port(interface_index:usize, mut target_iter:P
 
     // 获得首个目标     0:是否为非最终值, 1:最终值是否有效, 2:ip地址
     let mut cur_target = target_iter.ipv4_guide_iter.get_first_ip();
+    let mut cur_tar_index = 0;
 
     // 初始化 PID速率控制器                                                                          强制全局指导速率
     let mut rate_controller = RateController::from_conf(&sender_conf.global_rate_conf, 0, batch_size as f64);
@@ -57,7 +56,6 @@ pub fn pmap_recommend_scan_send_v4_port(interface_index:usize, mut target_iter:P
     drop(base_conf);
     drop(sender_conf);
 
-    let start_ip = target_iter.ipv4_guide_iter.start_ip;
     let graph_ptr = &graph;
     'big_batch:loop {
 
@@ -71,9 +69,10 @@ pub fn pmap_recommend_scan_send_v4_port(interface_index:usize, mut target_iter:P
 
                 if blocker.ip_is_avail(cur_target.2) {
                     // 如果没被黑名单阻止
-                    let cur_ip_index = (cur_target.2 - start_ip) as usize;
-                    let cur_port = target_iter.ip_map[cur_ip_index].send_port(graph_ptr);
 
+                    let cur_port = target_iter.ips_struct[cur_tar_index].send_port(graph_ptr);
+                    // 注意: cur_tar_index 是有效ip的索引, 每执行一次端口推荐, 索引值加一
+                    cur_tar_index += 1;
                     let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
                     // 由探测模块生成数据包
@@ -106,9 +105,9 @@ pub fn pmap_recommend_scan_send_v4_port(interface_index:usize, mut target_iter:P
 
                     if blocker.ip_is_avail(cur_target.2) {
                         // 如果当前 ip 被放行
-                        let cur_ip_index = (cur_target.2 - start_ip) as usize;
-                        let cur_port = target_iter.ip_map[cur_ip_index].send_port(graph_ptr);
 
+                        let cur_port = target_iter.ips_struct[cur_tar_index].send_port(graph_ptr);
+                        // 如果是最后一个有效ip, 就不需要让索引号自增
                         let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
                         // 由探测模块生成数据包

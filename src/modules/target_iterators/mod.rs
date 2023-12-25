@@ -18,6 +18,7 @@ pub use file_reader::v6::ipv6_file_reader::Ipv6FileReader;
 pub use pmap::PmapGraph;
 pub use pmap::PmapState;
 pub use pmap::PmapIterV4;
+pub use pmap::PmapIpStruct;
 
 
 

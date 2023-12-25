@@ -12,7 +12,7 @@ use crate::core::conf::set_conf::receiver_conf::ReceiverBaseConf;
 use crate::core::receiver::pcap::{Codec, PcapReceiver};
 use crate::modules::probe_modules::probe_mod_v4::ProbeModV4;
 use crate::SYS;
-use crate::tools::check_duplicates::DuplicateCheckerV4Port;
+use crate::tools::check_duplicates::{DuplicateCheckerV4Port};
 
 impl PcapReceiver {
 
@@ -20,7 +20,7 @@ impl PcapReceiver {
                        interface_index:usize,
                        base_conf:Arc<BaseConf>, receiver_conf:Arc<ReceiverBaseConf>,
                        // 探测模块用来验证信息, 处理数据包
-                       probe_mod:Arc<ProbeModV4>, sports:Vec<u16>, mut bit_map:B,
+                       probe_mod:Arc<ProbeModV4>, sports:Vec<u16>, mut recorder:B,
                        // 接收准备完成管道: 用于在接收线程准备好进行接收时,向主线程发送允许执行发送线程的信号
                        // 接收关闭时间管道: 用于接收从主线程传递过来的接收线程关闭时间
                        recv_ready_sender:Sender<bool>, recv_close_time_receiver:Receiver<i64>) -> B {
@@ -68,7 +68,7 @@ impl PcapReceiver {
                     if ip_ver == 4 {
                         // 如果是ipv4的数据包
                         Self::pmap_full_scan_handle_packet_v4(data_link_header, net_layer_data, &aes_rand,
-                                                              &mut bit_map, &probe);
+                                                              &mut recorder, &probe);
                     }
                     // 如果是 ipv6 的包, 或者其它特殊类型, 不进行处理
 
@@ -134,6 +134,7 @@ impl PcapReceiver {
                 }
             }
         }
-        bit_map
+
+       recorder
     }
 }

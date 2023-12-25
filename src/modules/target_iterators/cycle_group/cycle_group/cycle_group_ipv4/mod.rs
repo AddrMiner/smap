@@ -24,7 +24,7 @@ pub struct CycleIpv4 {
     valid_range:u64,
 
     // 起始地址
-    pub start_ip:u32,
+    start_ip:u32,
 }
 
 
