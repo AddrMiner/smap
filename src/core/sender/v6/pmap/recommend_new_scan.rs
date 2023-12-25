@@ -8,10 +8,10 @@ use crate::SYS;
 use crate::core::conf::set_conf::base_conf::BaseConf;
 use crate::core::conf::set_conf::sender_conf::SenderBaseConf;
 use crate::core::sender::tools::rate_controller::RateController;
-use crate::tools::blocker::ipv6_blocker::BlackWhiteListV6;
 use crate::core::sender::tools::source_ip_iter::source_ip_v6::SourceIpIterV6;
 use crate::modules::probe_modules::probe_mod_v6::ProbeModV6;
-use crate::modules::target_iterators::{Ipv6IterF};
+use crate::modules::target_iterators::{Ipv6Iter, PmapGraph, PmapIpStruct, PmapIterV6};
+use crate::tools::blocker::ipv6_blocker::BlackWhiteListV6;
 use net::Ipv6Addr;
 
 #[cfg(any(
@@ -35,11 +35,9 @@ target_os = "openbsd",
 target_os = "macos",
 target_os = "ios",
 target_os = "linux"))]
-#[allow(dead_code)]
-pub fn send_file_v6<T:Ipv6IterF>(interface_index:usize, mut target_iter:T, local_tar_num:u64,
-                                 blocker:BlackWhiteListV6, probe_mod_v6: Arc<ProbeModV6>, hop_limit:Option<u8>,
-                                 base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>) -> (u64, u64, u64) {
-
+pub fn pmap_recommend_new_scan_send_v6_port(interface_index:usize, mut target_iter:PmapIterV6,
+                                            blocker:BlackWhiteListV6, probe_mod_v6: Arc<ProbeModV6>, graph:Arc<PmapGraph>,
+                                            base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>) -> (u64, u64, u64, PmapIterV6) {
 
     // 初始化 数据包发送器
     let sender;
@@ -67,17 +65,21 @@ pub fn send_file_v6<T:Ipv6IterF>(interface_index:usize, mut target_iter:T, local
     let mut probe = ProbeModV6::init(probe_mod_v6, sender_conf.source_ports.clone());
 
     // 探测模块线程初始化
-    // 建议: 由 探测模块 生成 原始数据包缓冲区, 包含所有数据包中不变的内容, 后续改动直接在此基础上修改
     probe.thread_initialize_v6(&base_conf.interface[interface_index].local_mac,
                                &base_conf.interface[interface_index].gateway_mac);
 
     let aes_rand = base_conf.aes_rand.clone();
 
-    // 获得首个目标     0:是否为非最终值, 1:当前值是否有效, 2:ip地址
-    let mut cur_target = target_iter.get_next_ip();
+    // 获得首个目标     0:是否为非最终值, 1:最终值是否有效, 2:ip地址
+    let mut cur_target = target_iter.ipv6_guide_iter.get_first_ip();
 
-    // 初始化 PID速率控制器
-    let mut rate_controller = RateController::from_conf(&sender_conf.global_rate_conf, local_tar_num, batch_size as f64);
+    // 注意: 同一网络内所有地址的初始状态和初始推荐端口都一致
+    let mut first_ip_struct = PmapIpStruct::new();
+    let first_port = first_ip_struct.send_port(&graph);
+    let first_ip_struct = first_ip_struct;
+
+    // 初始化 PID速率控制器         tar_num设为0, 强制使用 全局指导速率
+    let mut rate_controller = RateController::from_conf(&sender_conf.global_rate_conf, 0, batch_size as f64);
 
     drop(base_conf);
     drop(sender_conf);
@@ -88,44 +90,42 @@ pub fn send_file_v6<T:Ipv6IterF>(interface_index:usize, mut target_iter:T, local
 
             if cur_target.0 {
                 // 如果不是最终值
-                if cur_target.1 {
-                    // 如果当前值有效
-                    if blocker.ip_is_avail(cur_target.2) {
-                        // 如果没被黑名单阻止
 
-                        let cur_source_ip = source_ip_iter.get_src_ip_with_change();
+                if blocker.ip_is_avail(cur_target.2) {
+                    // 如果没被黑名单阻止
 
-                        // 由探测模块生成数据包
-                        let packet = probe.make_packet_v6(
-                            cur_source_ip, cur_target.2, 0, hop_limit, &aes_rand);
+                    // 注意: 由于在同一网络内第一个推荐端口一致, 这里直接复制
+                    // 警告: 请注意 ips_struct 的添加顺序和总数 与 有效ip 保持一致
+                    target_iter.ips_struct.push(first_ip_struct.clone());
+                    let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
-                        let mut sent_successfully = false;
-                        for _ in 0..send_attempts {
-                            let res = sender.send_packet(&packet);
+                    // 由探测模块生成数据包
+                    let packet = probe.make_packet_v6(
+                        cur_source_ip, cur_target.2, first_port, None, &aes_rand);
 
-                            if res >= 0 {
-                                sent_successfully = true;
-                                break;
-                            }
+                    let mut sent_successfully = false;
+                    for _ in 0..send_attempts {
+                        let res = sender.send_packet(&packet);
+
+                        if res >= 0 {
+                            sent_successfully = true;
+                            break;
                         }
-                        if sent_successfully {
-                            // 统计发送成功的数据包
-                            send_success += 1;
-                        } else {
-                            // 统计发送失败的数据包
-                            debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(cur_target.2), 0);
-                            send_failed += 1;
-                        }
+                    }
+                    if sent_successfully {
+                        // 统计发送成功的数据包
+                        send_success += 1;
                     } else {
-                        total_blocked += 1;
+                        // 统计发送失败的数据包
+                        debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(cur_target.2), first_port);
+                        send_failed += 1;
                     }
                 } else {
-                    // 如果读取到的值无效, 当作发送失败处理
-                    send_failed += 1;
+                    total_blocked += 1;
                 }
 
                 // 获取下一个目标
-                cur_target = target_iter.get_next_ip();
+                cur_target = target_iter.ipv6_guide_iter.get_next_ip();
             } else {
                 // 如果是最终值
 
@@ -135,11 +135,13 @@ pub fn send_file_v6<T:Ipv6IterF>(interface_index:usize, mut target_iter:T, local
                     if blocker.ip_is_avail(cur_target.2) {
                         // 如果当前 ip 被放行
 
+                        // 注意: 由于在同一网络内第一个推荐端口一致, 这里直接复制
+                        target_iter.ips_struct.push(first_ip_struct.clone());
                         let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
                         // 由探测模块生成数据包
                         let packet = probe.make_packet_v6(
-                            cur_source_ip, cur_target.2, 0, hop_limit, &aes_rand);
+                            cur_source_ip, cur_target.2, first_port, None, &aes_rand);
 
                         let mut sent_successfully = false;
                         for _ in 0..send_attempts {
@@ -155,23 +157,28 @@ pub fn send_file_v6<T:Ipv6IterF>(interface_index:usize, mut target_iter:T, local
                             send_success += 1;
                         } else {
                             // 统计发送失败的数据包
-                            debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(cur_target.2), 0);
+                            debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(cur_target.2), first_port);
                             send_failed += 1;
                         }
                     } else {
                         total_blocked += 1;
                     }
-                } else {
-                    // 如果读取到的值无效, 当作发送失败处理
-                    send_failed += 1;
-                }
 
+                }
                 // 处理完最终值, 直接退出大循环
                 break 'big_batch;
             }
         }
         rate_controller.sleep();
     }
-    (send_success, send_failed, total_blocked)
+
+    // 将 保存所有地址状态信息的向量 中的 冗余容量 进行清除
+    target_iter.ips_struct.shrink_to_fit();
+
+    // 重置引导迭代器
+    target_iter.reset_guide_iter();
+
+    (send_success, send_failed, total_blocked, target_iter)
 }
+
 

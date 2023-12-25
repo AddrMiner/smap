@@ -34,6 +34,7 @@ target_os = "openbsd",
 target_os = "macos",
 target_os = "ios",
 target_os = "linux"))]
+#[allow(dead_code)]
 pub fn send_file_v4<T:Ipv4IterF>(interface_index:usize, mut target_iter:T, local_tar_num:u64, blocker:BlackWhiteListV4,
                                  probe_mod_v4: Arc<ProbeModV4>, ttl:Option<u8>, base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>) -> (u64, u64, u64) {
 

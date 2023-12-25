@@ -120,43 +120,25 @@ impl IpStruct {
     /// 当 概率相关图 不可用于 端口推荐 时, 使用 预设端口向量, 或逐个遍历所有端口号的方式得到 待推荐端口
     #[inline]
     fn get_tar_port_out_of_graph(&mut self, graph:&Arc<Graph>) -> u16 {
-        if self.preset_ports_avail {
-            // 如果 预设端口向量 可用
 
-            while self.preset_ports_index < graph.preset_ports_len {
-                // 如果 预设端口向量索引 在 预设端口向量 有效范围
-                // 以 预设端口向量索引 为索引, 从预设向量中按顺序取出推荐端口
+        while self.tar_ports_index < graph.tar_ports_len {
+            // 如果 目标端口向量索引 在 目标端口向量 有效范围
+            // 以 目标端口向量索引 为索引, 从目标端口向量中按顺序取出推荐端口
 
-                let next_port = graph.preset_ports[self.preset_ports_index];
-                if self.port_is_avail(&next_port) {
-                    // 如果 当前端口 可用
-                    self.preset_ports_index += 1;
-                    return next_port
-                }
-
-                // 如果 当前端口不可用, 预设端口向量索引加一, 查找下一个可用端口
-                self.preset_ports_index += 1;
-            }
-
-            // 如果 全端口空间索引 超出 预设端口向量 有效范围
-            self.preset_ports_avail = false;
-        }
-
-        while self.all_port <= u16::MAX {
-            let next_port = self.all_port;
+            let next_port = graph.tar_ports[self.tar_ports_index];
             if self.port_is_avail(&next_port) {
                 // 如果 当前端口 可用
-                self.all_port += 1;
+                self.tar_ports_index += 1;
                 return next_port
             }
 
-            //  如果 当前端口不可用, 端口号加1, 继续判断直到超出端口号有效范围
-            self.all_port += 1;
+            // 如果 当前端口不可用, 目标端口向量索引加一, 查找下一个可用端口
+            self.tar_ports_index += 1;
         }
 
         // 如果遍历过了所有端口, 仍需要推荐端口
         // 直接报错
-        error!("{}", SYS.get_info("err", "all_port_index_err"));
+        error!("{}", SYS.get_info("err", "tar_ports_index_err"));
         exit(1)
     }
 

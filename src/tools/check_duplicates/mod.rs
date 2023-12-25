@@ -1,14 +1,5 @@
-
-
-pub mod bit_map_v4;
-pub mod bit_map_v6;
-pub mod bit_map_v6_pattern;
-pub mod bit_map_v4_port;
-pub mod bit_map_v6_port;
-pub mod bit_map_v6_pattern_port;
-pub mod hash_set_v4;
-pub mod hash_set_v4_port;
-
+pub mod bit_map;
+pub mod hash_set;
 
 
 pub trait DuplicateCheckerV4 {
@@ -56,14 +47,20 @@ pub trait DuplicateCheckerV6Port {
 
 
 pub trait ExtractActPortsV4 {
-
     fn get_active_ports_u16_string(&self, ip:u32) -> (Vec<u16>, String);
-
     fn get_active_ports_string(&self, ip:u32) -> (String, usize);
+}
 
+pub trait ExtractActPortsV6 {
+    fn get_active_ports_u16_string(&self, ip:u128) -> (Vec<u16>, String);
+    fn get_active_ports_string(&self, ip:u128) -> (String, usize);
 }
 
 pub trait NotMarkedV4 {
     fn is_not_marked(&self, ip: u32) -> bool;
+}
+
+pub trait NotMarkedV6 {
+    fn is_not_marked(&self, ip: u128) -> bool;
 }
 

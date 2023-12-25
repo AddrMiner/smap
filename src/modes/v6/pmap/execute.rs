@@ -1,40 +1,39 @@
 use std::process::exit;
-use std::sync::{Arc};
+use std::sync::Arc;
 use std::thread;
 use std::thread::JoinHandle;
 use ahash::AHashMap;
 use bitvec::macros::internal::funty::Fundamental;
 use chrono::Local;
-use log::{error};
+use log::error;
+use crate::{computing_time, creat_channels, ending_the_receiving_thread, init_var, prepare_data, recv_ready, SYS, wait_sender_threads, write_to_summary};
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::core::receiver::pcap::PcapReceiver;
-use crate::core::sender::{pmap_full_scan_send_v4, pmap_recommend_new_scan_send_v4_port, pmap_recommend_scan_send_v4_port};
+use crate::core::sender::{pmap_full_scan_send_v6, pmap_recommend_new_scan_send_v6_port, pmap_recommend_scan_send_v6_port};
 use crate::modes::ModeMethod;
-use crate::modes::v4::pmap::PmapV4;
-use crate::modules::output_modules::{OutputMod};
+use crate::modes::v6::pmap::PmapV6;
+use crate::modules::output_modules::OutputMod;
 use crate::modules::target_iterators::{PmapGraph, PmapState};
-use crate::{computing_time, creat_channels, ending_the_receiving_thread, init_var, prepare_data, recv_ready, SYS, wait_sender_threads, write_to_summary};
-use crate::tools::check_duplicates::bit_map::{BitMapV4, BitMapV4Port};
-use crate::tools::check_duplicates::hash_set::{HashSetV4, HashSetV4Port};
+use crate::tools::check_duplicates::bit_map::{BitMapV6Pattern, BitMapV6PatternPort};
+use crate::tools::check_duplicates::hash_set::{HashSetV6, HashSetV6Port};
 
-
-enum Recorder4 {
-    B4(JoinHandle<BitMapV4>),
-    H4(JoinHandle<HashSetV4>)
+enum Recorder6 {
+    B6(JoinHandle<BitMapV6Pattern>),
+    H6(JoinHandle<HashSetV6>)
 }
 
-enum Recorder4P {
-    B4P(JoinHandle<BitMapV4Port>),
-    H4P(JoinHandle<HashSetV4Port>)
+enum Recorder6P {
+    B6P(JoinHandle<BitMapV6PatternPort>),
+    H6P(JoinHandle<HashSetV6Port>)
 }
 
-impl ModeMethod for PmapV4 {
+impl ModeMethod for PmapV6 {
     fn execute(&self) {
 
         // 定义 概率相关图
         let mut graph;
         // 初始化 输出模块
-        let mut out_mod = OutputMod::init(&self.receiver_conf.output_v4);
+        let mut out_mod = OutputMod::init(&self.receiver_conf.output_v6);
 
         // 定义 开始的时间
         let start_time;
@@ -56,18 +55,19 @@ impl ModeMethod for PmapV4 {
                 // 执行接收线程
                 if self.pmap_use_hash_recorder {
                     prepare_data!(self; as_usize; tar_ip_num);
-                    Recorder4P::H4P(thread::spawn(move || {
-                        let recorder = HashSetV4Port::new(tar_ip_num);
-                        PcapReceiver::pmap_full_scan_v4(0, base_conf, receiver_conf, probe, sports, recorder,
-                                                            recv_ready_sender, recv_close_time_receiver)
+                    Recorder6P::H6P(thread::spawn(move || {
+                        let recorder = HashSetV6Port::new(tar_ip_num);
+                        PcapReceiver::pmap_full_scan_v6(0, base_conf, receiver_conf, probe, sports, recorder,
+                                                        recv_ready_sender, recv_close_time_receiver)
                     }))
                 } else {
-                    prepare_data!(self; start_ip, end_ip, tar_ip_num);
+                    prepare_data!(self; ip_bits_num, base_ip_val, mask);
+                    prepare_data!(self; clone; parts);
                     // 执行 完全扫描(预扫描)接收线程
-                    Recorder4P::B4P(thread::spawn(move || {
+                    Recorder6P::B6P(thread::spawn(move || {
                         // 注意: 这里应该用 全部目标范围, 而不是只有预探测目标范围
-                        let bit_map = BitMapV4Port::new(start_ip, end_ip, tar_ip_num, tar_ports);
-                        PcapReceiver::pmap_full_scan_v4(0, base_conf, receiver_conf, probe, sports, bit_map,
+                        let bit_map = BitMapV6PatternPort::new(ip_bits_num, base_ip_val, mask, parts, tar_ports);
+                        PcapReceiver::pmap_full_scan_v6(0, base_conf, receiver_conf, probe, sports, bit_map,
                                                         recv_ready_sender, recv_close_time_receiver)
                     }))
                 }
@@ -77,7 +77,7 @@ impl ModeMethod for PmapV4 {
                 recv_ready!(recv_ready_receiver);
 
                 // 获取 完全扫描的多线程任务分配列表
-                let full_scan_tar_ranges = TarIterBaseConf::cycle_group_assign_targets_u64(self.full_scan_last_index, self.sender_conf.send_thread_num as u64);
+                let full_scan_tar_ranges = TarIterBaseConf::cycle_group_assign_targets_u128(self.full_scan_last_index, self.sender_conf.send_thread_num as u128);
 
                 // 记录 开始发送的时间
                 start_time = Local::now();
@@ -91,7 +91,7 @@ impl ModeMethod for PmapV4 {
                     let target_iter = self.tar_iter_without_port.init(target_range.0, target_range.1);
 
                     let full_scan_sender = thread::spawn(move || {
-                        pmap_full_scan_send_v4(0, target_iter, blocker, probe, tar_ports, base_conf, sender_conf)
+                        pmap_full_scan_send_v6(0, target_iter, blocker, probe, tar_ports, base_conf, sender_conf)
                     });
 
                     full_scan_sender_threads.push(full_scan_sender);
@@ -109,7 +109,7 @@ impl ModeMethod for PmapV4 {
             // 完全扫描全局迭代器
             let full_scan_iter = self.tar_iter_without_port.init(0, self.full_scan_last_index);
             match full_scan_result {
-                Recorder4P::B4P(b) => {
+                Recorder6P::B6P(b) => {
                     match b.join() {
                         Ok(bit_map) => {
                             if recommend_scan {     // 将完全扫描阶段的结果进行输出, 使用结果对概率相关图进行训练
@@ -128,7 +128,7 @@ impl ModeMethod for PmapV4 {
                         Err(_) => { error!("{}", SYS.get_info("err", "recv_thread_err")); exit(1) }
                     }
                 }
-                Recorder4P::H4P(h) => {
+                Recorder6P::H6P(h) => {
                     match h.join() {
                         Ok(hash_set) => {
                             if recommend_scan {     // 将完全扫描阶段的结果进行输出, 使用结果对概率相关图进行训练
@@ -154,8 +154,8 @@ impl ModeMethod for PmapV4 {
         if recommend_scan {
 
             // 获取不同批次的索引段
-            let batch_ranges = TarIterBaseConf::cycle_group_assign_targets_u64_part(
-                self.full_scan_last_index, self.tar_iter_without_port.p_sub_one, self.pmap_batch_num);
+            let batch_ranges = TarIterBaseConf::cycle_group_assign_targets_u128_part(
+                self.full_scan_last_index, self.tar_iter_without_port.p_sub_one, self.pmap_batch_num as u128);
 
             for batch_range in batch_ranges.into_iter() {
 
@@ -165,8 +165,8 @@ impl ModeMethod for PmapV4 {
                 let mut states_map:AHashMap<String, Arc<PmapState>> = AHashMap::new();
 
                 // 生成 pmap迭代器 队列
-                let mut pmap_iter_queue= Self::create_pmap4_iter_queue(
-                    batch_range.0-1, batch_range.1, self.sender_conf.send_thread_num as u64, &self.tar_iter_without_port);
+                let mut pmap_iter_queue= Self::create_pmap6_iter_queue(
+                    batch_range.0-1, batch_range.1, self.sender_conf.send_thread_num as u128, &self.tar_iter_without_port);
 
                 let mut sent_port_count_add_one:u32 = 0;
                 loop {
@@ -185,16 +185,17 @@ impl ModeMethod for PmapV4 {
                         // 执行接收线程
                         if self.pmap_use_hash_recorder {
                             prepare_data!(self; as_usize; tar_ip_num);
-                            Recorder4::H4(thread::spawn(move || {
-                                let hash_set = HashSetV4::new(tar_ip_num);
-                                PcapReceiver::pmap_recommend_scan_v4(0, base_conf, receiver_conf, probe, sports, hash_set,
+                            Recorder6::H6(thread::spawn(move || {
+                                let hash_set = HashSetV6::new(tar_ip_num);
+                                PcapReceiver::pmap_recommend_scan_v6(0, base_conf, receiver_conf, probe, sports, hash_set,
                                                                      recv_ready_sender, recv_close_time_receiver)
                             }))
                         } else {
-                            prepare_data!(self; start_ip, end_ip, tar_ip_num);
-                            Recorder4::B4(thread::spawn(move || {
-                                let bit_map = BitMapV4::new(start_ip, end_ip, tar_ip_num);
-                                PcapReceiver::pmap_recommend_scan_v4(0, base_conf, receiver_conf, probe, sports, bit_map,
+                            prepare_data!(self; ip_bits_num, base_ip_val, mask);
+                            prepare_data!(self; clone; parts);
+                            Recorder6::B6(thread::spawn(move || {
+                                let bit_map = BitMapV6Pattern::new(ip_bits_num, base_ip_val, mask, parts);
+                                PcapReceiver::pmap_recommend_scan_v6(0, base_conf, receiver_conf, probe, sports, bit_map,
                                                                      recv_ready_sender, recv_close_time_receiver)
                             }))
                         }
@@ -212,11 +213,11 @@ impl ModeMethod for PmapV4 {
 
                         let recommend_scan_sender = if sent_port_count_add_one == 1 {
                             thread::spawn(move || {
-                                pmap_recommend_new_scan_send_v4_port(0, pmap_iter, blocker, probe, graph_ptr, base_conf, sender_conf)
+                                pmap_recommend_new_scan_send_v6_port(0, pmap_iter, blocker, probe, graph_ptr, base_conf, sender_conf)
                             })
                         } else {
                             thread::spawn(move || {
-                                pmap_recommend_scan_send_v4_port(0, pmap_iter, blocker, probe, graph_ptr, base_conf, sender_conf)
+                                pmap_recommend_scan_send_v6_port(0, pmap_iter, blocker, probe, graph_ptr, base_conf, sender_conf)
                             })
                         };
                         recommend_scan_sender_threads.push(recommend_scan_sender);
@@ -239,11 +240,11 @@ impl ModeMethod for PmapV4 {
                     match Arc::get_mut(&mut graph) {
                         Some(g_ptr) => {
                             match recommend_scan_result {
-                                Recorder4::B4(b) =>
+                                Recorder6::B6(b) =>
                                     if let Ok(bit_map) = b.join() {
                                         Self::pmap_receive(bit_map, g_ptr, &mut states_map, &mut pmap_iter_queue, &self.blocker);
                                     },
-                                Recorder4::H4(h) =>
+                                Recorder6::H6(h) =>
                                     if let Ok(hash_set) = h.join() {
                                         Self::pmap_receive(hash_set, g_ptr, &mut states_map, &mut pmap_iter_queue, &self.blocker);
                                     },
@@ -275,12 +276,13 @@ impl ModeMethod for PmapV4 {
             // 清理 概率相关图
             drop(graph);
         }
+
         // 探测 和 接收 执行完毕
         println!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
         println!("{} {} {}", SYS.get_info("print", "pmap_scan_finished"), total_ip_count, total_pair_count);
         computing_time!(start_time; end_time, running_time);
 
-        write_to_summary!(self; "PmapV4"; "result";
+        write_to_summary!(self; "PmapV6"; "result";
             [start_time, end_time, running_time, total_send_success, total_send_failed, total_blocked, total_ip_count, total_pair_count;]
         );
     }

@@ -11,7 +11,7 @@ pub struct PmapIterV4 {
     // 引导迭代器的 起始状态索引, 用于重置 引导迭代器
     iter_start_current_last:(u64, u64),
 
-    // ipv4(u32) -> ip结构体
+    // ip结构体
     pub ips_struct:Vec<IpStruct>,
 
 
@@ -19,6 +19,7 @@ pub struct PmapIterV4 {
 
 impl PmapIterV4 {
 
+    /// 注意: 传入的迭代器必须在初始状态下
     pub fn new(capacity:usize, ipv4_guide_iter:CycleIpv4) -> Self {
 
         // 初始状态下的 current索引 和 last索引, 用于重置 引导迭代器 的状态

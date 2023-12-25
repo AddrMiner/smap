@@ -8,8 +8,7 @@ use crate::modes::ModeMethod;
 use crate::modes::v4::cycle::CycleV4;
 use crate::modules::target_iterators::CycleIpv4Type;
 use crate::{computing_time, creat_channels, ending_the_receiving_thread, init_var, prepare_data, recv_ready, SYS, wait_sender_threads, write_to_summary};
-use crate::tools::check_duplicates::bit_map_v4::BitMapV4;
-use crate::tools::check_duplicates::bit_map_v4_port::BitMapV4Port;
+use crate::tools::check_duplicates::bit_map::{BitMapV4, BitMapV4Port};
 
 impl ModeMethod for CycleV4 {
 

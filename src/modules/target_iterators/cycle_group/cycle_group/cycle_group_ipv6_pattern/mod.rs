@@ -7,7 +7,7 @@ use crate::modules::target_iterators::cycle_group::cyclic::Cyclic;
 mod get_targets;
 
 
-
+#[derive(Clone)]
 pub struct CycleIpv6Pattern {
 
     p:u128,
@@ -15,8 +15,8 @@ pub struct CycleIpv6Pattern {
     pub p_sub_one:u128,
 
     // 经过乘法群计算, 应用于探测的 当前目标 和 最后一个目标值
-    current:u128,
-    last:u128,
+    pub current:u128,
+    pub last:u128,
 
 
     // 基础ip值   把模式字符串中的 模式字符 置换为0后的 ip值

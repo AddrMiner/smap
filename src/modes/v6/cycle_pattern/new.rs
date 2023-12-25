@@ -20,7 +20,7 @@ impl CycleV6Pattern {
 
         // 获取 探测目标
         let tar_ips_str = &TarIterBaseConf::parse_tar_ip(&args.tar_ips);
-        let (ip_bits, base_ip_val, mask, parts, max_ip) = if tar_ips_str.contains('@'){
+        let (ip_bits_num, base_ip_val, mask, parts, max_ip) = if tar_ips_str.contains('@'){
             // 如果字符串中包含 @ 字符, 当作 一般模式字符串 处理
             parse_ipv6_pattern(tar_ips_str)
         } else {
@@ -43,18 +43,18 @@ impl CycleV6Pattern {
 
         // 发送模块基础配置
         let sender_conf= SenderBaseConf::new(args, &base_conf.interface,
-                                             SenderBaseConf::get_tar_num(TarIterBaseConf::get_tar_ip_num_binary(ip_bits),tar_ports.len()),
+                                             SenderBaseConf::get_tar_num(TarIterBaseConf::get_tar_ip_num_binary(ip_bits_num),tar_ports.len()),
                                              probe.max_packet_length_v6, false, true);
 
 
         // 创建目标迭代器
         let p_sub_one;
         let target_iter = if probe.use_tar_ports {
-            let c6p = CycleIpv6PatternPort::new(ip_bits, base_ip_val, parts.clone(), tar_ports, &mut base_conf.aes_rand.rng);
+            let c6p = CycleIpv6PatternPort::new(ip_bits_num, base_ip_val, parts.clone(), tar_ports, &mut base_conf.aes_rand.rng);
             p_sub_one = c6p.p_sub_one;
             CycleIpv6PatternType::CycleIpv6PatternPort(c6p)
         } else {
-            let c6 = CycleIpv6Pattern::new(ip_bits, base_ip_val, parts.clone(), &mut base_conf.aes_rand.rng);
+            let c6 = CycleIpv6Pattern::new(ip_bits_num, base_ip_val, parts.clone(), &mut base_conf.aes_rand.rng);
             p_sub_one = c6.p_sub_one;
             CycleIpv6PatternType::CycleIpv6Pattern(c6)
         };
@@ -71,13 +71,13 @@ impl CycleV6Pattern {
         let send_thread_num = sender_conf.send_thread_num as u128;
         Self {
             base_conf: base_conf.into(),
-            target_iter: target_iter.into(),
+            target_iter,
             sender_conf: sender_conf.into(),
             receiver_conf: receiver_conf.into(),
 
             probe: probe.into(),
 
-            ip_bits_num: ip_bits,
+            ip_bits_num,
             base_ip_val,
             mask,
             parts,
@@ -86,7 +86,6 @@ impl CycleV6Pattern {
 
             // 使用输入范围优化约束条件, 使得只有对探测范围造成影响的约束起效
             blocker: blocker.gen_local_constraints(base_ip_val, max_ip),
-
         }
     }
 }

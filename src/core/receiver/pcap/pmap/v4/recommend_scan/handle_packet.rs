@@ -14,7 +14,7 @@ impl PcapReceiver  {
 
     #[inline]
     pub fn pmap_recommend_scan_handle_packet_v4<B:DuplicateCheckerV4>(data_link_header:&[u8], net_layer_header_and_data:&[u8],
-                                           aes_rand:&AesRand, bit_map:&mut B, probe:&Box<dyn ProbeMethodV4>){
+                                           aes_rand:&AesRand, recorder:&mut B, probe:&Box<dyn ProbeMethodV4>){
 
         // ipv4 数据包头部
         let v4_header = Ipv4PacketU32::parse_ipv4_packet(net_layer_header_and_data);
@@ -28,8 +28,8 @@ impl PcapReceiver  {
 
             // 注意:  接收数据包的源端口, 也就是探测的目的端口, 已经在模块中进行了检验
 
-            // 直接将  源地址加入位图, 多次对 同一地址 进行标记, 等同于 一次标记
-            bit_map.set(v4_header.source_addr)
+            // 直接将  源地址加入, 多次对 同一地址 进行标记, 等同于 一次标记
+            recorder.set(v4_header.source_addr)
         }
     }
 }

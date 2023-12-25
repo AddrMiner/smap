@@ -4,7 +4,7 @@ use bitvec::macros::internal::funty::Fundamental;
 use bitvec::vec::BitVec;
 use log::error;
 use crate::SYS;
-use crate::tools::check_duplicates::DuplicateCheckerV6;
+use crate::tools::check_duplicates::{DuplicateCheckerV6, NotMarkedV6};
 
 pub struct BitMapV6Pattern {
     map:BitVec,
@@ -181,4 +181,35 @@ impl BitMapV6Pattern {
         move_len
     }
 
+}
+
+impl NotMarkedV6 for BitMapV6Pattern {
+    fn is_not_marked(&self, ip: u128) -> bool {
+        // 将 ip 转化为 ip索引, 起始地址的索引为0, 以后顺序加一
+        let ip_index = self.ip_to_val(ip);
+
+        if ip_index < self.max_val {
+
+            match self.map.get(ip_index as usize) {
+                Some(tar ) => {
+                    tar.as_bool()
+                }
+
+                None => {
+                    // 获取目标出错
+                    error!("{} {}", SYS.get_info("err", "bitmap_get_target_failed"), ip_index);
+                    exit(1)
+                }
+            }
+
+        } else if ip_index == self.max_val {
+
+            !self.last
+
+        } else {
+            // 得到的ip值大于64位, 说明出错了
+            error!("{} {}", SYS.get_info("err", "bitmap_get_target_failed"), ip_index);
+            exit(1)
+        }
+    }
 }

@@ -22,6 +22,8 @@ pub fn mode_help(mode_name:&str) -> String {
 
         "pmap_v4" | "p4" => modes::v4::PmapV4::print_help(),
 
+        "pmap_v6" | "p6" => modes::v6::PmapV6::print_help(),
+
         _ => {
             "no mode help".to_string()
         }

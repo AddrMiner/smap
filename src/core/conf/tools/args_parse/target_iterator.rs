@@ -195,7 +195,40 @@ impl TarIterBaseConf {
         targets_ranges
     }
 
+    /// 注意: 第一个参数是 起始索引减一
+    pub fn cycle_group_assign_targets_u128_part(mut pre_last:u128, end_index:u128, range_num:u128) -> Vec<(u128, u128, u128)> {
 
+        let mut targets_ranges = vec![];
+
+        let total_num = end_index - pre_last;
+
+        let base_num = total_num / range_num;
+        let mut remain_num = total_num % range_num;
+
+        for _ in 0..range_num {
+
+            let tar_num;
+            if remain_num > 0 {
+                tar_num = base_num + 1;
+                remain_num -= 1;
+            } else {
+                tar_num = base_num;
+            }
+
+            if tar_num < 1 {
+                return targets_ranges
+            }
+
+            let start = pre_last + 1;
+            let end = pre_last + tar_num;
+
+            targets_ranges.push((start, end, tar_num));
+
+            pre_last = end;
+        }
+
+        targets_ranges
+    }
 
 
 

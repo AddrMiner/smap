@@ -1,6 +1,7 @@
 use ahash::AHashMap;
 use crate::tools::others::sort::quick_sort_from_big_to_small;
 
+
 pub struct Graph {
 
     // 当前概率相关图的地址总量
@@ -26,18 +27,20 @@ pub struct Graph {
     // 端口(下标) -> 端口对应的绝对概率(值)
     pub port_to_ab_probability:[f64; 65536],
 
-    // 预设端口向量, 当超出概率相关图单位图推荐范围时, 将按照该向量的顺序进行推荐
-    pub preset_ports:Vec<u16>,
-    // 预设端口向量长度
-    pub preset_ports_len:usize,
-
-
+    // 目标端口向量
+    pub tar_ports:Vec<u16>,
+    // 目标端口长度
+    pub tar_ports_len:usize,
 }
 
 
 impl Graph {
 
-    pub fn new() -> Self {
+    pub fn new(mut tar_ports:Vec<u16>) -> Self {
+
+        tar_ports.sort();
+        let sorted_tar_ports = Self::sort_tar_ports(tar_ports);
+        let tar_ports_len = sorted_tar_ports.len();
 
         Self {
             ip_cnt: 0,
@@ -53,9 +56,8 @@ impl Graph {
 
             port_to_ab_probability: [0.0; 65536],
 
-            preset_ports: vec![],
-            preset_ports_len: 0,
-
+            tar_ports:sorted_tar_ports,
+            tar_ports_len,
         }
 
     }
@@ -71,8 +73,8 @@ impl Graph {
             recommend_ports_cnt: vec![],
             recommend_ports_probability: vec![],
             port_to_ab_probability: [0.0;65536],
-            preset_ports: vec![],
-            preset_ports_len: 0,
+            tar_ports: vec![],
+            tar_ports_len: 0,
         }
     }
 
@@ -204,7 +206,4 @@ impl Graph {
             self.port_to_ab_probability[self.recommend_ports[i] as usize] = cur_pro;
         }
     }
-
-
-
 }

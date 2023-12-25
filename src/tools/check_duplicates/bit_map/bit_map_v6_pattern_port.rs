@@ -5,7 +5,7 @@ use bitvec::vec::BitVec;
 use log::error;
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::SYS;
-use crate::tools::check_duplicates::DuplicateCheckerV6Port;
+use crate::tools::check_duplicates::{DuplicateCheckerV6Port, ExtractActPortsV6};
 
 pub struct BitMapV6PatternPort {
     map:BitVec,
@@ -20,6 +20,7 @@ pub struct BitMapV6PatternPort {
 
     bits_for_port:u32,
     tar_ports_index:[usize; 65536],
+    sorted_tar_ports:Vec<u16>,
 }
 
 impl DuplicateCheckerV6Port for BitMapV6PatternPort {
@@ -100,11 +101,11 @@ impl BitMapV6PatternPort {
         let mut tar_ports_index:[usize; 65536] = [usize::MAX; 65536];
 
         let mut index:usize = 0;
-        for tar_port in tar_ports.into_iter() {
+        for tar_port in tar_ports.iter() {
             // 下标为 目的端口号   值为 序号index
             // 注意: index的有效范围为 0..<tar_ports_num
             // 以端口号为下标可得到对应序号,  不存在端口对应的值为 -1
-            tar_ports_index[usize::from(tar_port)] = index;
+            tar_ports_index[usize::from(*tar_port)] = index;
             index += 1;
         }
 
@@ -117,6 +118,7 @@ impl BitMapV6PatternPort {
 
             bits_for_port,
             tar_ports_index,
+            sorted_tar_ports: tar_ports,
         }
     }
 
@@ -164,4 +166,78 @@ impl BitMapV6PatternPort {
         move_len
     }
 
+}
+
+impl ExtractActPortsV6 for BitMapV6PatternPort {
+    fn get_active_ports_u16_string(&self, ip: u128) -> (Vec<u16>, String) {
+        // 存放活跃端口的向量
+        let mut active_ports:Vec<u16> = vec![];
+        let mut active_ports_str:String = String::new();
+
+        // 将 ip 转化为 ip索引, 起始地址的索引为0, 以后顺序加一
+        let ip_index = (self.ip_to_val(ip) as usize) << self.bits_for_port;
+
+        let ports_len = self.sorted_tar_ports.len();
+        for i in 0..ports_len {
+
+            // 计算 位图索引
+            let bit_map_index = ip_index | i;
+
+            match self.map.get(bit_map_index) {
+                Some(is_not_active) => {
+                    if !is_not_active.as_bool() {
+                        // 如果 当前索引 被标记
+
+                        // 记录 当前端口
+                        let cur_port = self.sorted_tar_ports[i];
+
+                        active_ports.push(cur_port);
+                        active_ports_str.push_str(&format!("{}|", cur_port));
+                    }
+                }
+                None => { error!("{} {}", SYS.get_info("err", "bitmap_get_target_failed"), bit_map_index);exit(1) }
+            };
+        }
+        if active_ports.len() != 0 {
+            // 删除字符串中最后一个字符
+            active_ports_str.pop();
+        }
+        (active_ports, active_ports_str)
+    }
+
+    fn get_active_ports_string(&self, ip: u128) -> (String, usize) {
+        // 存放活跃端口
+        let mut active_ports:String = String::new();
+
+        // 端口计数
+        let mut ports_count:usize = 0;
+
+        // 将 ip 转化为 ip索引, 起始地址的索引为0, 以后顺序加一
+        let ip_index = (self.ip_to_val(ip) as usize) << self.bits_for_port;
+
+        let ports_len = self.sorted_tar_ports.len();
+        for i in 0..ports_len {
+
+            // 计算 位图索引
+            let bit_map_index = ip_index | i;
+
+            match self.map.get(bit_map_index) {
+                Some(is_not_active) => {
+                    if !is_not_active.as_bool() {
+                        // 如果 当前索引 被标记
+
+                        // 记录 当前端口
+                        active_ports.push_str(&format!("{}|", self.sorted_tar_ports[i]));
+                        ports_count += 1;
+                    }
+                }
+                None => { error!("{} {}", SYS.get_info("err", "bitmap_get_target_failed"), bit_map_index);exit(1) }
+            };
+        }
+        // 删除字符串中最后一个字符
+        if ports_count != 0 {
+            active_ports.pop();
+        }
+        (active_ports, ports_count)
+    }
 }
