@@ -65,6 +65,9 @@ impl PcapReceiver {
         let mut send_running = true;               // 发送进程 正在运行标识
         let act_check_count:u32 = SYS.get_conf("conf", "active_check_count");
 
+        // 是否允许输出 验证成功但探测失败的结果
+        let allow_no_succ:bool = receiver_conf.allow_no_succ;
+
         // 向主线程发送 接收线程 准备完毕的 管道消息
         if let Err(_) = recv_ready_sender.send(true) {
             error!("{}", SYS.get_info("err","recv_ready_send_failed"));
@@ -91,13 +94,13 @@ impl PcapReceiver {
                     if ip_ver == 4 {
                         Self::handle_packet_v4_port_hash(&header,data_link_header,
                                                net_layer_data, &aes_rand, &mut hash_set_v4,
-                                               &mut receiver_info_v4, &probe_v4, &mut output_v4);
+                                               &mut receiver_info_v4, allow_no_succ, &probe_v4, &mut output_v4);
                     }
                     if ip_ver == 6 {
                         // 如果是ipv6的数据包
                         Self::handle_packet_v6_port_hash(&header,data_link_header,
                                                net_layer_data, &aes_rand, &mut hash_set_v6,
-                                               &mut receiver_info_v6, &probe_v6, &mut output_v6);
+                                               &mut receiver_info_v6, allow_no_succ, &probe_v6, &mut output_v6);
                     }
                     // 如果是 其它特殊类型, 不进行处理
 

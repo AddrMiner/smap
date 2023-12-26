@@ -44,15 +44,13 @@ pub fn set_logger(args:&Args){
     let mut log_file_exist = true;
     let mut log_directory_exist = true;
 
-    let log_file:String = match args.log_file.clone() {
-        Some(path) => path,
-        None => {log_file_exist=false; String::new()}
-    };
+    let log_file:String = args.log_file.clone().unwrap_or_else(|| {
+        log_file_exist = false; String::new()
+    });
 
-    let log_directory:String = match args.log_directory.clone() {
-        Some(path) => path,
-        None => {log_directory_exist=false; String::new()}
-    };
+    let log_directory:String = args.log_directory.clone().unwrap_or_else(|| {
+        log_directory_exist = false; String::new()
+    });
 
     // 日志文件和日志目录不能同时指定。
     if log_file_exist && log_directory_exist {

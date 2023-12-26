@@ -110,6 +110,9 @@ pub struct Args{
     #[arg(long = "output_file_v6", help = "设置ipv6协议输出文件路径")]
     pub output_file_v6:Option<String>,
 
+    #[arg(long = "allow_no_succ", default_value_t = false, help = "允许探测失败但验证成功的输出, 如icmp包裹原始数据包, rst标志数据包等")]
+    pub allow_no_succ:bool,
+
     #[arg(long, help = "接收线程的数据包过滤方法")]
     pub filter:Option<String>,
 
@@ -119,7 +122,6 @@ pub struct Args{
 
 
     // logger
-
     #[arg(short = 'q', long = "disable_sys_log", default_value_t = false, help = "关闭日志终端输出")]
     pub disable_sys_log:bool,
 

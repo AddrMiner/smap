@@ -11,6 +11,9 @@ pub struct ReceiverBaseConf {
     // 接收过滤器
     pub filter:Option<String>,
 
+    // 允许探测失败的结果输出, 如 icmp差错报文包裹原始数据包, rst标志数据包等
+    pub allow_no_succ:bool,
+
 }
 
 
@@ -61,6 +64,7 @@ impl ReceiverBaseConf {
             output_v4: OutputMod::new(&Self::parse_output_mod(&args.output_mod), None, &args.output_file_v4, false),
             output_v6: OutputMod::new(&Self::parse_output_mod(&args.output_mod), None, &args.output_file_v6, true),
             filter,
+            allow_no_succ: args.allow_no_succ,
         }
 
     }

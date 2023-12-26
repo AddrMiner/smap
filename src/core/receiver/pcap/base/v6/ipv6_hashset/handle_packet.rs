@@ -12,7 +12,7 @@ impl PcapReceiver  {
 
     #[inline]
     pub fn handle_packet_v6_hash(header:&PacketHeader, data_link_header:&[u8], net_layer_header_and_data:&[u8],
-                            aes_rand:&AesRand, hash_set:&mut AHashSet<u128>, receiver_info:&mut ReceiverInfoV6,
+                            aes_rand:&AesRand, hash_set:&mut AHashSet<u128>, receiver_info:&mut ReceiverInfoV6, allow_no_succ:bool,
                             probe:&Box<dyn ProbeMethodV6>, output:&mut Box<dyn OutputMethod>){
 
         // ipv6 数据包头部
@@ -45,14 +45,20 @@ impl PcapReceiver  {
             let (is_successful, output_line_data) = probe.process_packet_v6(header, data_link_header,
                                                                             &v6_header, &net_layer_data, inner_src_ip);
 
-            if output_line_data.len() != 0 {
-                output.writer_line(&output_line_data);
-            }
-
             if is_successful {
                 // 如果 探测成功
+
+                if output_line_data.len() != 0 {
+                    output.writer_line(&output_line_data);
+                }
+
                 receiver_info.recv_success += 1;
             } else {
+
+                if allow_no_succ && output_line_data.len() != 0 {
+                    output.writer_line(&output_line_data);
+                }
+
                 receiver_info.recv_failed += 1;
             }
 
