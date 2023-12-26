@@ -107,7 +107,7 @@ pub struct Args{
     #[arg(long = "output_file_v4", help = "设置ipv4协议输出文件路径")]
     pub output_file_v4:Option<String>,
 
-    #[arg(long = "output_file_v6", help = "设置ipv4协议输出文件路径")]
+    #[arg(long = "output_file_v6", help = "设置ipv6协议输出文件路径")]
     pub output_file_v6:Option<String>,
 
     #[arg(long, help = "接收线程的数据包过滤方法")]

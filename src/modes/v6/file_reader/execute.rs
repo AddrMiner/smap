@@ -10,7 +10,6 @@ use crate::{computing_time, creat_channels, ending_the_receiving_thread, init_va
 
 impl ModeMethod for V6FileReader {
 
-
     fn execute(&self){
 
         // 创建信息传递管道

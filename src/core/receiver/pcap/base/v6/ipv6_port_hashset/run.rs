@@ -108,8 +108,7 @@ impl PcapReceiver {
 
                                         send_running = false;       // 将 发送线程状态 设置为 关闭
                                     }
-                                    Err(_) => {     // 没消息，继续等
-                                    }
+                                    Err(_) => {}    // 没消息，继续等
                                 }
                             } else {
                                 if  (header.ts.tv_sec as i64) >=  tar_time {     // 检查有没有 达到 目标时间
@@ -139,8 +138,7 @@ impl PcapReceiver {
 
                                 send_running = false;       // 将 发送线程状态 设置为 关闭
                             }
-                            Err(_) => {     // 没消息，继续等
-                            }
+                            Err(_) => {}     // 没消息，继续等
                         }
 
                     } else {        // 之前收到过消息
@@ -156,8 +154,6 @@ impl PcapReceiver {
                 }
             }
         }
-
         receiver_info
-
     }
 }

@@ -199,7 +199,6 @@ impl TargetFileReader {
                 pre_last_add_one += cur_bytes_num;
             }
 
-
         } else {
             // 如果不存在有效目标数量, 使用 字节大小进行分割
 
