@@ -63,7 +63,6 @@ impl ModeMethod for PmapV4 {
                     }))
                 } else {
                     prepare_data!(self; start_ip, end_ip, tar_ip_num);
-                    // 执行 完全扫描(预扫描)接收线程
                     Recorder4P::B4P(thread::spawn(move || {
                         // 注意: 这里应该用 全部目标范围, 而不是只有预探测目标范围
                         let bit_map = BitMapV4Port::new(start_ip, end_ip, tar_ip_num, tar_ports);
@@ -249,7 +248,7 @@ impl ModeMethod for PmapV4 {
                                     },
                             }
                         }       // 如果 获取概率相关图的可变指针失败
-                        None => {error!("{}", SYS.get_info("err", "get_graph_arc_failed"));  exit(1)}
+                        None => { error!("{}", SYS.get_info("err", "get_graph_arc_failed")); exit(1) }
                     }
                 }
 
@@ -264,7 +263,7 @@ impl ModeMethod for PmapV4 {
                             total_ip_count += ip_count;
                             total_pair_count += pair_count;
                         }
-                        None => {   error!("{}", SYS.get_info("err", "get_graph_arc_failed"));  exit(1) }
+                        None => { error!("{}", SYS.get_info("err", "get_graph_arc_failed")); exit(1) }
                     }
                 } else {
                     let (ip_count, pair_count) = Self::recommend_scan_output(pmap_iter_queue, &mut out_mod, &self.blocker);

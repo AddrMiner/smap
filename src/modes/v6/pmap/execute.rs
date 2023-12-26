@@ -63,7 +63,6 @@ impl ModeMethod for PmapV6 {
                 } else {
                     prepare_data!(self; ip_bits_num, base_ip_val, mask);
                     prepare_data!(self; clone; parts);
-                    // 执行 完全扫描(预扫描)接收线程
                     Recorder6P::B6P(thread::spawn(move || {
                         // 注意: 这里应该用 全部目标范围, 而不是只有预探测目标范围
                         let bit_map = BitMapV6PatternPort::new(ip_bits_num, base_ip_val, mask, parts, tar_ports);
