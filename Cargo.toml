@@ -3,15 +3,10 @@ name = "smap"
 version = "0.1.0"
 edition = "2021"
 
-[package.metadata.cross.target.x86_64-unknown-linux-gnu]
-pre-build = ["apt update && apt install -y libpcap-dev"]
-
-# libpcap-dev     libpcap-devel
-
 # 警告: 在linux下设置非零编译优化等级可能导致无法发包
 # 建议在windows下尽可能进行优化
 [profile.release]
-opt-level = 3
+opt-level = 0
 
 [dependencies]
 # ini

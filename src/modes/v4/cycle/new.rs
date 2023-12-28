@@ -18,8 +18,7 @@ impl CycleV4 {
     pub fn new(args:&Args) -> Self {
 
         // 获取 探测目标
-        let (start_ip, end_ip, tar_ip_num) = parse_ipv4_cycle_group(
-            &TarIterBaseConf::parse_tar_ip(&args.tar_ips));
+        let (start_ip, end_ip, tar_ip_num) = parse_ipv4_cycle_group(&TarIterBaseConf::parse_tar_ip(&args.tar_ips));
         let tar_ports = TarIterBaseConf::parse_tar_port(&args.tar_ports, "default_ports");
 
         // 基础配置
@@ -30,7 +29,6 @@ impl CycleV4 {
             &SenderBaseConf::parse_probe_v4(&args.probe_v4, "default_probe_mod_v4"),
             ModuleConf::new_from_vec_args(&args.probe_args, vec![]),
             &tar_ports, base_conf.aes_rand.seed, &args.fields);
-
 
         // 发送模块基础配置
         let sender_conf= SenderBaseConf::new(args, &base_conf.interface,

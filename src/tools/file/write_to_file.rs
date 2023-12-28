@@ -1,18 +1,17 @@
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::{Write, BufRead, BufReader, Seek, SeekFrom};
+use std::path::PathBuf;
 use std::process::exit;
 use log::{error, warn};
 use crate::SYS;
+use crate::tools::file::get_path::get_current_path;
 
 pub fn write_record(mode:&str, target:&str, filepath: &String, header: Vec<&str>, record: Vec<String>){
 
-    let filepath = if cfg!(target_os = "windows") {
-        format!("{}_{}_{}.csv", filepath.replace("/", "\\"), mode, target)
-    } else {
-        format!("{}_{}_{}.csv", filepath, mode, target)
-    };
+    let filepath = get_current_path(&format!("{}_{}_{}.csv", filepath, mode, target));
 
+    let filepath = PathBuf::from(filepath);
 
     match OpenOptions::new().read(true).write(true).open(&filepath) {
 
@@ -70,14 +69,13 @@ pub fn write_record(mode:&str, target:&str, filepath: &String, header: Vec<&str>
         Err(_) => {}
     }
 
-
     // 创建记录文件
     let mut file = OpenOptions::new()
         .write(true)
         .create(true)
         .open(&filepath)
         .map_err(|_| {
-            error!("{} {}", SYS.get_info("err", "create_record_file_err"), &filepath);
+            error!("{} {:?}", SYS.get_info("err", "create_record_file_err"), &filepath);
             exit(1)
         }).unwrap();
 

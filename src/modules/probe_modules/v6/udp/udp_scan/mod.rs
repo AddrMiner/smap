@@ -6,6 +6,7 @@ use crate::modes::Helper;
 use crate::modules::probe_modules::probe_mod_v6::{ProbeMethodV6, ProbeModV6};
 use crate::modules::probe_modules::tools::payload::get_payload;
 use crate::{parse_custom_args, SYS};
+use crate::tools::file::get_path::get_current_path;
 use crate::tools::net_handle::packet::udp::fields::UdpFields;
 
 
@@ -30,9 +31,10 @@ impl UdpScanV6 {
 
     pub fn new(mod_conf:ModuleConf, seed:u64, fields:&Vec<String>) -> ProbeModV6 {
 
+        // 得到 payload文件路径
+        let payload_path = get_current_path(&SYS.get_info("conf", "default_payload_file"));
         let payload = get_payload(mod_conf.get_info(&"payload".to_string()),
-                                  SYS.get_info("conf", "default_payload_file"),
-                                  seed, 1, 508);
+                                  payload_path, seed, 1, 508);
 
         ProbeModV6 {
             name: "udp_scan_v6",

@@ -6,6 +6,7 @@ use crate::modes::Helper;
 use crate::modules::probe_modules::probe_mod_v6::{ProbeMethodV6, ProbeModV6};
 use crate::modules::probe_modules::tools::payload::get_payload;
 use crate::SYS;
+use crate::tools::file::get_path::get_current_path;
 use crate::tools::net_handle::packet::tcp::opt::opt_fields::TcpOptFields;
 
 
@@ -28,10 +29,11 @@ impl TcpSynOptV6 {
 
     pub fn new(mod_conf:ModuleConf, seed:u64, fields:&Vec<String>) -> ProbeModV6 {
 
+        // 得到 payload文件路径
+        let payload_path = get_current_path(&SYS.get_info("conf", "default_payload_file"));
         // 将负载长度填充为 4 的字节倍数
         let mut opt_payload = get_payload(mod_conf.get_info(&"payload".to_string()),
-                                          SYS.get_info("conf", "default_payload_file"),
-                                          seed, 1, 40);
+                                          payload_path, seed, 1, 40);
         let mut fill_bytes_len = 4 - (opt_payload.len() % 4);
         if fill_bytes_len == 4 { fill_bytes_len = 0; }
         opt_payload.extend(vec![0; fill_bytes_len]);

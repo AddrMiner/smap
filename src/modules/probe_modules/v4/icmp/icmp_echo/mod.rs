@@ -6,6 +6,7 @@ use crate::modes::Helper;
 use crate::modules::probe_modules::probe_mod_v4::{ProbeMethodV4, ProbeModV4};
 use crate::modules::probe_modules::tools::payload::get_payload;
 use crate::{not_use_port_check, SYS};
+use crate::tools::file::get_path::get_current_path;
 use crate::tools::net_handle::packet::v4::icmp_v4::fields::IcmpV4Fields;
 
 
@@ -27,10 +28,12 @@ impl IcmpEchoV4 {   // 定义构造方法和初始化方法
         // 不使用端口的模块, 强制目标端口为 0
         not_use_port_check!(tar_ports);
 
+        // 得到 payload文件路径
+        let payload_path = get_current_path(&SYS.get_info("conf", "default_payload_file"));
+
         // 根据自定义参数 payload, 得到具体的 payload字节向量
         let payload = get_payload(mod_conf.get_info(&"payload".to_string()),
-                                      SYS.get_info("conf", "default_payload_file"),
-                                      seed,0, 8);
+                                  payload_path, seed,0, 8);
 
         ProbeModV4 {
             name:"icmp_v4",

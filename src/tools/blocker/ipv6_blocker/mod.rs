@@ -1,5 +1,6 @@
 use crate::tools::blocker::ipv6_blocker::ipv6_blocker::Ipv6Blocker;
 use crate::SYS;
+use crate::tools::file::get_path::get_current_path;
 
 pub mod ipv6_blocker;
 
@@ -94,21 +95,13 @@ fn get_default_destination_black_white_list(black_list_file_arg:&Option<String>,
     if let Some(black_path) = black_list_file_arg {
         black_list_file = black_path.to_string();
     } else {
-        black_list_file = if cfg!(target_os = "windows") {
-            SYS.get_info("conf", "destination_black_list_v6").replace("/", "\\")
-        } else {
-            SYS.get_info("conf", "destination_black_list_v6")
-        };
+        black_list_file = get_current_path(&SYS.get_info("conf", "destination_black_list_v6"));
     }
 
     if let Some(white_path) = white_list_file_arg {
         white_list_file = white_path.to_string();
     } else {
-        white_list_file = if cfg!(target_os = "windows") {
-            SYS.get_info("conf", "destination_white_list_v6").replace("/", "\\")
-        } else {
-            SYS.get_info("conf", "destination_white_list_v6")
-        };
+        white_list_file = get_current_path(&SYS.get_info("conf", "destination_white_list_v6"));
     }
 
     (black_list_file, white_list_file)
@@ -124,21 +117,13 @@ fn get_default_source_black_white_list(black_list_file_arg:&Option<String>,
     if let Some(black_path) = black_list_file_arg {
         black_list_file = black_path.to_string();
     } else {
-        black_list_file = if cfg!(target_os = "windows") {
-            SYS.get_info("conf", "source_black_list_v6").replace("/", "\\")
-        } else {
-            SYS.get_info("conf", "source_black_list_v6")
-        };
+        black_list_file = get_current_path(&SYS.get_info("conf", "source_black_list_v6"));
     }
 
     if let Some(white_path) = white_list_file_arg {
         white_list_file = white_path.to_string();
     } else {
-        white_list_file = if cfg!(target_os = "windows") {
-            SYS.get_info("conf", "source_white_list_v6").replace("/", "\\")
-        } else {
-            SYS.get_info("conf", "source_white_list_v6")
-        };
+        white_list_file = get_current_path(&SYS.get_info("conf", "source_white_list_v6"));
     }
 
     (black_list_file, white_list_file)

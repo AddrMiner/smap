@@ -5,6 +5,7 @@ use log::error;
 use crate::modes::Helper;
 use crate::modules::output_modules::{OutputMethod, OutputMod};
 use crate::SYS;
+use crate::tools::file::get_path::get_current_path;
 use crate::tools::others::time::get_fmt_time;
 
 
@@ -20,16 +21,13 @@ impl Csv {   // 定义构造方法和初始化方法
         let output_file = match output_file_arg {
             Some(o) => (*o).clone(),
             None => {
-                let tar_path = if is_ipv6 {
+                let child_path = if is_ipv6 {
                     get_fmt_time(&SYS.get_info("conf", "output_file_pattern_v6"))
                 } else {
                     get_fmt_time(&SYS.get_info("conf", "output_file_pattern_v4"))
                 };
-                if cfg!(target_os = "windows") {
-                    tar_path.replace("/", "\\")
-                } else {
-                    tar_path
-                }
+
+                get_current_path(&child_path)
             }
         };
 
