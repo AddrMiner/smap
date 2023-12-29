@@ -11,8 +11,8 @@ fn main() {
     let mode;
     {
         let args = Args::get_args();	// 获取命令行参数
-        set_logger(&args);				// 配置 系统日志
-        mode = Mode::new(&args);		// 选择并创建模式
+        set_logger(&args);		// 配置 系统日志
+        mode = Mode::new(&args);	// 选择并创建模式
     }
     mode.execute();	// 执行模式
 }

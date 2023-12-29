@@ -55,16 +55,17 @@ else {
 # 4. Install with cargo
 cargo install --path . --root $installPath
 
-# 5. Add cargo bin path to PATH 
+# 5. copy resource folder
+Copy-Item -Path $resourceFolder -Destination $installPath -Recurse
+
+# 6. clear
+Remove-Item $tempDir -Recurse -Force
+Remove-Item .\target -Recurse -Force
+
+# 7. Add cargo bin path to PATH
 $cargoBinPath = "$installPath\bin"
 $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
 if (-not $userPath.Contains($cargoBinPath)) {
-  [Environment]::SetEnvironmentVariable("Path", $userPath + ";$cargoBinPath", "User")
+    [Environment]::SetEnvironmentVariable("Path", $userPath + ";$cargoBinPath", "User")
+    Write-Output "Please close the current terminal window and open a new terminal"
 }
-
-# 6. copy resource folder
-Copy-Item -Path $resourceFolder -Destination $installPath -Recurse
-
-# 7. clear
-Remove-Item $tempDir -Recurse -Force
-Remove-Item .\target -Recurse -Force
