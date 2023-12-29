@@ -55,19 +55,19 @@ smap支持 Windows, Linux, Macos, Bsd等主流平台.
 - 安装时应保持联网状态
 - 自定义的安装路径必须包含本程序的名称, 如 D:\Smap
 
-##### Windows(管理员权限)
+##### Windows (管理员权限)
 
    ```powershell
    .\install_windows.ps1
    ```
 
-##### Linux(root)
+##### Linux (root)
 
 ```shell
 ./install_linux.sh
 ```
 
-##### Mac os(root)
+##### Macos (root)
 
 ```shell
 ./install_macos.sh
