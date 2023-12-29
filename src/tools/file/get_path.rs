@@ -12,7 +12,7 @@ pub fn get_current_path(child_path:&str) -> String {
     let mut path = match env::current_exe() {
         Ok(p) => p,
         Err(_) => {
-            error!("{}", SYS.get_info("err", "get_cur_path_failed"));
+            error!("{}", SYS.get_info("err", "get_install_path_failed"));
             exit(1)
         }
     };

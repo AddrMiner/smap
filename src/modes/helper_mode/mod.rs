@@ -1,4 +1,5 @@
-use log::warn;
+use std::env;
+use log::{error, warn};
 use crate::core::conf::args::Args;
 use crate::modes::helper_mode::modules_helper::{mode_help, output_help, probe_v4_help, probe_v6_help};
 use crate::modes::helper_mode::print_modules::{print_modes, print_output_modules, print_probe_v4_modules, print_probe_v6_modules};
@@ -53,5 +54,14 @@ pub fn helper(args:&Args){
 
     // 打印全部 输出模块 名称
     print_output_modules();
+
+    // 打印当前程序安装路径
+    match env::current_exe() {
+        Ok(mut p) => {
+            p.pop(); p.pop();
+            println!("{} {:?}", SYS.get_info("print", "install_path_info"), p);
+        }
+        Err(_) => { error!("{}", SYS.get_info("err", "get_install_path_failed")); }
+    }
 
 }
