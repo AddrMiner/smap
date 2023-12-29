@@ -56,7 +56,7 @@ else {
 cargo install --path . --root $installPath
 
 # 5. copy resource folder
-Copy-Item -Path $resourceFolder -Destination $installPath -Recurse
+Copy-Item -Path $resourceFolder -Destination $installPath -Recurse -Force
 
 # 6. clear
 Remove-Item $tempDir -Recurse -Force

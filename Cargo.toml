@@ -6,7 +6,7 @@ edition = "2021"
 # 警告: 在linux下设置非零编译优化等级可能导致无法发包
 # 建议在windows下尽可能进行优化
 [profile.release]
-opt-level = 0
+opt-level = 3
 
 [dependencies]
 # ini

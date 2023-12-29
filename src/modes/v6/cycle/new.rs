@@ -29,7 +29,7 @@ impl CycleV6 {
         // ipv6 探测模块
         let probe = ProbeModV6::new(
             &SenderBaseConf::parse_probe_v6(&args.probe_v6, "default_probe_mod_v6"),
-            ModuleConf::new_from_vec_args(&args.probe_args, vec![]),
+            ModuleConf::new_from_vec_args(&args.custom_args, vec![]),
             &tar_ports, base_conf.aes_rand.seed, &args.fields);
 
         // 发送模块基础配置

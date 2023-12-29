@@ -32,7 +32,7 @@ impl CycleV4V6 {
         let probe_v6;
         let max_packet_length;
         {
-            let probe_args = ModuleConf::new_from_vec_args(&args.probe_args, vec![]);
+            let probe_args = ModuleConf::new_from_vec_args(&args.custom_args, vec![]);
 
             probe_v4 = ProbeModV4::new(
                 &SenderBaseConf::parse_probe_v4(&args.probe_v4, "default_probe_mod_v4"),

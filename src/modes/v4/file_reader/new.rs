@@ -28,7 +28,7 @@ impl V4FileReader {
         // ipv4 探测模块
         let probe = ProbeModV4::new(
             &SenderBaseConf::parse_probe_v4(&args.probe_v4, "default_probe_mod_v4"),
-            ModuleConf::new_from_vec_args(&args.probe_args, vec![]),
+            ModuleConf::new_from_vec_args(&args.custom_args, vec![]),
             &tar_ports, base_conf.aes_rand.seed, &args.fields);
 
         // 发送模块基础配置

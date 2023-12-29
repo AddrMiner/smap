@@ -27,7 +27,7 @@ impl PmapV4 {
         let mut base_conf = BaseConf::new(args);
 
         // 解析自定义参数    注意: 这里强制所有探测模块检查接收数据包的源端口
-        let module_conf = ModuleConf::new_from_vec_args(&args.probe_args, vec!["not_check_sport=false".to_string()]);
+        let module_conf = ModuleConf::new_from_vec_args(&args.custom_args, vec!["not_check_sport=false".to_string()]);
 
         // 创建 无端口目标迭代器
         let tar_iter_without_port = CycleIpv4::new(start_ip, tar_ip_num, &mut base_conf.aes_rand.rng);
