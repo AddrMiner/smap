@@ -236,7 +236,7 @@ impl TargetFileReader {
             if tar_num < 1 {
                 return targets_ranges
             }
-            targets_ranges.push( tar_num);
+            targets_ranges.push(tar_num);
         }
         targets_ranges
     }

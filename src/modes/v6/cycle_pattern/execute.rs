@@ -28,7 +28,6 @@ impl ModeMethod for CycleV6Pattern {
                 CycleIpv6PatternType::CycleIpv6Pattern(_) => {
                     receiver_res = thread::spawn(move || {
                         let bit_map = BitMapV6Pattern::new(ip_bits_num, base_ip_val, mask, parts);
-
                         PcapReceiver::run_v6(0, base_conf, receiver_conf, probe, bit_map,
                                                      recv_ready_sender, recv_close_time_receiver)
                     });
@@ -36,9 +35,9 @@ impl ModeMethod for CycleV6Pattern {
                 CycleIpv6PatternType::CycleIpv6PatternPort(t) => {
                     let sports = self.sender_conf.source_ports.clone();
                     let tar_ports = t.tar_ports.clone();
-                    let bit_map = BitMapV6PatternPort::new(ip_bits_num, base_ip_val, mask, parts, tar_ports);
 
                     receiver_res = thread::spawn(move || {
+                        let bit_map = BitMapV6PatternPort::new(ip_bits_num, base_ip_val, mask, parts, tar_ports);
                         PcapReceiver::run_v6_port(0, base_conf, receiver_conf, probe, sports, bit_map,
                                                           recv_ready_sender, recv_close_time_receiver)
                     });

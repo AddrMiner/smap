@@ -151,8 +151,6 @@ impl PcapReceiver {
                 }
             }
         }
-
         receiver_info
-
     }
 }
