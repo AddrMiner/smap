@@ -107,7 +107,7 @@ smap -m c4 -b 10m --probe_v4 tcp_syn_scan_v4 -t 110.242.68.5 -p 80,442-443
 smap -m f4 -b 10m -f your_path
 ```
 
-以10m速率对 ipv4[**地址文件,  地址端口对文件**] 进行 **tcp_syn存活** 扫描
+以10m速率对 ipv4[**地址文件,  地址端口对文件**] 进行 **tcp_syn端口** 扫描
 
 ```shell
 # 未指定端口, 将从文件中读取
@@ -144,7 +144,7 @@ smap -m c6 -b 10m --probe_v6 tcp_syn_scan_v6 -t 240e:83:205:58:0:ff:b09f:36bf -p
 smap -m f6 -b 10m -f your_path
 ```
 
-以10m速率对 ipv4[**地址文件,  地址端口对文件**] 进行 **tcp_syn存活** 扫描
+以10m速率对 ipv4[**地址文件,  地址端口对文件**] 进行 **tcp_syn端口** 扫描
 
 ```shell
 # 未指定端口, 将从文件中读取  格式同ipv4
