@@ -56,7 +56,7 @@ impl PmapV6 {
         }
     }
 
-    pub fn full_scan_output<T: Ipv6Iter, B:ExtractActPortsV6>(mut iter:T, res:B, blocker:&BlackWhiteListV6,
+    pub fn full_scan_output<T: Ipv6Iter, B:ExtractActPortsV6>(mut iter:T, res:&B, blocker:&BlackWhiteListV6,
                                                               out_mod:&mut Box<dyn OutputMethod>) -> (usize, usize) {
 
         // 存在活跃端口的ip计数
@@ -109,7 +109,7 @@ impl PmapV6 {
     }
 
 
-    pub fn full_scan_output_and_train<T: Ipv6Iter, B:ExtractActPortsV6>(mut iter:T, res:B, blocker:&BlackWhiteListV6,
+    pub fn full_scan_output_and_train<T: Ipv6Iter, B:ExtractActPortsV6>(mut iter:T, res:&B, blocker:&BlackWhiteListV6,
                                                                         out_mod:&mut Box<dyn OutputMethod>, graph:&mut PmapGraph)  -> (usize, usize){
 
         // 存在活跃端口的ip计数
@@ -185,7 +185,7 @@ impl PmapV6 {
     }
 
 
-    pub fn pmap_receive<B:NotMarkedV6>(res:B, graph:&PmapGraph, states_map:&mut AHashMap<String, Arc<PmapState>>,
+    pub fn pmap_receive<B:NotMarkedV6>(res:&B, graph:&PmapGraph, states_map:&mut AHashMap<String, Arc<PmapState>>,
                                        pmap_iter_queue:&mut Vec<PmapIterV6>, blocker:&BlackWhiteListV6){
 
         for pmap_iter in pmap_iter_queue.iter_mut() {

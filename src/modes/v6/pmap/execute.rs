@@ -106,17 +106,21 @@ impl ModeMethod for PmapV6 {
             }
 
             // 完全扫描全局迭代器
-            let full_scan_iter = self.tar_iter_without_port.init(0, self.full_scan_last_index);
+            let full_scan_iter = self.tar_iter_without_port.init(1, self.full_scan_last_index);
             match full_scan_result {
                 Recorder6P::B6P(b) => {
-                    match b.join() {
+                    match &b.join() {
                         Ok(bit_map) => {
                             if recommend_scan {     // 将完全扫描阶段的结果进行输出, 使用结果对概率相关图进行训练
-                                let mut raw_graph = PmapGraph::new(self.tar_ports.clone());
-                                let (ip_count, pair_count) = Self::full_scan_output_and_train(full_scan_iter, bit_map,  &self.blocker, &mut out_mod, &mut raw_graph);
-                                total_ip_count += ip_count;
-                                total_pair_count += pair_count;
-                                graph = Arc::new(raw_graph);
+                                graph = Arc::new(PmapGraph::new(self.tar_ports.clone()));
+                                match Arc::get_mut(&mut graph) {
+                                    Some(g_ptr) => {
+                                        let (ip_count, pair_count) = Self::full_scan_output_and_train(full_scan_iter, bit_map,  &self.blocker, &mut out_mod, g_ptr);
+                                        total_ip_count += ip_count;
+                                        total_pair_count += pair_count;
+                                    }
+                                    None => { error!("{}", SYS.get_info("err", "get_graph_arc_failed")); exit(1) }
+                                }
                             } else {        // 将完全扫描阶段的结果进行输出
                                 let (ip_count, pair_count) = Self::full_scan_output(full_scan_iter, bit_map,  &self.blocker, &mut out_mod);
                                 total_ip_count += ip_count;
@@ -128,14 +132,18 @@ impl ModeMethod for PmapV6 {
                     }
                 }
                 Recorder6P::H6P(h) => {
-                    match h.join() {
+                    match &h.join() {
                         Ok(hash_set) => {
                             if recommend_scan {     // 将完全扫描阶段的结果进行输出, 使用结果对概率相关图进行训练
-                                let mut raw_graph = PmapGraph::new(self.tar_ports.clone());
-                                let (ip_count, pair_count) = Self::full_scan_output_and_train(full_scan_iter, hash_set,  &self.blocker, &mut out_mod, &mut raw_graph);
-                                total_ip_count += ip_count;
-                                total_pair_count += pair_count;
-                                graph = Arc::new(raw_graph);
+                                graph = Arc::new(PmapGraph::new(self.tar_ports.clone()));
+                                match Arc::get_mut(&mut graph) {
+                                    Some(g_ptr) => {
+                                        let (ip_count, pair_count) = Self::full_scan_output_and_train(full_scan_iter, hash_set, &self.blocker, &mut out_mod, g_ptr);
+                                        total_ip_count += ip_count;
+                                        total_pair_count += pair_count;
+                                    }
+                                    None => { error!("{}", SYS.get_info("err", "get_graph_arc_failed")); exit(1) }
+                                }
                             } else {        // 将完全扫描阶段的结果进行输出
                                 let (ip_count, pair_count) = Self::full_scan_output(full_scan_iter, hash_set,  &self.blocker, &mut out_mod);
                                 total_ip_count += ip_count;
@@ -240,11 +248,11 @@ impl ModeMethod for PmapV6 {
                         Some(g_ptr) => {
                             match recommend_scan_result {
                                 Recorder6::B6(b) =>
-                                    if let Ok(bit_map) = b.join() {
+                                    if let Ok(bit_map) = &b.join() {
                                         Self::pmap_receive(bit_map, g_ptr, &mut states_map, &mut pmap_iter_queue, &self.blocker);
                                     },
                                 Recorder6::H6(h) =>
-                                    if let Ok(hash_set) = h.join() {
+                                    if let Ok(hash_set) = &h.join() {
                                         Self::pmap_receive(hash_set, g_ptr, &mut states_map, &mut pmap_iter_queue, &self.blocker);
                                     },
                             }

@@ -104,6 +104,8 @@ smap -m c4 -b 10m --probe_v4 tcp_syn_scan_v4 -t 110.242.68.5 -p 80,442-443
 以10m速率对 ipv4[**地址文件,  地址端口对文件**] 进行 **icmp存活** 扫描
 
 ```shell
+# 注意: 文件名中可以使用 _num目标数量_  _min最小ip值_  _max最大ip值_ 等标记优化扫描
+# ip值类型: u32(ipv4) 或 u128(ipv6), 如: test_num10_min0_max10_.txt
 smap -m f4 -b 10m -f your_path
 ```
 
@@ -194,8 +196,35 @@ smap -m c46 -b 10m -t 220.181.38.149-220.181.38.150,42.81.179.153,20.76.201.171,
 smap -m c46 -b 10m --probe_v4 tcp_syn_scan_v4 --probe_v6 tcp_syn_scan_v6 -t 220.181.38.149-220.181.38.150,42.81.179.153,20.76.201.171,240e:c2:1800:166:3::3d7-240e:c2:1800:166:3::3d8,240e:928:1400:1000::25,2603:1020:201:10::10f -p 80,442-443
 ```
 
+#### 结果保存
+
+smap的所有扫描记录(扫描时间, 参数, 探测结果摘要), 探测结果(存活的地址列表, 地址端口对列表等)等文件默认存放在安装目录. 记录文件的文件夹名为records,  探测结果的文件夹名为result. 您可以通过修改sys_conf.ini或传入对应参数的方式修改这些设置. 相对路径以安装路径为起始路径, 绝对路径由用户指定, 传入参数优先级大于sys_conf.ini配置的优先级.
+
+#### pmap
+
+pmap专为同一网络内的全端口范围活跃端口扫描任务进行设计
+
+以10m速率对 单个ipv4[**地址, 范围, 网段**] 进行 **tcp_syn端口**  活跃推荐扫描
+
+```shell
+smap -m p4 -b 10m -t 42.81.179.50-42.81.179.180 -p 80,443,22,21,53 -a pmap_sampling_pro=0.1 -a pmap_budget=2 -a pmap_batch_num=2
+```
+以10m速率对 单个ipv6[**模式字符串**] 进行 **tcp_syn端口**  活跃推荐扫描
+
+```shell
+smap -m p6 -b 10m -t 240e:928:1400:105::b@125-128 -p 80,443,22,21,53 -a pmap_sampling_pro=0.1 -a pmap_budget=2 -a pmap_batch_num=2
+```
+
 ### 选项字段及开发者文档
 
-- [选项文档](./doc/options.md)
+- 详细的命令行参数信息请参照 [选项文档](./doc/options.md)
 
-  
+- 项目结构及系统参数信息请参照 [结构与系统参数文档](./doc/structure_and_system_parameters.md)
+
+##  License and Copyright
+
+SMap Copyright 2023 
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See LICENSE for the specific language governing permissions and limitations under the License.

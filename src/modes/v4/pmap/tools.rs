@@ -56,7 +56,7 @@ impl PmapV4 {
         }
     }
 
-    pub fn full_scan_output<T: Ipv4Iter, B:ExtractActPortsV4>(mut iter:T, res:B, blocker:&BlackWhiteListV4,
+    pub fn full_scan_output<T: Ipv4Iter, B:ExtractActPortsV4>(mut iter:T, res:&B, blocker:&BlackWhiteListV4,
                                                     out_mod:&mut Box<dyn OutputMethod>) -> (usize, usize) {
 
         // 存在活跃端口的ip计数
@@ -109,7 +109,7 @@ impl PmapV4 {
     }
 
 
-    pub fn full_scan_output_and_train<T: Ipv4Iter, B:ExtractActPortsV4>(mut iter:T, res:B, blocker:&BlackWhiteListV4,
+    pub fn full_scan_output_and_train<T: Ipv4Iter, B:ExtractActPortsV4>(mut iter:T, res:&B, blocker:&BlackWhiteListV4,
                                                               out_mod:&mut Box<dyn OutputMethod>, graph:&mut PmapGraph)  -> (usize, usize){
 
         // 存在活跃端口的ip计数
@@ -185,7 +185,7 @@ impl PmapV4 {
     }
 
 
-    pub fn pmap_receive<B:NotMarkedV4>(res:B, graph:&PmapGraph, states_map:&mut AHashMap<String, Arc<PmapState>>,
+    pub fn pmap_receive<B:NotMarkedV4>(res:&B, graph:&PmapGraph, states_map:&mut AHashMap<String, Arc<PmapState>>,
                         pmap_iter_queue:&mut Vec<PmapIterV4>, blocker:&BlackWhiteListV4){
 
         for pmap_iter in pmap_iter_queue.iter_mut() {

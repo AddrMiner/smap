@@ -46,7 +46,7 @@ impl PmapV6 {
 
         // ipv6 探测模块
         let probe = ProbeModV6::new(
-            &SenderBaseConf::parse_probe_v6(&args.probe_v6, "default_probe_mod_v6"),
+            &SenderBaseConf::parse_probe_v6(&args.probe_v6, "pmap_default_probe_mod_v6"),
             module_conf, &tar_ports, base_conf.aes_rand.seed, &args.fields);
 
         // 如果 目标探测模块不使用端口, 直接报错并退出
