@@ -15,7 +15,7 @@ pub struct BitMapV4Port {
     bits_for_port:u32,
 
     map:BitVec,
-    tar_ports_index:[usize; 65536],
+    tar_ports_index:Vec<usize>,
     sorted_tar_ports:Vec<u16>,
 }
 
@@ -95,7 +95,7 @@ impl BitMapV4Port {
         // 例:  目的端口: [22, 80, 443]
         // 索引数组: [ -1  -1 ..  -1 |  0 | -1 .. -1 |  1  |  -1 ..  -1 |   2  |  -1..  ],  -1表示usize::MAX, 因为 usize一定大于等于u64, 所以端口索引一定取不到
         // index:     0   1 ..   21 | 22 | 23 .. 79 | 80  |  81 .. 442 | 443  |  444..
-        let mut tar_ports_index:[usize; 65536] = [usize::MAX; 65536];
+        let mut tar_ports_index = vec![usize::MAX; 65536];
 
         let mut index:usize = 0;
         for tar_port in tar_ports.iter() {

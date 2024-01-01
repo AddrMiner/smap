@@ -33,7 +33,9 @@ pub fn quick_sort_from_big_to_small<T: PartialOrd + Copy, U>(arr:&mut Vec<T>, in
             j -= 1;
         }
 
-        quick_sort_from_big_to_small(arr, index, left, i-1);
+        if i != 0 {
+            quick_sort_from_big_to_small(arr, index, left, i-1);
+        }
         quick_sort_from_big_to_small(arr, index, j+1, right);
     }
 }
