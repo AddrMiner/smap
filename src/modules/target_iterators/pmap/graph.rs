@@ -25,7 +25,7 @@ pub struct Graph {
     pub recommend_ports_probability:Vec<f64>,
 
     // 端口(下标) -> 端口对应的绝对概率(值)
-    pub port_to_ab_probability:Vec<f64>,
+    pub port_to_ab_probability:Box<[f64;65536]>,
 
     // 目标端口向量
     pub tar_ports:Vec<u16>,
@@ -54,7 +54,7 @@ impl Graph {
             recommend_ports_cnt: vec![],
             recommend_ports_probability: vec![],
 
-            port_to_ab_probability: vec![0.0; 65536],
+            port_to_ab_probability: Box::new([0.0; 65536]),
 
             tar_ports:sorted_tar_ports,
             tar_ports_len,
@@ -72,7 +72,7 @@ impl Graph {
             recommend_ports: vec![],
             recommend_ports_cnt: vec![],
             recommend_ports_probability: vec![],
-            port_to_ab_probability: vec![],
+            port_to_ab_probability: Box::new([0.0; 65536]),
             tar_ports: vec![],
             tar_ports_len: 0,
         }
@@ -195,7 +195,7 @@ impl Graph {
 
         quick_sort_from_big_to_small(&mut self.recommend_ports_cnt, &mut self.recommend_ports, 0, self.port_cnt-1);
 
-        self.port_to_ab_probability = vec![0.0; 65536];
+        self.port_to_ab_probability = Box::new([0.0; 65536]);
 
         let ip_cnt_f64 = self.ip_cnt as f64;
         for i in 0..self.port_cnt {
