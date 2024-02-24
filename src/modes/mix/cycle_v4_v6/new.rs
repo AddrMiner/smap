@@ -114,6 +114,8 @@ impl CycleV4V6 {
         } else if ips_v4.2 != 0 {
             ReceiverBaseConf::new(args, vec![probe_v4.filter_v4.clone()])
         } else { ReceiverBaseConf::new(args, vec![probe_v6.filter_v6.clone()]) };
+        
+        let ttl = args.ttl;
 
         write_to_summary!(base_conf; "CycleV4V6"; "args"; args;);
 
@@ -144,6 +146,7 @@ impl CycleV4V6 {
 
             v4_ranges,
             v6_ranges,
+            ttl,
         }
     }
 }

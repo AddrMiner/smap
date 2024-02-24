@@ -65,6 +65,8 @@ impl CycleV6Pattern {
 
         // 接收模块基础配置
         let receiver_conf= ReceiverBaseConf::new(args, vec![probe.filter_v6.clone()]);
+        
+        let ttl = args.ttl;
 
         write_to_summary!(base_conf; "CycleV6Pattern"; "args"; args;);
 
@@ -82,6 +84,7 @@ impl CycleV6Pattern {
             mask,
             parts,
 
+            ttl,
             assigned_target_range: TarIterBaseConf::cycle_group_assign_targets_u128(p_sub_one, send_thread_num),
 
             // 使用输入范围优化约束条件, 使得只有对探测范围造成影响的约束起效

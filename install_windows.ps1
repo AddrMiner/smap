@@ -1,6 +1,6 @@
 
 
-$npcap = "npcap-1.78"
+$npcap = "npcap-1.79"
 $npcap_sdk = "npcap-sdk-1.13"
 $defaultInstallPath = "${env:USERPROFILE}\smap"
 $resourceFolder = @(".\\block_list",".\\probe_modules_payload")

@@ -4,9 +4,9 @@ use crate::modules::target_iterators::Ipv4IterP;
 impl CycleIpv4Port {
 
     /// 以当前目标为基础, 计算并获取下一个目标
-    /// 返回值: 0:是否为非最终值, 1:目标值
+    /// 返回值:  是否为非最终值
     #[inline]
-    fn get_next_target(&mut self) -> (bool, u64) {
+    fn get_next_target(&mut self) -> bool {
 
         loop {
 
@@ -17,18 +17,13 @@ impl CycleIpv4Port {
             if self.current == self.last {
                 // 如果当前 乘法群的输出值为 最终值, 标记为 false
 
-                return if self.current < self.valid_range {
-                    // 如果最终值合法, 返回最终值
-                    (false, self.current)
-                } else {
-                    (false, u64::MAX)
-                }
+                return false
             } else {
 
                 // 使得 current 的值 始终处于  1..[    0..   |   tar_ip_num - 1  |  1..   ]  + 1
                 // 注意这里 不等于0 的条件省略
                 if self.current < self.valid_range {
-                    return (true, self.current)
+                    return true
                 }
 
             }
@@ -107,11 +102,11 @@ impl Ipv4IterP for CycleIpv4Port {
 
     fn get_next_ip_port(&mut self) -> (bool, bool, u32, u16) {
         loop {
-            let target_val = self.get_next_target();
+            let target_not_end = self.get_next_target();
 
-            if target_val.0 {
+            if target_not_end {
                 // 如果不是最终值
-                let target = self.parse_tar_val(target_val.1);
+                let target = self.parse_tar_val(self.current);
 
                 if target.0 {
                     // 如果得到的 ip 和 port 有效
@@ -121,12 +116,9 @@ impl Ipv4IterP for CycleIpv4Port {
                 // 如果 ip 和 port 无效, 循环直到得到 有效目标
             } else {
                 // 如果是最终值
-                return if target_val.1 == u64::MAX {
-                    // 如果最终值无效
-                    (false, false, 0, 0)
-                } else {
+                return if self.current < self.valid_range {
                     // 如果最终值有效
-                    let target = self.parse_tar_val(target_val.1);
+                    let target = self.parse_tar_val(self.current);
 
                     if target.0 {
                         // 如果得到的 ip 和 port 有效
@@ -134,6 +126,9 @@ impl Ipv4IterP for CycleIpv4Port {
                     } else {
                         (false, false, 0, 0)
                     }
+                } else {
+                    // 如果最终值无效
+                    (false, false, 0, 0)
                 }
             }
         }

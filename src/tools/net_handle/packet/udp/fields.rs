@@ -56,16 +56,16 @@ impl UdpFields {
 
             // 如果无任何字段匹配, 默认打出所有字段
             fields_conf = Self {
-                source_addr: false,
-                classification: false,
-                sport: false,
-                dport: false,
-                icmp_responder: false,
-                icmp_type: false,
-                icmp_code: false,
-                icmp_unreach: false,
-                udp_pkt_size: false,
-                data: false,
+                source_addr: true,
+                classification: true,
+                sport: true,
+                dport: true,
+                icmp_responder: true,
+                icmp_type: true,
+                icmp_code: true,
+                icmp_unreach: true,
+                udp_pkt_size: true,
+                data: true,
 
                 len: 10,
             };

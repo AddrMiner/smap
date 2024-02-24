@@ -13,14 +13,15 @@ pub struct Mode {}
 pub use helper_mode::Helper;
 
 /// 激活的所有模块
-const MODES: [&str; 16] = ["cycle_v4","c4",
+const MODES: [&str; 18] = ["cycle_v4","c4",
                           "cycle_v6", "c6",
                           "cycle_v6_pattern", "c6p",
                           "file_v4", "f4",
                           "file_v6", "f6",
                           "cycle_v4_v6", "c46",
                           "pmap_v4", "p4",
-                          "pmap_v6", "p6"];
+                          "pmap_v6", "p6",
+                          "topo_v4", "t4"];
 impl Mode {
 
     pub fn new(args:&Args) -> Box<dyn ModeMethod> {
@@ -49,6 +50,8 @@ impl Mode {
             "pmap_v4" | "p4" => Box::new(v4::PmapV4::new(args)),
 
             "pmap_v6" | "p6" => Box::new(v6::PmapV6::new(args)),
+
+            "topo_v4" | "t4" => Box::new(v4::Topo4::new(args)),
 
             _ => {
                 // 未查询到有效模式

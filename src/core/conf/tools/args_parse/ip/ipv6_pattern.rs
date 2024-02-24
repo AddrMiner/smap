@@ -36,11 +36,11 @@ pub fn parse_ipv6_pattern(pattern:&String) -> (u32, u128, u128, Vec<(u32, u32)>,
         }
     };
 
-    parse_pattern_whole_range(u128::from(ip), parts_str)
+    parse_pattern_whole_range_v6(u128::from(ip), parts_str)
 }
 
 
-fn parse_pattern_whole_range(raw_ip:u128, parts_str:&str) -> (u32, u128, u128, Vec<(u32, u32)>, u128) {
+fn parse_pattern_whole_range_v6(raw_ip:u128, parts_str:&str) -> (u32, u128, u128, Vec<(u32, u32)>, u128) {
 
     let mut bits_for_ip = 0;
     let mut parts:Vec<(u32, u32)> = vec![];
@@ -52,7 +52,7 @@ fn parse_pattern_whole_range(raw_ip:u128, parts_str:&str) -> (u32, u128, u128, V
     let mut pre_last:u32 = 0;
     for ps in s {   // 每个片段
 
-        let (first, last) = parse_pattern_local_range(ps);
+        let (first, last) = parse_pattern_local_range_v6(ps);
 
         if pre_last >= first {
             // 当前片段的首索引 必须 大于上一个片段的 尾索引
@@ -111,12 +111,12 @@ fn parse_pattern_whole_range(raw_ip:u128, parts_str:&str) -> (u32, u128, u128, V
 }
 
 
-fn parse_pattern_local_range(part_str:&str) -> (u32, u32) {
+fn parse_pattern_local_range_v6(part_str:&str) -> (u32, u32) {
 
 
     let s:Vec<&str> = part_str.trim().split('-').collect();
 
-    if s.len() == 2 {  // 两个端口
+    if s.len() == 2 {
 
         let first:u32 = parse_str(s[0].trim());
         let end:u32 = parse_str(s[1].trim());
@@ -128,7 +128,7 @@ fn parse_pattern_local_range(part_str:&str) -> (u32, u32) {
             exit(1)
         }
 
-    }else if s.len() == 1 { // 只有一个端口
+    }else if s.len() == 1 {
 
         let single:u32 = parse_str(s[0].trim());
         if 1 <= single && single <= 128 {

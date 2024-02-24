@@ -42,6 +42,8 @@ impl V4FileReader {
 
         // 接收模块基础配置
         let receiver_conf= ReceiverBaseConf::new(args, vec![probe.filter_v4.clone()]);
+        
+        let ttl = args.ttl;
 
         write_to_summary!(base_conf; "V4FileReader"; "args"; args;);
 
@@ -60,6 +62,7 @@ impl V4FileReader {
                 target_iter: targets,
                 // 使用输入范围优化约束条件, 使得只有对探测范围造成影响的约束起效
                 blocker: blocker.gen_local_constraints(first_tar, end_tar),
+                ttl,
             }
 
         } else {
@@ -76,6 +79,7 @@ impl V4FileReader {
                 tar_ports,
                 target_iter: targets,
                 blocker,
+                ttl,
             }
         }
     }

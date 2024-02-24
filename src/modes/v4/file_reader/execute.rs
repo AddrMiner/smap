@@ -7,6 +7,7 @@ use crate::core::sender::{send_file_v4_port};
 use crate::modes::ModeMethod;
 use crate::modes::v4::file_reader::V4FileReader;
 use crate::{computing_time, creat_channels, ending_the_receiving_thread, init_var, prepare_data, recv_ready, SYS, wait_sender_threads, write_to_summary};
+use crate::tools::check_duplicates::hash_set::HashSetV4Port;
 
 impl ModeMethod for V4FileReader {
 
@@ -18,13 +19,16 @@ impl ModeMethod for V4FileReader {
         // 执行接收线程
         let receiver_res;
         {
-            prepare_data!(self; tar_num);
             prepare_data!(self; clone; base_conf, receiver_conf, probe);
             let sports = self.sender_conf.source_ports.clone();
+            let tar_num = self.tar_num.map_or(256, |v| {v as usize});
 
             receiver_res = thread::spawn(move || {
-                PcapReceiver::run_v4_port_hash(0, base_conf, receiver_conf, probe, tar_num,  sports,
-                                     recv_ready_sender, recv_close_time_receiver)
+                // PcapReceiver::run_v4_port_hash(0, base_conf, receiver_conf, probe, tar_num,  sports,
+                //                      recv_ready_sender, recv_close_time_receiver)
+                // 初始化 哈希集合查重器
+                let hash_set = HashSetV4Port::new(tar_num);
+                PcapReceiver::run_v4_port(0, base_conf, receiver_conf, probe, sports, hash_set, recv_ready_sender, recv_close_time_receiver)
             });
         }
 
@@ -47,10 +51,11 @@ impl ModeMethod for V4FileReader {
                 if let Some(target_iter) = target_iter_option {
                     // 获得有效目标迭代器
 
+                    prepare_data!(self; ttl);
                     prepare_data!(self; clone; blocker, base_conf, sender_conf, probe);
 
                     let sender_thread = thread::spawn(move || {
-                        send_file_v4_port(0, target_iter, 0, blocker, probe, None, base_conf, sender_conf)
+                        send_file_v4_port(0, target_iter, 0, blocker, probe, ttl, base_conf, sender_conf)
                     });
                     sender_threads.push(sender_thread);
                 }

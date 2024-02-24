@@ -18,8 +18,8 @@ pub use ipv4::send_v4;
 #[cfg(not(windows))]
 pub use ipv4_port::send_v4_port;
 
-#[cfg(not(windows))]
-pub use file_ipv4::send_file_v4;
+// #[cfg(not(windows))]
+// pub use file_ipv4::send_file_v4;
 
 #[cfg(not(windows))]
 pub use file_ipv4_port::send_file_v4_port;

@@ -26,6 +26,8 @@ pub struct CycleV6Pattern {
     pub mask:u128,
     pub parts:Vec<(u32, u32)>,
 
+    pub ttl:Option<u8>,
+    
     pub assigned_target_range:Vec<(u128,u128,u64)>,
     pub blocker:BlackWhiteListV6,
 }

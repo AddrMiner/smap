@@ -27,6 +27,52 @@ pub struct Ipv4PacketU32 {
 }
 
 impl Ipv4PacketU32 {
+    
+    pub fn print_header() -> Vec<String> {
+        vec![
+            "ipv4_ihl".to_string(),
+            "ipv4_tos".to_string(),
+            "ipv4_total_len".to_string(),
+            
+            "ipv4_id".to_string(),
+            
+            "ipv4_rf".to_string(),
+            "ipv4_df".to_string(),
+            "ipv4_mf".to_string(),
+            
+            "ipv4_offset".to_string(),
+            
+            "ipv4_ttl".to_string(),
+            "ipv4_protocol".to_string(),
+            "ipv4_header_check_sum".to_string(),
+            
+            "ipv4_source_addr".to_string(),
+            "ipv4_dest_addr".to_string()
+        ]
+    }
+    
+    pub fn print(&self) -> Vec<String> {
+        vec![
+            self.ihl.to_string(), 
+            self.tos.to_string(), 
+            self.total_len.to_string(),
+            
+            self.id.to_string(),
+            
+            self.rf.to_string(),
+            self.df.to_string(),
+            self.mf.to_string(),
+            
+            self.offset.to_string(),
+            
+            self.ttl.to_string(),
+            self.protocol.to_string(),
+            self.header_check_sum.to_string(),
+            
+            self.source_addr.to_string(),
+            self.dest_addr.to_string()
+        ]
+    }
 
 
     /// 从ipv4首部计算校验和

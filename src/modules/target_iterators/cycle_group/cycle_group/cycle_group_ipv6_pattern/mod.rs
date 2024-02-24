@@ -36,10 +36,10 @@ impl CycleIpv6Pattern {
     pub fn new(bits_for_ip:u32, base_ip_val:u128, parts:Vec<(u32, u32)>, rng:&mut StdRng) -> Self {
 
         // 获取片段移动位数, 注意: 这里端口位数为 0
-        let ip_move_len = CycleIpv6Pattern::get_move_len(bits_for_ip, 0, parts);
+        let ip_move_len = Cyclic::get_move_len(bits_for_ip, 0, parts,128);
 
         // 获得乘法循环群
-        let cycle = Cyclic::new_from_ipv6_pattern(bits_for_ip, rng, u128::MAX);
+        let cycle = Cyclic::new_from_pattern(bits_for_ip, rng, u128::MAX);
 
         Self {
             p: cycle.p,
@@ -98,45 +98,5 @@ impl CycleIpv6Pattern {
     #[allow(dead_code)]
     pub fn init_whole(&self) -> Self {
         self.init(1, self.p_sub_one)
-    }
-
-    /// 获取片段移动位数
-    /// 返回值: (0: 第一次左移位数, 1: 右移位数, 2: 第二次左移位数)
-    pub fn get_move_len(bits_for_ip:u32, bits_for_payload:u32, parts:Vec<(u32, u32)>) -> Vec<(u32, u32, u32)> {
-
-        // [  0..  ( 位数 : 128 - bits_for_ip - bits_for_payload)  |    part1 ( 位数: parts.0 )   |   part2 ( 位数: parts.0 )  |  part3 ( 位数: parts.0 )  |  payload  ]
-        // =>
-        // 清除前置比特位
-        // [ part1 |   0..    (128 - parts.0)      ]
-        // [ part2 |   0..    (128 - parts.0)      ]
-        // [ part3 |   0..    (128 - parts.0)      ]
-        // =>
-        // 清除后置比特位
-        // [ 0..  | part1 ]
-        // [ 0..  | part2 ]
-        // [ 0..  | part3 ]
-        // =>
-        // 使用偏移量进行调整
-        // [ part1  |       0..   ( 位数: parts.1 )                   ]
-        // [    0..         |  part2 |     0..  ( 位数: parts.1 )     ]
-        // [    0..                         |  part3 ]      // ( 位数: parts.1  为 0 )
-        // =>
-        // 所有片段 或运算
-        // [  part1 |  0..  |  part2 |  0.. |  part3 ]
-
-
-        // 0: 第一次左移位数    1: 右移位数  2: 第二次左移位数
-        let mut move_len:Vec<(u32, u32, u32)> = vec![];
-
-        let leading_zeros = 128 - bits_for_ip - bits_for_payload;
-
-        let mut left_move = leading_zeros;
-        for part in parts {
-
-            move_len.push((left_move, 128 - part.0, part.1));
-            left_move += part.0;
-        }
-
-        move_len
     }
 }

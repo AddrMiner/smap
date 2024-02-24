@@ -25,6 +25,8 @@ pub struct CycleV6 {
     pub end_ip:u128,
     pub tar_ip_num:u64,
 
+    pub ttl:Option<u8>,
+
     pub assigned_target_range:Vec<(u128,u128,u64)>,
     pub blocker:BlackWhiteListV6,
 }

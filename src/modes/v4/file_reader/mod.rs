@@ -27,6 +27,8 @@ pub struct V4FileReader {
 
     pub assigned_target_range:Vec<(u64, u64, u64)>,
 
+    pub ttl:Option<u8>,
+
     pub blocker:BlackWhiteListV4,
 }
 

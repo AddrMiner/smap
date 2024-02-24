@@ -74,6 +74,11 @@ impl BitMapV4Port {
 
         // 不能安全地将 u64 转化为 usize
         if (u64::MAX as u128) > (usize::MAX as u128) { error!("{}", SYS.get_info("err", "bitmap_u64_to_usize_err")); exit(1) }
+        
+        // 在检查重复时, 必须添加0端口，以应对特殊情况
+        if !tar_ports.contains(&0) {
+            tar_ports.push(0);
+        }
 
         // 从小到大排序
         tar_ports.sort();

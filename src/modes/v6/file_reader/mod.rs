@@ -26,6 +26,8 @@ pub struct V6FileReader {
 
     pub tar_ports:Vec<u16>,
     pub assigned_target_range:Vec<(u64, u64, u64)>,
+    
+    pub ttl:Option<u8>,
 
     pub blocker:BlackWhiteListV6,
 }

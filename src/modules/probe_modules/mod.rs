@@ -1,10 +1,13 @@
 mod tools;
 
-mod v4;
-mod v6;
 
-pub mod probe_mod_v4;
-pub mod probe_mod_v6;
+mod active_probe;
+pub mod topology_probe;
+
+pub use active_probe::v4;
+pub use active_probe::v6;
+pub use active_probe::probe_mod_v4;
+pub use active_probe::probe_mod_v6;
 
 
 

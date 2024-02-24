@@ -1,7 +1,6 @@
 use std::process::exit;
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender};
-use ahash::AHashSet;
 use chrono::Utc;
 use log::error;
 use crate::core::conf::set_conf::base_conf::BaseConf;
@@ -12,6 +11,7 @@ use crate::modules::output_modules::OutputMod;
 use crate::modules::probe_modules::probe_mod_v4::ProbeModV4;
 use crate::modules::probe_modules::probe_mod_v6::ProbeModV6;
 use crate::SYS;
+use crate::tools::check_duplicates::hash_set::{HashSetV4Port, HashSetV6Port};
 
 impl PcapReceiver {
 
@@ -52,10 +52,10 @@ impl PcapReceiver {
         // 接收线程信息统计
         let mut receiver_info_v4 = ReceiverInfoV4::new();
         let mut receiver_info_v6 = ReceiverInfoV6::new();
-
-        // 初始化 查重器
-        let mut hash_set_v4:AHashSet<(u32, u16)> = AHashSet::with_capacity(hash_set_v4_cap);
-        let mut hash_set_v6:AHashSet<(u128, u16)> = AHashSet::with_capacity(hash_set_v6_cap);
+        
+        // 初始化 哈希集合查重器
+        let mut hash_set_v4 = HashSetV4Port::new(hash_set_v4_cap);
+        let mut hash_set_v6 = HashSetV6Port::new(hash_set_v6_cap);
 
         let aes_rand = base_conf.aes_rand.clone();
 
@@ -92,13 +92,13 @@ impl PcapReceiver {
 
                     let ip_ver = net_layer_data[0] >> 4;
                     if ip_ver == 4 {
-                        Self::handle_packet_v4_port_hash(&header,data_link_header,
+                        Self::handle_packet_v4_port(&header,data_link_header,
                                                net_layer_data, &aes_rand, &mut hash_set_v4,
                                                &mut receiver_info_v4, allow_no_succ, &probe_v4, &mut output_v4);
                     }
                     if ip_ver == 6 {
                         // 如果是ipv6的数据包
-                        Self::handle_packet_v6_port_hash(&header,data_link_header,
+                        Self::handle_packet_v6_port(&header,data_link_header,
                                                net_layer_data, &aes_rand, &mut hash_set_v6,
                                                &mut receiver_info_v6, allow_no_succ, &probe_v6, &mut output_v6);
                     }

@@ -38,6 +38,8 @@ pub struct CycleV4V6 {
 
     pub blocker_v4:BlackWhiteListV4,
     pub blocker_v6:BlackWhiteListV6,
+
+    pub ttl:Option<u8>,
 }
 
 

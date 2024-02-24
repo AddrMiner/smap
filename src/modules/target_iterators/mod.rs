@@ -1,9 +1,11 @@
 mod cycle_group;
 mod file_reader;
 mod pmap;
+mod topo;
 
 pub use cycle_group::cycle_group::cycle_group_ipv4::CycleIpv4;
 pub use cycle_group::cycle_group::cycle_group_ipv6::CycleIpv6;
+pub use cycle_group::cycle_group::cycle_group_ipv4_pattern::CycleIpv4Pattern;
 pub use cycle_group::cycle_group::cycle_group_ipv6_pattern::CycleIpv6Pattern;
 
 pub use cycle_group::cycle_group_with_port::cycle_group_ipv4::CycleIpv4Port;
@@ -21,7 +23,8 @@ pub use pmap::PmapIpStruct;
 pub use pmap::PmapIterV4;
 pub use pmap::PmapIterV6;
 
-
+pub use topo::TopoStateChainV4;
+pub use topo::TopoIterV4;
 
 
 
@@ -110,4 +113,13 @@ pub trait Reset {
 
     /// 重置 引导迭代器 至 起始状态
     fn reset(&mut self);
+}
+
+
+pub trait Topo4Iter {
+    /// 返回值: 0:是否为<u>非最终值</u>, 1:最终值是否有效, 2:ip地址, 3:ttl
+    fn get_first_ip_ttl(&mut self) -> (bool, bool, u32, u8);
+
+    /// 返回值: 0:是否为<u>非最终值</u>, 1:最终值是否有效, 2:ip地址, 3:ttl
+    fn get_next_ip_ttl(&mut self) -> (bool, bool, u32, u8);
 }

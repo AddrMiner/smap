@@ -39,6 +39,7 @@ impl ModeMethod for CycleV4V6 {
         for assigned_ranges in self.assigned_target_range_v4.iter() {
 
             let assigned_ranges = assigned_ranges.clone();
+            prepare_data!(self; ttl);
             prepare_data!(self; clone; base_conf, sender_conf, probe_v4, blocker_v4, v4_ranges,target_iters_v4);
 
             let sender_thread = thread::spawn(move || {
@@ -54,7 +55,7 @@ impl ModeMethod for CycleV4V6 {
                         let tar_iter_v4 = target_iters_v4[index].init(assigned_range.0, assigned_range.1);
 
                         let res = send_v4_port(0, tar_iter_v4, 0,        // 局部目标数量设为0, 使速率控制器以全局速率发送
-                                            blocker_v4,probe_v4, None, base_conf, sender_conf);
+                                            blocker_v4,probe_v4, ttl, base_conf, sender_conf);
 
                         send_success += res.0; send_failed += res.1; blocked += res.2;
                     }
@@ -67,6 +68,7 @@ impl ModeMethod for CycleV4V6 {
         // 执行 ipv6 发送线程
         for assigned_ranges in self.assigned_target_range_v6.iter() {
 
+            prepare_data!(self; ttl);
             prepare_data!(;clone;assigned_ranges);
             prepare_data!(self; clone; target_iters_v6, base_conf, sender_conf, probe_v6, blocker_v6, v6_ranges);
 
@@ -82,7 +84,7 @@ impl ModeMethod for CycleV4V6 {
                         let tar_iter_v6 = target_iters_v6[index].init(assigned_range.0, assigned_range.1);
 
                         let res = send_v6_port(0, tar_iter_v6, 0,
-                                                      blocker_v6,probe_v6, None, base_conf, sender_conf);
+                                                      blocker_v6,probe_v6, ttl, base_conf, sender_conf);
 
                         send_success += res.0; send_failed += res.1; blocked += res.2;
                     }

@@ -32,6 +32,9 @@ pub struct Args{
     pub probe_v6:Option<String>,
 
     // sender conf
+    #[arg(long = "ttl", help = "设置发送时的ttl字段")]
+    pub ttl:Option<u8>,
+    
     #[arg(long = "saddr", help = "设置本机用于发送的地址")]
     pub source_addrs:Option<String>,
 

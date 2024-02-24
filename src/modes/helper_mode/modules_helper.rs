@@ -24,6 +24,8 @@ pub fn mode_help(mode_name:&str) -> String {
 
         "pmap_v6" | "p6" => modes::v6::PmapV6::print_help(),
 
+        "topo_v4" | "t4" => modes::v4::Topo4::print_help(),
+
         _ => {
             "no mode help".to_string()
         }
@@ -45,6 +47,9 @@ pub fn probe_v4_help(name:&str) -> String {
         "tcp_syn_opt_v4" => probe_modules::probe_mod_v4::TcpSynOptV4::print_help(),
 
         "udp_scan_v4" => probe_modules::probe_mod_v4::UdpScanV4::print_help(),
+
+
+        "topo_v4" => probe_modules::topology_probe::topo_mod_v4::TopoV4::print_help(),
 
         _ => {
             "no help".to_string()

@@ -16,6 +16,31 @@ pub struct Ipv6PacketU128 {
 
 impl Ipv6PacketU128 {
 
+    pub fn print_header() -> Vec<String> {
+        vec![
+            "ipv6_traffic_class".to_string(),
+            "ipv6_flow_label".to_string(),
+            "ipv6_payload_len".to_string(),
+            "ipv6_next_header".to_string(),
+            "ipv6_hop_limit".to_string(),
+
+            "ipv6_source_addr".to_string(),
+            "ipv6_dest_addr".to_string(),
+        ]
+    }
+
+    pub fn print(&self) -> Vec<String> {
+        vec![
+            self.traffic_class.to_string(),
+            self.flow_label.to_string(),
+            self.payload_len.to_string(),
+            self.next_header.to_string(),
+            self.hop_limit.to_string(),
+
+            self.source_addr.to_string(),
+            self.dest_addr.to_string()
+        ]
+    }
 
     pub fn get_u8_vec_without_addr(&self) -> [u8; 8] {
 

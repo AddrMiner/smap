@@ -42,6 +42,8 @@ impl V6FileReader {
 
         // 接收模块基础配置
         let receiver_conf= ReceiverBaseConf::new(args, vec![probe.filter_v6.clone()]);
+        
+        let ttl = args.ttl;
 
         write_to_summary!(base_conf; "V6FileReader"; "args"; args;);
 
@@ -60,6 +62,7 @@ impl V6FileReader {
                 tar_num,
                 tar_ports,
                 blocker: blocker.gen_local_constraints(first_tar, end_tar),
+                ttl,
             }
 
         } else {
@@ -76,6 +79,7 @@ impl V6FileReader {
                 tar_num,
                 tar_ports,
                 blocker,
+                ttl,
             }
         }
     }

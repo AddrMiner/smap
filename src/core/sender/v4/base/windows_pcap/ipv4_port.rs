@@ -7,7 +7,7 @@ use crate::core::sender::tools::rate_controller::RateController;
 use crate::core::sender::tools::source_ip_iter::source_ip_v4::SourceIpIterV4;
 use crate::core::sys::packet_sender::PcapSender;
 use crate::modules::probe_modules::probe_mod_v4::ProbeModV4;
-use crate::modules::target_iterators::{Ipv4IterP};
+use crate::modules::target_iterators::Ipv4IterP;
 use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
 
 

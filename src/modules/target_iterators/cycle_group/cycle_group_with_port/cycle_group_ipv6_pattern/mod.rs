@@ -7,7 +7,6 @@ use rand::rngs::StdRng;
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::modules::target_iterators::cycle_group::cycle_group_with_port::cyclic_with_port::CyclicPort;
 use crate::modules::target_iterators::cycle_group::cyclic::Cyclic;
-use crate::modules::target_iterators::CycleIpv6Pattern;
 use crate::SYS;
 
 /// ipv6 模式字符串 乘法循环群
@@ -54,10 +53,10 @@ impl CycleIpv6PatternPort {
         let bits_for_port = TarIterBaseConf::bits_needed_usize(tar_ports.len());
 
         // 获取片段移动位数
-        let ip_move_len = CycleIpv6Pattern::get_move_len(bits_for_ip, bits_for_port, parts);
+        let ip_move_len = Cyclic::get_move_len(bits_for_ip, bits_for_port, parts, 128);
 
         // 获得乘法循环群
-        let cycle = CyclicPort::new_from_ipv6_pattern(bits_for_ip, bits_for_port, rng, u128::MAX);
+        let cycle = CyclicPort::new_from_pattern(bits_for_ip, bits_for_port, rng, u128::MAX);
 
         Self {
             p: cycle.p,

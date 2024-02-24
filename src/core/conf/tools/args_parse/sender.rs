@@ -439,9 +439,9 @@ impl SenderBaseConf {
         }
     }
 
-    pub fn get_tar_num(tar_ip_num:u64, tar_ports_num:usize) -> Option<u64> {
+    pub fn get_tar_num(tar_ip_num:u64, tar_repeat_num:usize) -> Option<u64> {
 
-        let tar_num:u128 = (tar_ip_num as u128) * (tar_ports_num as u128);
+        let tar_num:u128 = (tar_ip_num as u128) * (tar_repeat_num as u128);
 
         if tar_num > (u64::MAX as u128) {
             // 超出范围限制

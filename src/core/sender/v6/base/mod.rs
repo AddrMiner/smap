@@ -18,8 +18,8 @@ pub use ipv6::send_v6;
 #[cfg(not(windows))]
 pub use ipv6_port::send_v6_port;
 
-#[cfg(not(windows))]
-pub use file_ipv6::send_file_v6;
+// #[cfg(not(windows))]
+// pub use file_ipv6::send_file_v6;
 
 #[cfg(not(windows))]
 pub use file_ipv6_port::send_file_v6_port;

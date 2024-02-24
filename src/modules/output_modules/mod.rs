@@ -51,7 +51,7 @@ impl OutputMod {
     }
 }
 
-pub trait OutputMethod {     // 运行过程中的回调函数
+pub trait OutputMethod:Send {     // 运行过程中的回调函数
 
     // vec<string>格式 行写入
     fn writer_line(&mut self, data:&Vec<String>);

@@ -4,9 +4,9 @@ use crate::modules::target_iterators::Ipv6Iter;
 impl CycleIpv6Pattern {
 
     /// 以当前目标为基础, 计算并获取下一个目标
-    /// 返回值: 0:是否为非最终值, 1:目标值
+    /// 返回值: 是否为非最终值
     #[inline]
-    fn get_next_target(&mut self) -> (bool, u128) {
+    fn get_next_target(&mut self) -> bool {
 
         loop {
 
@@ -17,20 +17,13 @@ impl CycleIpv6Pattern {
             if self.current == self.last {
                 // 如果当前乘法群的输出值为最终值, 标记为 false
 
-                return if self.current < self.valid_range {
-                    // 如果最终值合法, 返回最终值
-
-                    // 注意: 这里对ip值合法性进行了检查
-                    (false, self.current)
-                } else {
-                    (false, u128::MAX)
-                }
+                return false
             } else {
 
                 // 使得 current 的值 始终处于  1..[    0..   |   tar_ip_num  ]
                 // 注意这里 不等于0 的条件省略
                 if self.current < self.valid_range {
-                    return (true, self.current)
+                    return true
                 }
             }
         }
@@ -107,9 +100,9 @@ impl Ipv6Iter for CycleIpv6Pattern {
     }
 
     fn get_next_ip(&mut self) -> (bool, bool, u128) {
-        let target_ip_val = self.get_next_target();
+        let target_ip_not_end = self.get_next_target();
 
-        if target_ip_val.0 {
+        if target_ip_not_end {
             // 如果不是最终值
 
             // ip值有效, 得到的 真实ip 也一定有效
@@ -118,16 +111,16 @@ impl Ipv6Iter for CycleIpv6Pattern {
             (true, false, real_ip)
         } else {
             // 如果是最终值
-            if target_ip_val.1 == u128::MAX {
-                // 如果最终值无效
-                (false, false, 0)
-            } else {
+            if self.current < self.valid_range {
                 // 如果最终值有效
 
                 // ip值有效, 得到的 真实ip 也一定有效
                 // 注意: 这里ip值需要减一
                 let real_ip = self.get_real_ip_from_tar_val(self.current-1);
                 (false, true, real_ip)
+            } else {
+                // 如果最终值无效
+                (false, false, 0)
             }
         }
     }

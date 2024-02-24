@@ -25,6 +25,8 @@ pub struct CycleV4 {
     pub start_ip:u32,
     pub end_ip:u32,
     pub tar_ip_num:u64,
+    
+    pub ttl:Option<u8>,
 
     pub assigned_target_range:Vec<(u64,u64,u64)>,
     pub blocker:BlackWhiteListV4,

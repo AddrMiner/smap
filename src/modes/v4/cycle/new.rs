@@ -54,6 +54,8 @@ impl CycleV4 {
 
         // 接收模块基础配置
         let receiver_conf= ReceiverBaseConf::new(args, vec![probe.filter_v4.clone()]);
+        
+        let ttl = args.ttl;
 
         // 将 所有输入参数 写入记录文件
         write_to_summary!(base_conf; "CycleV4"; "args"; args;);
@@ -71,6 +73,7 @@ impl CycleV4 {
             end_ip,
             tar_ip_num,
 
+            ttl,
             assigned_target_range: TarIterBaseConf::cycle_group_assign_targets_u64(p_sub_one, send_thread_num),
 
             // 使用输入范围优化约束条件, 使得只有对探测范围造成影响的约束起效

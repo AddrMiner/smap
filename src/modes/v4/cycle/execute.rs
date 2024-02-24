@@ -56,6 +56,7 @@ impl ModeMethod for CycleV4 {
         let mut sender_threads = vec![];
         for assigned_targets in self.assigned_target_range.iter() {
 
+            prepare_data!(self; ttl);
             prepare_data!(self; clone; blocker, base_conf, sender_conf, probe);
 
             let sender_thread;
@@ -66,7 +67,7 @@ impl ModeMethod for CycleV4 {
 
                     sender_thread = thread::spawn(move || {
                         send_v4(0, target_iter, 0,
-                                     blocker,probe, None, base_conf, sender_conf)
+                                     blocker,probe, ttl, base_conf, sender_conf)
                     });
                 }
                 CycleIpv4Type::CycleIpv4Port(t) => {
@@ -75,7 +76,7 @@ impl ModeMethod for CycleV4 {
 
                     sender_thread = thread::spawn(move || {
                         send_v4_port(0, target_iter, 0,
-                                     blocker,probe, None, base_conf, sender_conf)
+                                     blocker,probe, ttl, base_conf, sender_conf)
                     });
                 }
             }
