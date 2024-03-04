@@ -10,7 +10,6 @@ use crate::tools::net_handle::packet::v6::icmp_v6::fields::IcmpV6Fields;
 pub struct IcmpEchoV6 {
 
     base_buf:Vec<u8>,
-    max_len:usize,
 
     pub print_ipv6_packet:bool,
     fields_flag:IcmpV6Fields
@@ -56,7 +55,6 @@ impl IcmpEchoV6 {   // 定义构造方法和初始化方法
         IcmpEchoV6 {
             // 以太网头 14字节, 没有地址的ipv6首部 8字节       14 + 8 = 22
             base_buf: Vec::with_capacity(22),
-            max_len: p.max_packet_length_v6,
             print_ipv6_packet,
             fields_flag,
         }

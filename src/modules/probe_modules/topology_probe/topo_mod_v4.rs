@@ -6,9 +6,9 @@ use crate::SYS;
 use crate::tools::encryption_algorithm::aes::AesRand;
 use crate::tools::net_handle::net_interface::mac_addr::MacAddress;
 
-pub use crate::modules::probe_modules::topology_probe::v4::TopoV4;
+pub use crate::modules::probe_modules::topology_probe::v4::{TopoUdpV4, TopoIcmpV4};
 
-pub const TOPO_MODS_V4: [&str; 1] = ["topo_v4"];
+pub const TOPO_MODS_V4: [&str; 2] = ["topo_udp_v4", "topo_icmp_v4"];
 
 impl TopoModV4 {
 
@@ -21,7 +21,8 @@ impl TopoModV4 {
 
         match name {
 
-            "topo_v4" => TopoV4::new(conf),
+            "topo_icmp_v4" => TopoIcmpV4::new(conf),
+            "topo_udp_v4"  => TopoUdpV4::new(conf),
 
             _ => {
                 error!("{}", SYS.get_info("err", "v4_probe_mod_not_exist"));
@@ -37,7 +38,8 @@ impl TopoModV4 {
 
         match name {
 
-            "topo_v4" => Box::new(TopoV4::init(t, sports)),
+            "topo_icmp_v4" => Box::new(TopoIcmpV4::init(t)),
+            "topo_udp_v4"  => Box::new(TopoUdpV4::init(t, sports)),
 
             _ => {
                 error!("{}", SYS.get_info("err", "v4_probe_mod_not_exist"));
@@ -56,19 +58,20 @@ pub trait TopoMethodV4 {
 
     fn make_packet_v4(&self, source_ip:u32, dest_ip:u32, ttl:u8, aes_rand:&AesRand) -> Vec<u8>;
 
-    fn parse_packet_v4(&self, ts:&libc::timeval, ipv4_header:&[u8], net_layer_packet:&[u8], aes_rand:&AesRand) -> Option<TopoResultV4>;
+    fn parse_packet_v4(&self, ts:&libc::timeval, ipv4_header:&[u8], net_layer_data:&[u8], aes_rand:&AesRand) -> Option<TopoResultV4>;
 
     /// 打印出首部字段
     fn print_header(&self) -> Vec<String>;
 
-    fn print_record(&self, res:&TopoResultV4) -> Vec<String>;
+    fn print_record(&self, res:&TopoResultV4, net_layer_header_and_data:&[u8]) -> Vec<String>;
     
-    fn print_silent_record(&self, responder:u32, distance:u8) -> Vec<String>;
+    fn print_silent_record(&self, dest_ip:u32, distance:u8) -> Vec<String>;
 
 
 }
 
 
+#[derive(Clone)]
 pub struct TopoModV4 {
 
     pub name:&'static str,

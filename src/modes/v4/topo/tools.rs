@@ -1,10 +1,13 @@
 use std::net::Ipv4Addr;
 use std::process::exit;
+use std::sync::Arc;
 use log::error;
 use rand::prelude::StdRng;
 use rand::Rng;
+use crate::core::conf::modules_config::ModuleConf;
 use crate::core::conf::tools::args_parse::ip::ipv4_pattern::{parse_ipv4_pattern, parse_pattern_local_range_v4};
 use crate::modes::v4::Topo4;
+use crate::modules::probe_modules::topology_probe::topo_mod_v4::TopoModV4;
 use crate::SYS;
 
 impl Topo4 {
@@ -94,7 +97,7 @@ impl Topo4 {
     }
 
     pub fn split_chains(mut state_chain: Vec<u8>, sender_count: usize) -> Vec<Vec<u8>> {
-        let chunk_size = state_chain.len() / sender_count;
+        let chunk_size = (state_chain.len() / sender_count) + 1;
         let chunks = state_chain.chunks_mut(chunk_size);
 
         let mut res = vec![];
@@ -105,5 +108,17 @@ impl Topo4 {
         let res_len = res.len();
         res.swap(0, res_len - 1);
         res
+    }
+    
+    
+    pub fn get_sub_probe(para:&str, mod_conf:ModuleConf) -> Option<Arc<TopoModV4>> {
+        
+        match mod_conf.get_info(&para.to_string()) {
+            None => None,
+            Some(name) => {
+                Some(Arc::new(TopoModV4::new(&name, mod_conf)))
+            }
+        }
+        
     }
 }

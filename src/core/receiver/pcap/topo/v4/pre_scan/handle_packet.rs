@@ -37,7 +37,7 @@ impl PcapReceiver {
                         *active_count += 1;
 
                         // 输出该条目信息
-                        output.writer_line(&probe.print_record(&res));
+                        output.writer_line(&probe.print_record(&res, net_layer_header_and_data));
 
                         // 获取目标索引
                         let ip_index = state_chain.get_ip_index(

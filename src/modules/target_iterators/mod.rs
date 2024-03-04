@@ -26,6 +26,9 @@ pub use pmap::PmapIterV6;
 pub use topo::TopoStateChainV4;
 pub use topo::TopoIterV4;
 
+pub use topo::TopoStateChainV6;
+pub use topo::TopoIterV6;
+
 
 
 pub enum  CycleIpv4Type {
@@ -122,4 +125,12 @@ pub trait Topo4Iter {
 
     /// 返回值: 0:是否为<u>非最终值</u>, 1:最终值是否有效, 2:ip地址, 3:ttl
     fn get_next_ip_ttl(&mut self) -> (bool, bool, u32, u8);
+}
+
+pub trait Topo6Iter {
+    /// 返回值: 0:是否为<u>非最终值</u>, 1:最终值是否有效, 2:ip地址, 3:ttl
+    fn get_first_ip_ttl(&mut self) -> (bool, bool, u128, u8);
+
+    /// 返回值: 0:是否为<u>非最终值</u>, 1:最终值是否有效, 2:ip地址, 3:ttl
+    fn get_next_ip_ttl(&mut self) -> (bool, bool, u128, u8);
 }

@@ -34,7 +34,7 @@ impl ProbeMethodV4 for IcmpEchoV4 {
             mf: 0,
             offset: 0,
 
-            ttl: 64,               // 初始ttl
+            ttl: 64,                // 初始ttl
             protocol: 1,            // icmp_v4 在 ipv4 中的协议号为 1
 
             // 无论该项输入是什么, 输出字节数组时都会被置为 0
@@ -83,7 +83,7 @@ impl ProbeMethodV4 for IcmpEchoV4 {
             // 生成验证信息, 注意这里是 源地址在前
             let validation = aes_rand.validate_gen_v4_u32_without_sport(source_ip, dest_ip);
 
-            // 写入 icmp_v4首部, icmp_v4数据部分为 空
+            // 写入 icmp_v4首部
             packet.extend([
                 //   类型为回显请求      code                           校验和置为0
                             8,                 0,                          0,                         0,

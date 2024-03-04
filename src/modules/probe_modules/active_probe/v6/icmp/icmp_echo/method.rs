@@ -36,7 +36,7 @@ impl ProbeMethodV6 for IcmpEchoV6 {
     /// 发送线程 制作数据包
     fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, _dest_port: u16, hop_limit:Option<u8>, aes_rand:&AesRand) -> Vec<u8> {
         // 按最大数据包长度设置 向量容量
-        let mut packet = Vec::with_capacity(self.max_len);
+        let mut packet = Vec::with_capacity(70);
 
         let source_ip_bytes = source_ip.to_be_bytes();
         let dest_ip_bytes = dest_ip.to_be_bytes();
@@ -62,31 +62,30 @@ impl ProbeMethodV6 for IcmpEchoV6 {
         }
 
         {
+            // icmp报头: [ 类型: {54}  代码: {55}  校验和: {56, 57} id: {58, 59} 序列号: {60, 61} ]
+            // icmp数据: [ 62 .. <总长度]
+
+            // icmp数据: [ 62, 63, 64, 65,  66, 67, 68, 69]
+            
             // 生成验证信息, 注意这里是 源地址在前
             let validation = aes_rand.validate_gen_v6_u128_without_sport(source_ip, dest_ip);
 
-            let icmp_type: u8 = 128;    // 回声请求  ping
-            let icmp_code: u8 = 0;
-
-            // 使用验证数据的 第10, 11位(大端字节)作为id
-            let icmp6_id = ((validation[10] as u32) << 8) | (validation[11] as u32);
-
-            // 使用验证数据的 前8位 作为icmp_v6的数据部分
-            let icmp6_data = &validation[0..8];
-
-            let check_sum_bytes = IcmpV6Packet::get_check_sum(&source_ip_bytes, &dest_ip_bytes,
-                                                        // len: 8字节(icmp首部) + 8字节(验证数据)
-                                                        16, icmp_type, icmp_code, icmp6_id, icmp6_data);
-
             // 写入icmp_v6首部
             packet.extend([
-                icmp_type,            icmp_code, check_sum_bytes[0], check_sum_bytes[1],
-                // 使用验证数据的 第10, 11位(大端字节)作为id       序列号填充为0
+                //        类型              code                      check_sum字段填充为0
+                           128,               0,                  0,                  0,
+                // 使用验证数据的 第10, 11位(大端字节)作为id                       序列号填充为0
                 validation[10],  validation[11],                  0,                  0,
             ]);
 
-            // 写入icmp_v6数据(验证数据)
-            packet.extend(icmp6_data);
+            // 使用验证数据的 前8字节 作为icmp_v6的数据部分
+            packet.extend_from_slice(&validation[0..8]);
+
+            let check_sum_bytes = IcmpV6Packet::get_check_sum(&source_ip_bytes, &dest_ip_bytes,
+                                                        // len: 8字节(icmp首部) + 8字节(验证数据)
+                                                        16, &packet[54..70]);
+            packet[56] = check_sum_bytes[0];
+            packet[57] = check_sum_bytes[1];
         }
         packet
     }

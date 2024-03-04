@@ -23,7 +23,7 @@ pub struct CycleIpv6Pattern {
     base_ip_val:u128,
     // ip 片段的位移量
     // (0: 第一次左移位数, 1: 右移位数, 2: 第二次左移位数)
-    ip_move_len:Vec<(u32,u32,u32)>,
+    pub ip_move_len:Vec<(u32,u32,u32)>,
 
 
     // 根据 ip 占的比特位数计算得到的 目标值有效范围

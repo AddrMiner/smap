@@ -1,4 +1,4 @@
-use crate::modules::target_iterators::{Topo4Iter, TopoIterV4};
+use crate::modules::target_iterators::{Ipv4Iter, Topo4Iter, TopoIterV4};
 
 impl Topo4Iter for TopoIterV4 {
     fn get_first_ip_ttl(&mut self) -> (bool, bool, u32, u8) {
@@ -172,5 +172,113 @@ impl TopoIterV4 {
         }
 
         real_ip
+    }
+}
+
+
+// 辅助预扫描迭代器
+impl Ipv4Iter for TopoIterV4 {
+    fn get_first_ip(&mut self) -> (bool, bool, u32) {
+        if self.current == self.last {
+            // 如果初始值是最后一个
+
+            if self.current < self.valid_range {
+                // index 有效
+                let index = (self.current - 1) as usize;
+                // 使用索引 取出该地址对应的 状态
+                //     [ 地址1                              , 地址2, ...  ]
+                //     [ u8(  下一个ttl | 是否接收到响应(1比特)), u8, ....   ]
+                // 注意: 已接收响应为1, 未接收响应为0
+                let code = self.state_chain[index];
+
+                // 如果 code 等于 0, 表示 为首次预扫描未响应的目标
+                if code == 0 {
+                    // 注意: 这里将 局部索引 转换为 全局索引
+                    let real_ip = self.get_real_ip_from_tar_val((index as u32) + self.start_index);
+                    (false, true, real_ip)
+                } else {
+                    (false, false, 0)
+                }
+            } else {
+                // 如果 超出有效范围
+                (false, false, 0)
+            }
+        } else {
+            // 如果初始值不是最后一个
+
+            if self.current < self.valid_range {
+                // index 有效
+
+                let index = (self.current - 1) as usize;
+                // 使用索引 取出该地址对应的 状态
+                //     [ 地址1                              , 地址2, ...  ]
+                //     [ u8(  下一个ttl | 是否接收到响应(1比特)), u8, ....   ]
+                // 注意: 已接收响应为1, 未接收响应为0
+                let code = self.state_chain[index];
+
+                // 如果 code 等于 0, 表示 为首次预扫描未响应的目标
+                if code == 0 {
+                    // 注意: 这里将 局部索引 转换为 全局索引
+                    let real_ip = self.get_real_ip_from_tar_val((index as u32) + self.start_index);
+                    return (true, false, real_ip)
+                } else {
+                    // 当前ip不在探测范围
+                    // 继续寻找下一个目标
+                    self.get_next_ip()
+                }
+            } else {
+                // index 超出有效范围
+                self.get_next_ip()
+            }
+        }
+    }
+
+    fn get_next_ip(&mut self) -> (bool, bool, u32) {
+        loop {
+            let target_not_end = self.get_next_target();
+
+            if target_not_end {
+                // 如果不是最终值
+
+                let index = (self.current - 1) as usize;
+                // 使用索引 取出该地址对应的 状态
+                //     [ 地址1                              , 地址2, ...  ]
+                //     [ u8(  下一个ttl | 是否接收到响应(1比特)), u8, ....   ]
+                // 注意: 已接收响应为1, 未接收响应为0
+                let code = self.state_chain[index];
+
+                // 如果 code 等于 0, 表示 为首次预扫描未响应的目标
+                if code == 0 {
+                    // 注意: 这里将 局部索引 转换为 全局索引
+                    let real_ip = self.get_real_ip_from_tar_val((index as u32) + self.start_index);
+                    return (true, false, real_ip)
+                }
+
+                // 如果 code 无效, 循环直到得到 有效目标
+            } else {
+                // 如果是最终值
+                return if self.current < self.valid_range {
+                    // 如果最终值有效
+                    let index = (self.current - 1) as usize;
+                    // 使用索引 取出该地址对应的 状态
+                    //     [ 地址1                              , 地址2, ...  ]
+                    //     [ u8(  下一个ttl | 是否接收到响应(1比特)), u8, ....   ]
+                    // 注意: 已接收响应为1, 未接收响应为0
+                    let code = self.state_chain[index];
+
+                    // 如果 code 等于 0, 表示 为首次预扫描未响应的目标
+                    return if code == 0 {
+                        // 注意: 这里将 局部索引 转换为 全局索引
+                        let real_ip = self.get_real_ip_from_tar_val((index as u32) + self.start_index);
+                        (false, true, real_ip)
+                    } else {
+                        (false, false, 0)
+                    }
+                } else {
+                    // 如果最终值无效
+                    (false, false, 0)
+                }
+            }
+        }
     }
 }

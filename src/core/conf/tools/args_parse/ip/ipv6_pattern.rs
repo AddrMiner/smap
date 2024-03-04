@@ -111,7 +111,7 @@ fn parse_pattern_whole_range_v6(raw_ip:u128, parts_str:&str) -> (u32, u128, u128
 }
 
 
-fn parse_pattern_local_range_v6(part_str:&str) -> (u32, u32) {
+pub fn parse_pattern_local_range_v6(part_str:&str) -> (u32, u32) {
 
 
     let s:Vec<&str> = part_str.trim().split('-').collect();

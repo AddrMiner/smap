@@ -42,6 +42,22 @@ impl Ipv6PacketU128 {
         ]
     }
 
+    pub fn get_u8_vec_before_payload_len(&self) -> [u8; 4] {
+
+        // 版本号
+        let ver = 6u8;
+
+        let first_byte = (ver << 4) | (self.traffic_class >> 4);
+        let second_byte = (self.traffic_class << 4) | ((self.flow_label >> 16) as u8);
+        let third_byte = ((self.flow_label << 16) >> 24) as u8;
+        let fourth_byte = ((self.flow_label << 24) >> 24) as u8;
+
+        [
+            first_byte,           second_byte,          third_byte,           fourth_byte,
+        ]
+
+    }
+
     pub fn get_u8_vec_without_addr(&self) -> [u8; 8] {
 
         // 版本号

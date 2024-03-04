@@ -1,14 +1,15 @@
 use std::net::Ipv4Addr;
 use chrono::Utc;
 use crate::modules::probe_modules::tools::ethernet::make_ethernet_header;
+use crate::modules::probe_modules::topology_probe::tools::default_ttl::get_default_ttl;
 use crate::modules::probe_modules::topology_probe::topo_mod_v4::{TopoMethodV4, TopoResultV4};
-use crate::modules::probe_modules::topology_probe::v4::topo::TopoV4;
+use crate::modules::probe_modules::topology_probe::v4::topo_udp::TopoUdpV4;
 use crate::tools::encryption_algorithm::aes::AesRand;
 use crate::tools::net_handle::net_interface::mac_addr::MacAddress;
 use crate::tools::net_handle::packet::udp::UdpPacket;
 use crate::tools::net_handle::packet::v4::packet_v4_u32::Ipv4PacketU32;
 
-impl TopoMethodV4 for TopoV4 {
+impl TopoMethodV4 for TopoUdpV4 {
     fn thread_initialize_v4(&mut self, local_mac: &MacAddress, gateway_mac: &MacAddress) {
         //  填充以太网首部字段 14字节       以太网类型为 ipv4 在以太网类型字段中的标识
         make_ethernet_header(&mut self.base_buf, local_mac, gateway_mac, 0x0800u16);
@@ -68,7 +69,7 @@ impl TopoMethodV4 for TopoV4 {
         // 包括 以太网首部 在内的数据包总长度
         let total_len = 14 + (expected_packet_size as usize);
 
-        // 按最大数据包长度设置 向量容量
+        // 设置 向量容量
         let mut packet = Vec::with_capacity(total_len);
 
         let source_ip_bytes = source_ip.to_be_bytes();
@@ -148,7 +149,7 @@ impl TopoMethodV4 for TopoV4 {
         // 如果存在内层数据包, 网络层应至少包含  外层icmp(8字节) + 内层ipv4报头(20字节) + 内层udp报头(8字节) = 36
         if ipv4_header[9] != 1 || net_layer_data.len() < 36 { return None }
 
-        // 是否是来自 目的地址 的响应
+        // 是否是来自 目的地址 或 目标网络(主机不可达消息) 的响应
         let from_destination= match net_layer_data[0] {
             // 如果 ICMP类型字段 为 目标不可达
             3 => {
@@ -199,7 +200,7 @@ impl TopoMethodV4 for TopoV4 {
         // 计算距离
         let distance = if from_destination { original_ttl - inner_ipv4[8] + 1 } else { original_ttl };
 
-        // 提取 发送时的时间戳
+        // 计算 经过的时间
         let spent_time = if self.use_time_encoding {
             // 提取 内层ip数据包 的 id字段
             // [ 当前时间戳 后10比特 |  ttl(6比特)  ]
@@ -210,9 +211,10 @@ impl TopoMethodV4 for TopoV4 {
             // 提取 发送时的 时间戳
             let original_time = (inner_ip_total_len << 10) | (inner_ip_id >> 6);
 
-            // 接收时的时间戳(只取 最后16比特)   以毫秒为粒度
-            // 此处注意严格检查
-            let now_time = (((ts.tv_sec & 0x1fff) as u16) << 3) | ((ts.tv_usec as u16) >> 3);
+            // 接收时的时间戳(只取 最后16比特)   以毫秒为粒度 (此处务必仔细检查)
+            let now_time = ((ts.tv_sec as u64) * 1000) + ((ts.tv_usec as u64) / 1000);
+            // 提取 毫秒时间戳 的最后16比特
+            let now_time = (now_time & 0xffff) as u16;
 
             // 警告: 由于只编码了16位的时间戳，当 实际往返时间 超过 65秒时, 得到的时延信息将出错
             if now_time >= original_time {
@@ -237,27 +239,33 @@ impl TopoMethodV4 for TopoV4 {
     }
 
     fn print_header(&self) -> Vec<String> {
-        if self.use_time_encoding {
-            vec!["dest_ip".to_string(), "responder".to_string(), "distance".to_string(), "rtt".to_string()]
-        } else {
-            vec!["dest_ip".to_string(), "responder".to_string(), "distance".to_string()]
-        }
+        let mut output_data = Vec::with_capacity(self.output_len);
+        output_data.extend(vec!["dest_ip".to_string(), "responder".to_string(), "distance".to_string()]);
+        
+        if self.use_time_encoding { output_data.push("rtt".to_string()); } 
+        if self.print_default_ttl { output_data.push("default_ttl".to_string()); }
+        output_data
     }
 
-    fn print_record(&self, res:&TopoResultV4) -> Vec<String> {
-        if self.use_time_encoding {
-            vec![Ipv4Addr::from(res.dest_ip).to_string(), Ipv4Addr::from(res.responder).to_string(), res.distance.to_string(), res.rtt.to_string()]
-        } else {
-            vec![Ipv4Addr::from(res.dest_ip).to_string(), Ipv4Addr::from(res.responder).to_string(), res.distance.to_string()]
+    fn print_record(&self, res:&TopoResultV4, ipv4_header:&[u8]) -> Vec<String> {
+        let mut output_data = Vec::with_capacity(self.output_len);
+        output_data.extend(vec![Ipv4Addr::from(res.dest_ip).to_string(), Ipv4Addr::from(res.responder).to_string(), res.distance.to_string()]);
+        
+        if self.use_time_encoding { output_data.push(res.rtt.to_string()); }
+        if self.print_default_ttl {
+            let responder_default_ttl = get_default_ttl(res.distance, ipv4_header[8]);
+            output_data.push(responder_default_ttl.to_string()); 
         }
+        output_data
     }
 
     fn print_silent_record(&self, dest_ip: u32, distance:u8) -> Vec<String> {
-        if self.use_time_encoding {
-            vec![Ipv4Addr::from(dest_ip).to_string(), "null".to_string(), distance.to_string(), "null".to_string()]
-        } else {
-            vec![Ipv4Addr::from(dest_ip).to_string(), "null".to_string(), distance.to_string()]
-        }
+        let mut output_data = Vec::with_capacity(self.output_len);
+        output_data.extend(vec![Ipv4Addr::from(dest_ip).to_string(), "null".to_string(), distance.to_string()]);
+
+        if self.use_time_encoding { output_data.push("null".to_string()); }
+        if self.print_default_ttl { output_data.push("null".to_string()); }
+        output_data
     }
 }
 

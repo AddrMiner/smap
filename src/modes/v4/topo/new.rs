@@ -7,7 +7,7 @@ use crate::core::conf::set_conf::receiver_conf::ReceiverBaseConf;
 use crate::core::conf::set_conf::sender_conf::SenderBaseConf;
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::{get_conf_from_mod_or_sys, SYS, write_to_summary};
-use crate::modes::v4::topology_probing::Topo4;
+use crate::modes::v4::topo::Topo4;
 use crate::modules::probe_modules::topology_probe::topo_mod_v4::TopoModV4;
 use crate::modules::target_iterators::CycleIpv4Pattern;
 use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
@@ -31,7 +31,10 @@ impl Topo4 {
             Self::topo4_get_target_ips(tar_ips_str, topo4_rand_bits, &mut base_conf.aes_rand.rng);
 
         // ipv4 拓扑探测模块
-        let topo_probe = TopoModV4::new(&SenderBaseConf::parse_probe_v4(&args.probe_v4, "topo4_default_probe_mod"), module_conf);
+        let topo_probe = TopoModV4::new(&SenderBaseConf::parse_probe_v4(&args.probe_v4, "topo4_default_probe_mod"), module_conf.clone());
+        
+        // ipv4 辅助拓扑探测模块    用于对预探测进行加强
+        let topo_sub_probe = Self::get_sub_probe("topo_sub_probe_v4", module_conf);
 
         // 发送模块基础配置
         let sender_conf= SenderBaseConf::new(args, &base_conf.interface, // 警告: 预测时间估算和速率控制按照  总数量=目标地址数量*最大ttl进行计算
@@ -56,6 +59,7 @@ impl Topo4 {
             receiver_conf: receiver_conf.into(),
             probe: topo_probe.into(),
 
+            sub_probe: topo_sub_probe,
             ip_bits_num,
             base_ip_val,
             mask,

@@ -150,7 +150,7 @@ impl BitMapV6Pattern {
 
 
 
-    fn get_move_len(mut parts:Vec<(u32, u32)>) -> Vec<(u32, u32, u32)> {
+    pub fn get_move_len(mut parts:Vec<(u32, u32)>) -> Vec<(u32, u32, u32)> {
 
         // [       |  part1  |       |  part2  |       | part3 |  ]
         // =>

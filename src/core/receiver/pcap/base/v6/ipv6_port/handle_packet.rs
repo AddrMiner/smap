@@ -1,8 +1,4 @@
 
-
-
-
-
 use pcap::PacketHeader;
 use crate::core::receiver::pcap::PcapReceiver;
 use crate::core::receiver::{ReceiverInfoV6};

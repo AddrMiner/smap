@@ -22,10 +22,8 @@ pub struct IcmpV6Packet {
 
 impl IcmpV6Packet {
 
-
     #[inline]
-    pub fn get_check_sum(source_ip:&[u8], dest_ip:&[u8], len:u32,
-                         icmp_type:u8, icmp_code:u8, icmp_id:u32, icmp_data:&[u8]) -> [u8;2] {
+    pub fn get_check_sum(source_ip:&[u8], dest_ip:&[u8], len:u32, icmp_header_data:&[u8]) -> [u8;2] {
 
         // 注意: 序列号默认为 0
 
@@ -46,21 +44,18 @@ impl IcmpV6Packet {
         }
 
         sum += len;
-        sum += icmp_id;
 
-        sum += ((icmp_type as u32) << 8) | (icmp_code as u32);
+        let icmp_header_data_len = icmp_header_data.len();
+        let icmp_header_data_index = icmp_header_data_len / 2 ;
+        let is_odd = icmp_header_data_len % 2 == 1;
 
-        let icmp_data_len = icmp_data.len();
-        let icmp_data_index = icmp_data_len / 2 ;
-        let is_odd = icmp_data_len % 2 == 1;
-
-        for i in 0..icmp_data_index {
+        for i in 0..icmp_header_data_index {
             let z = i * 2;
-            sum += u16::from_be_bytes([icmp_data[z],  icmp_data[z+1]]) as u32;
+            sum += u16::from_be_bytes([icmp_header_data[z],  icmp_header_data[z+1]]) as u32;
         }
 
         if is_odd {
-            sum += u16::from_be_bytes([icmp_data[icmp_data_len - 1], 0]) as u32;
+            sum += u16::from_be_bytes([icmp_header_data[icmp_header_data_len - 1], 0]) as u32;
         }
 
         while sum > 65535  {

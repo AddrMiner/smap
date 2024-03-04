@@ -23,7 +23,10 @@ fi
 cargo install --path . --root "$installPath"
 
 # 3. copy resource folder
-cp -r   ./block_list  ./probe_modules_payload  "$installPath"
+read -r -p "Do you need to keep the resource files (please confirm that all resource files are working properly) (y or ..): " keepResFiles
+if [ "$keepResFiles" != "y" ]; then
+  cp -r   ./block_list  ./probe_modules_payload  "$installPath"
+fi
 
 # 4. clear
 rm -rf ./target
