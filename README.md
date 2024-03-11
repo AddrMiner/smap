@@ -204,7 +204,7 @@ smap的所有扫描记录(扫描时间, 参数, 探测结果摘要), 探测结�
 
 #### pmap
 
-pmap专为同一网络内的全端口范围活跃端口扫描任务进行设计
+pmap专为同一网络内的全端口范围活跃端口扫描任务进行设计. 在同一网络中, 首先对一定比例或数量的目标地址进行所有待探测端口的扫描, 使用反馈数据分析出该网络中所有端口的绝对开放概率(某个网络内80端口开放的比例很高)和端口之间的相对开放概率(开放80端口更可能开放443端口), 使用这些信息对剩下的所有地址进行端口推荐并扫描.
 
 以10m速率对 单个ipv4[**地址, 范围, 网段**] 进行 **tcp_syn端口**  活跃推荐扫描
 
@@ -216,6 +216,20 @@ smap -m p4 -b 10m -t 42.81.179.50-42.81.179.180 -p 80,443,22,21,53 -a pmap_sampl
 ```shell
 smap -m p6 -b 10m -t 240e:928:1400:105::b@125-128 -p 80,443,22,21,53 -a pmap_sampling_pro=0.1 -a pmap_budget=2 -a pmap_batch_num=2
 ```
+
+#### topo
+
+ipv4/ipv6拓扑探测算法, 根据拓扑的树状结构进行设计. 首先进行预扫描一次性获得目标地址的距离和往返时延, 其次使用辅助预扫描补足(建议为icmp模块, 凡是icmp探活到的地址均能得到距离和往返时延), 最后从树的末端向根节点(本地优势点)收束. 该算法具有目标范围沿树状结构快速收缩, 没有无效尝试流量, 轻量级等优点. 如果探测目标范围过小建议调低发送时的batch_size, 以免触发icmp速率限制.
+
+```shell
+smap -m t4 -b 100k -t 45.82.247.47@29-32 -a topo_allow_tar_network_respond=true  -a use_time_encoding=true  -a print_default_ttl=true -a topo_sub_probe_v4=topo_icmp_v4
+```
+
+```shell
+smap -m t6 -b 100k -t 240e:928:1400:105::b@128 -a topo_allow_tar_network_respond=true  -a use_time_encoding=true  -a print_default_ttl=true -a topo_sub_probe_v6=topo_icmp_v6
+```
+
+
 
 ### 选项字段及开发者文档
 

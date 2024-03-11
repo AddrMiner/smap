@@ -255,3 +255,12 @@ method.rs为探测模块实现探测方法接口. 在这一部分, 我们提供�
 - pmap_allow_graph_iter: 是否允许概率相关图更新的默认值
 - pmap_use_hash_recorder: 是否默认使用哈希表作为记录器. 如果设为真, 默认以哈希表(适用总范围较大且推荐轮次较多的情形)作为记录器, 如果设为假, 默认以位图(适用总范围较小且活跃比例较高的情形)作为记录器.
 
+### topo系统参数
+
+- topo_max_ttl: 默认最大ttl, 最大值不超过64
+- topo_udp_dest_port: 拓扑探测模块默认udp端口
+- topo_payload: 拓扑探测模块默认负载
+- topo4_rand_bits: ipv4模式字符串随机比特位(于固定比特位有效)
+- topo4_default_probe_mod: topo4默认拓扑探测模块
+- topo6_rand_bits: ipv6模式字符串随机比特位(于固定比特位有效)
+- topo6_default_probe_mod: topo6默认拓扑探测模块
