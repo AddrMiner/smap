@@ -1,7 +1,7 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::process::exit;
 use std::thread::available_parallelism;
-use chrono::{DateTime, Local, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, Local, TimeZone, Utc};
 use log::{error, warn};
 use crate::core::conf::set_conf::sender_conf::{RateGlobalConf, SenderBaseConf};
 use crate::core::conf::tools::args_parse::ip::mix::parse_mix_ip_range_ipaddr;
@@ -240,7 +240,7 @@ impl SenderBaseConf {
                         let now_time = Utc::now().timestamp();
                         let end_time = now_time + (seconds_need as i64) + cool_time;
 
-                        let end_time = NaiveDateTime::from_timestamp_opt(end_time, 0).unwrap();
+                        let end_time = DateTime::from_timestamp(end_time, 0).unwrap().naive_local();
                         let end_time: DateTime<Local> =  Local.from_utc_datetime(&end_time);
 
                         println!("{} {}", SYS.get_info("print", "forecast_completion_time"),
@@ -288,7 +288,7 @@ impl SenderBaseConf {
                         let now_time = Utc::now().timestamp();
                         let end_time = now_time + (seconds_need as i64) + cool_time;
 
-                        let end_time = NaiveDateTime::from_timestamp_opt(end_time, 0).unwrap();
+                        let end_time = DateTime::from_timestamp(end_time, 0).unwrap().naive_local();
                         let end_time: DateTime<Local> =  Local.from_utc_datetime(&end_time);
 
                         println!("{} {}", SYS.get_info("print", "forecast_completion_time"),

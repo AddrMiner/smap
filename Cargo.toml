@@ -20,7 +20,7 @@ log = "0.4.20"
 log4rs = "1.2.0"
 
 # time
-chrono = "0.4.31"
+chrono = "0.4.35"
 
 #hash
 ahash = "0.8.3"

@@ -1,4 +1,4 @@
-use chrono::{DateTime, Duration, Local};
+use chrono::{DateTime, Local, TimeDelta};
 
 pub fn get_fmt_time(fmt:&str) -> String{
 
@@ -11,7 +11,7 @@ pub fn get_fmt_time(fmt:&str) -> String{
 pub fn get_fmt_duration(seconds:i64, mut format_str:String) -> String {
 
 
-    let duration = Duration::seconds(seconds);
+    let duration = TimeDelta::try_seconds(seconds).unwrap();
 
     let days = duration.num_days();
     let hours = duration.num_hours() % 24;
