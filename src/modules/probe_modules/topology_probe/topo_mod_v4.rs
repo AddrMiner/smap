@@ -8,7 +8,7 @@ use crate::tools::net_handle::net_interface::mac_addr::MacAddress;
 
 pub use crate::modules::probe_modules::topology_probe::v4::{TopoUdpV4, TopoIcmpV4};
 
-pub const TOPO_MODS_V4: [&str; 2] = ["topo_udp_v4", "topo_icmp_v4"];
+pub const TOPO_MODS_V4: [&str; 2] = ["topo_icmp_v4", "topo_udp_v4"];
 
 impl TopoModV4 {
 
