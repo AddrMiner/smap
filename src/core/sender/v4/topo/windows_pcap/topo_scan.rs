@@ -31,6 +31,7 @@ pub fn topo_scan_send_v4<T:Topo4Iter>(interface_index:usize, mut target_iter:T, 
 
     // 初始化 源地址迭代器
     let mut source_ip_iter = SourceIpIterV4::new(&sender_conf.source_addrs_v4[interface_index]);
+    let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
     // 初始化 拓扑探测模块
     let mut probe = TopoModV4::init(probe_mod_v4, sender_conf.source_ports.clone());
@@ -59,8 +60,6 @@ pub fn topo_scan_send_v4<T:Topo4Iter>(interface_index:usize, mut target_iter:T, 
 
             if cur_target.0 {
                 // 如果不是最终值
-
-                let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
                 // 由探测模块生成数据包
                 let packet = probe.make_packet_v4(
@@ -91,8 +90,6 @@ pub fn topo_scan_send_v4<T:Topo4Iter>(interface_index:usize, mut target_iter:T, 
 
                 if cur_target.1 {
                     // 最终值有效
-
-                    let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
                     // 由探测模块生成数据包
                     let packet = probe.make_packet_v4(
