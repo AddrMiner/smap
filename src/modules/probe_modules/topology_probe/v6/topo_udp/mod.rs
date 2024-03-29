@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use crate::core::conf::modules_config::ModuleConf;
 use crate::modules::probe_modules::topology_probe::topo_mod_v6::{TopoMethodV6, TopoModV6};
-use crate::{parse_custom_args, SYS};
+use crate::{cal_output_len, parse_custom_args, SYS};
 use crate::modes::Helper;
 use crate::modules::probe_modules::topology_probe::tools::payload::get_topo_message;
 
@@ -58,21 +58,19 @@ impl TopoUdpV6 {
         parse_custom_args!(t;
             (use_time_encoding, bool, true, "use_time_encoding_parse_failed"),
             (print_default_ttl, bool, false, "print_default_ttl_parse_failed"),
-            (topo_udp_dest_port, u16, SYS.get_conf("conf", "topo_udp_dest_port"), "topo_udp_dest_port_parse_failed"),
+            (topo_dest_port, u16, SYS.get_conf("conf", "topo_dest_port"), "topo_dest_port_parse_failed"),
             (topo_payload, String, SYS.get_conf("conf","topo_payload"), "topo_payload_parse_failed"),
             (topo_payload_allow_repeat, bool, true, "topo_payload_allow_repeat_parse_failed"),
-            (topo_allow_tar_network_respond, bool, false, "topo_allow_tar_network_respond_parse_failed")
+            (topo_allow_tar_network_respond, bool, true, "topo_allow_tar_network_respond_parse_failed")
         );
 
         let udp_payload = get_topo_message(topo_payload, topo_payload_allow_repeat, "topo_payload_len_err", 20);
 
-        let mut output_len = 3;
-        if use_time_encoding { output_len += 1; }
-        if print_default_ttl { output_len += 1; }
+        cal_output_len!(output_len, usize, 3; use_time_encoding, print_default_ttl);
         
         TopoUdpV6 {
             base_buf: Vec::with_capacity(18),                    // 以太网首部 (14字节) + ipv6首部 有效载荷长度 字段前 (4字节)
-            udp_dest_port:topo_udp_dest_port,
+            udp_dest_port:topo_dest_port,
             udp_sports_len: sports.len(),
             udp_sports:sports,
             udp_payload,

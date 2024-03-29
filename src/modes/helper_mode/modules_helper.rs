@@ -53,6 +53,7 @@ pub fn probe_v4_help(name:&str) -> String {
 
         "topo_udp_v4" => probe_modules::topology_probe::topo_mod_v4::TopoUdpV4::print_help(),
         "topo_icmp_v4" => probe_modules::topology_probe::topo_mod_v4::TopoIcmpV4::print_help(),
+        "topo_tcp_v4" => probe_modules::topology_probe::topo_mod_v4::TopoTcpV4::print_help(),
 
         _ => {
             "no help".to_string()
@@ -76,6 +77,7 @@ pub fn probe_v6_help(name:&str) -> String {
 
         "topo_udp_v6" => probe_modules::topology_probe::topo_mod_v6::TopoUdpV6::print_help(),
         "topo_icmp_v6" => probe_modules::topology_probe::topo_mod_v6::TopoIcmpV6::print_help(),
+        "topo_tcp_v6" => probe_modules::topology_probe::topo_mod_v6::TopoTcpV6::print_help(),
 
         _ => {
             "no help".to_string()

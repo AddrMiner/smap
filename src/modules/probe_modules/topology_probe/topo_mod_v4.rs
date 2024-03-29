@@ -6,9 +6,9 @@ use crate::SYS;
 use crate::tools::encryption_algorithm::aes::AesRand;
 use crate::tools::net_handle::net_interface::mac_addr::MacAddress;
 
-pub use crate::modules::probe_modules::topology_probe::v4::{TopoUdpV4, TopoIcmpV4};
+pub use crate::modules::probe_modules::topology_probe::v4::{TopoUdpV4, TopoIcmpV4, TopoTcpV4};
 
-pub const TOPO_MODS_V4: [&str; 2] = ["topo_icmp_v4", "topo_udp_v4"];
+pub const TOPO_MODS_V4: [&str; 3] = ["topo_icmp_v4", "topo_udp_v4", "topo_tcp_v4"];
 
 impl TopoModV4 {
 
@@ -23,6 +23,7 @@ impl TopoModV4 {
 
             "topo_icmp_v4" => TopoIcmpV4::new(conf),
             "topo_udp_v4"  => TopoUdpV4::new(conf),
+            "topo_tcp_v4" => TopoTcpV4::new(conf),
 
             _ => {
                 error!("{}", SYS.get_info("err", "v4_probe_mod_not_exist"));
@@ -40,6 +41,7 @@ impl TopoModV4 {
 
             "topo_icmp_v4" => Box::new(TopoIcmpV4::init(t)),
             "topo_udp_v4"  => Box::new(TopoUdpV4::init(t, sports)),
+            "topo_tcp_v4"  => Box::new(TopoTcpV4::init(t, sports)),
 
             _ => {
                 error!("{}", SYS.get_info("err", "v4_probe_mod_not_exist"));
@@ -56,7 +58,7 @@ pub trait TopoMethodV4 {
 
     fn thread_initialize_v4(&mut self, local_mac:&MacAddress, gateway_mac:&MacAddress);
 
-    fn make_packet_v4(&self, source_ip:u32, dest_ip:u32, ttl:u8, aes_rand:&AesRand) -> Vec<u8>;
+    fn make_packet_v4(&self, source_ip:u32, dest_ip:u32, dest_port_offset:Option<u16>, ttl:u8, aes_rand:&AesRand) -> Vec<u8>;
 
     fn parse_packet_v4(&self, ts:&libc::timeval, ipv4_header:&[u8], net_layer_data:&[u8], aes_rand:&AesRand) -> Option<TopoResultV4>;
 

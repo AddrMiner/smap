@@ -42,7 +42,7 @@ impl TopoIcmpV4 {
         parse_custom_args!(t;
             (use_time_encoding, bool, true, "use_time_encoding_parse_failed"),
             (print_default_ttl, bool, false, "print_default_ttl_parse_failed"),
-            (topo_allow_tar_network_respond, bool, false, "topo_allow_tar_network_respond_parse_failed")
+            (topo_allow_tar_network_respond, bool, true, "topo_allow_tar_network_respond_parse_failed")
         );
 
 

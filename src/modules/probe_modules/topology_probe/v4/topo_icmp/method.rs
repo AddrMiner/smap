@@ -46,7 +46,7 @@ impl TopoMethodV4 for TopoIcmpV4 {
         self.ipv4_header_base_buf_2.extend_from_slice(&ipv4_header_without_addrs[6..12]);
     }
 
-    fn make_packet_v4(&self, source_ip: u32, dest_ip: u32, ttl: u8, aes_rand: &AesRand) -> Vec<u8> {
+    fn make_packet_v4(&self, source_ip: u32, dest_ip: u32, _dest_port_offset:Option<u16>, ttl: u8, aes_rand: &AesRand) -> Vec<u8> {
 
         // 按最大数据包长度(42字节)设置 向量容量
         let mut packet = Vec::with_capacity(42);

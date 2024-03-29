@@ -30,7 +30,7 @@ impl TopoMethodV6 for TopoIcmpV6 {
         }.get_u8_vec_without_addr());
     }
 
-    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, hop_limit: u8, aes_rand: &AesRand) -> Vec<u8> {
+    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, _dest_port_offset:Option<u16>, hop_limit: u8, aes_rand: &AesRand) -> Vec<u8> {
         // 按最大数据包长度设置 向量容量
         let mut packet = Vec::with_capacity(70);
 

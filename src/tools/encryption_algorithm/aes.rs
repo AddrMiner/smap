@@ -76,7 +76,7 @@ impl AesRand {
     /// 生成验证信息 (u32)
     /// 注意, 这里的目标地址, 源地址, 源端口 是对接收线程来说的
     /// 在发送线程中, 目标地址 和 源地址 应该调换位置, 源端口位置应该输入 目的端口
-    pub fn validate_gen_v4_u32(&self, dest_ip:u32, source_ip:u32, sport_be_bytes:&[u8]) -> [u8;16]{
+    pub fn validate_gen_v4_u32(&self, dest_ip:u32, source_ip:u32, port_be_bytes:&[u8]) -> [u8;16]{
 
         let d = dest_ip.to_le_bytes();
         let s = source_ip.to_le_bytes();
@@ -85,7 +85,7 @@ impl AesRand {
         let mut tar = [d[0], d[1], d[2], d[3],
             s[0], s[1], s[2], s[3],
             0, 0, 0, 0,
-            0, 0, sport_be_bytes[1], sport_be_bytes[0]];
+            0, 0, port_be_bytes[1], port_be_bytes[0]];
 
         self.encrypt(&mut tar);
 

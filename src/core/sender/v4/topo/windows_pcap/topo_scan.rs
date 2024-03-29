@@ -63,7 +63,7 @@ pub fn topo_scan_send_v4<T:Topo4Iter>(interface_index:usize, mut target_iter:T, 
 
                 // 由探测模块生成数据包
                 let packet = probe.make_packet_v4(
-                    cur_source_ip, cur_target.2, cur_target.3, &aes_rand);
+                    cur_source_ip, cur_target.2, None, cur_target.3, &aes_rand);
 
                 let mut add_successfully = false;
                 for _ in 0..send_attempts {
@@ -93,7 +93,7 @@ pub fn topo_scan_send_v4<T:Topo4Iter>(interface_index:usize, mut target_iter:T, 
 
                     // 由探测模块生成数据包
                     let packet = probe.make_packet_v4(
-                        cur_source_ip, cur_target.2, cur_target.3, &aes_rand);
+                        cur_source_ip, cur_target.2, None, cur_target.3, &aes_rand);
 
                     let mut add_successfully = false;
                     for _ in 0..send_attempts {

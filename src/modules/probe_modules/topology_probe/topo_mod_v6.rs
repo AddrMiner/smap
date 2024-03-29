@@ -7,9 +7,9 @@ use crate::SYS;
 use crate::tools::encryption_algorithm::aes::AesRand;
 use crate::tools::net_handle::net_interface::mac_addr::MacAddress;
 
-pub use crate::modules::probe_modules::topology_probe::v6::{TopoUdpV6, TopoIcmpV6};
+pub use crate::modules::probe_modules::topology_probe::v6::{TopoUdpV6, TopoIcmpV6, TopoTcpV6};
 
-pub const TOPO_MODS_V6: [&str; 2] = ["topo_icmp_v6", "topo_udp_v6"];
+pub const TOPO_MODS_V6: [&str; 3] = ["topo_icmp_v6", "topo_udp_v6", "topo_tcp_v6"];
 
 impl TopoModV6 {
 
@@ -25,6 +25,7 @@ impl TopoModV6 {
 
             "topo_icmp_v6" => TopoIcmpV6::new(conf),
             "topo_udp_v6"  => TopoUdpV6::new(conf),
+            "topo_tcp_v6"  => TopoTcpV6::new(conf),
 
             _ => {
                 error!("{}", SYS.get_info("err", "v6_probe_mod_not_exist"));
@@ -42,6 +43,7 @@ impl TopoModV6 {
             
             "topo_icmp_v6" => Box::new(TopoIcmpV6::init(t)),
             "topo_udp_v6" => Box::new(TopoUdpV6::init(t, sports)),
+            "topo_tcp_v6" => Box::new(TopoTcpV6::init(t, sports)),
 
             _ => {
                 error!("{}", SYS.get_info("err", "v6_probe_mod_not_exist"));
@@ -58,7 +60,7 @@ pub trait TopoMethodV6 {
 
     fn thread_initialize_v6(&mut self, local_mac:&MacAddress, gateway_mac:&MacAddress);
 
-    fn make_packet_v6(&self, source_ip:u128, dest_ip:u128, hop_limit:u8, aes_rand:&AesRand) -> Vec<u8>;
+    fn make_packet_v6(&self, source_ip:u128, dest_ip:u128, dest_port_offset:Option<u16>, hop_limit:u8, aes_rand:&AesRand) -> Vec<u8>;
 
     fn parse_packet_v6(&self, ts:&libc::timeval, ipv6_header:&[u8], net_layer_data:&[u8], aes_rand:&AesRand) -> Option<TopoResultV6>;
 

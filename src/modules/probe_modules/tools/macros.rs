@@ -97,3 +97,13 @@ macro_rules! parse_custom_args {
         }
     };
 }
+
+#[macro_export]
+macro_rules! cal_output_len {
+    ($output_len:ident, $type:ty, $val:expr; $($field:ident),* ) => (
+        let mut $output_len:$type = $val;
+        $(
+            if $field { $output_len += 1; }
+        )*
+    )
+}

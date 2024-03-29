@@ -89,7 +89,7 @@ pub fn topo_pre_scan_send_v4<T:Ipv4Iter>(interface_index:usize, mut target_iter:
 
                     // 由探测模块生成数据包
                     let packet = probe.make_packet_v4(
-                        cur_source_ip, cur_target.2,  ttl, &aes_rand);
+                        cur_source_ip, cur_target.2, None, ttl, &aes_rand);
 
                     let mut sent_successfully = false;
                     for _ in 0..send_attempts {
@@ -125,7 +125,7 @@ pub fn topo_pre_scan_send_v4<T:Ipv4Iter>(interface_index:usize, mut target_iter:
 
                         // 由探测模块生成数据包
                         let packet = probe.make_packet_v4(
-                            cur_source_ip, cur_target.2, ttl, &aes_rand);
+                            cur_source_ip, cur_target.2, None, ttl, &aes_rand);
 
                         let mut sent_successfully = false;
                         for _ in 0..send_attempts {
