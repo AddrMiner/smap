@@ -13,7 +13,7 @@ pub struct Mode {}
 pub use helper_mode::Helper;
 
 /// 激活的所有模块
-const MODES: [&str; 20] = ["cycle_v4","c4",
+const MODES: [&str; 21] = ["cycle_v4","c4",
                           "cycle_v6", "c6",
                           "cycle_v6_pattern", "c6p",
                           "file_v4", "f4",
@@ -22,7 +22,8 @@ const MODES: [&str; 20] = ["cycle_v4","c4",
                           "pmap_v4", "p4",
                           "pmap_v6", "p6",
                           "topo_v4", "t4",
-                          "topo_v6", "t6"];
+                          "topo_v6", "t6",
+                          "ipv6_addrs_gen"];
 impl Mode {
 
     pub fn new(args:&Args) -> Box<dyn ModeMethod> {
@@ -55,6 +56,8 @@ impl Mode {
             "topo_v4" | "t4" => Box::new(v4::Topo4::new(args)),
             
             "topo_v6" | "t6" => Box::new(v6::Topo6::new(args)),
+
+            "ipv6_addrs_gen" => Box::new(v6::SpaceTree6::new(args)),
 
             _ => {
                 // 未查询到有效模式

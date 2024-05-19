@@ -35,13 +35,8 @@ pub fn topo_pre_scan_send_v6<T:Ipv6Iter>(interface_index:usize, mut target_iter:
                                          probe_mod_v6: Arc<TopoModV6>, base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>) -> (u64, u64, u64) {
 
     // 初始化 数据包发送器
-    let sender;
-    {
-        let mut socket = PacketSender::new(
-            &base_conf.interface[interface_index].name_index, &base_conf.interface[interface_index].gateway_mac);
-        socket.init();
-        sender = socket;
-    }
+    let sender = PacketSender::new(
+        &base_conf.interface[interface_index].name_index, &base_conf.interface[interface_index].gateway_mac);
 
     // 取出常用变量
     let batch_size = sender_conf.global_rate_conf.batch_size;

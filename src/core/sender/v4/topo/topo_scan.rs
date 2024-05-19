@@ -34,15 +34,10 @@ target_os = "ios",
 target_os = "linux"))]
 pub fn topo_scan_send_v4<T:Topo4Iter>(interface_index:usize, mut target_iter:T, probe_mod_v4: Arc<TopoModV4>, 
                                       base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>) -> (u64, u64) {
-
+    
     // 初始化 数据包发送器
-    let sender;
-    {
-        let mut socket = PacketSender::new(
-            &base_conf.interface[interface_index].name_index, &base_conf.interface[interface_index].gateway_mac);
-        socket.init();
-        sender = socket;
-    }
+    let sender = PacketSender::new(
+        &base_conf.interface[interface_index].name_index, &base_conf.interface[interface_index].gateway_mac);
 
     // 取出常用变量
     let batch_size = sender_conf.global_rate_conf.batch_size;

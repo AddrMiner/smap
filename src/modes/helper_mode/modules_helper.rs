@@ -28,6 +28,8 @@ pub fn mode_help(mode_name:&str) -> String {
         
         "topo_v6" | "t6" => modes::v6::Topo6::print_help(),
 
+        "ipv6_addrs_gen" => modes::v6::SpaceTree6::print_help(),
+
         _ => {
             "no mode help".to_string()
         }
@@ -78,6 +80,8 @@ pub fn probe_v6_help(name:&str) -> String {
         "topo_udp_v6" => probe_modules::topology_probe::topo_mod_v6::TopoUdpV6::print_help(),
         "topo_icmp_v6" => probe_modules::topology_probe::topo_mod_v6::TopoIcmpV6::print_help(),
         "topo_tcp_v6" => probe_modules::topology_probe::topo_mod_v6::TopoTcpV6::print_help(),
+        
+        "code_icmp_v6" => probe_modules::active_probe_ipv6_code::CodeIcmpEchoV6::print_help(),
 
         _ => {
             "no help".to_string()

@@ -122,11 +122,6 @@ impl PacketSender {
         }
     }
 
-    pub fn init(&self){
-        // unix 操作系统不需要在这里做任何事情
-        // 该函数只是形式
-    }
-
 
     #[inline]
     pub fn send_packet(&self, buf:&Vec<u8>) -> ssize_t {

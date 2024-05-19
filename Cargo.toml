@@ -3,8 +3,7 @@ name = "smap"
 version = "0.1.0"
 edition = "2021"
 
-# 警告: 在linux下设置非零编译优化等级可能导致无法发包
-# 建议在windows下尽可能进行优化
+
 [profile.release]
 opt-level = 3
 
@@ -44,7 +43,7 @@ num-bigint = "0.4.4"
 num-traits = "0.2.17"
 
 # receiver
-pcap = "1.1.0"
+pcap = "2.0.0"
 
 # bitmap
 bitvec = "1.0.1"

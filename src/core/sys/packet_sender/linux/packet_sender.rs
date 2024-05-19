@@ -11,7 +11,7 @@ use crate::tools::net_handle::net_interface::mac_addr::MacAddress;
 pub struct PacketSender {
     sock:c_int,
     sockaddr:libc::sockaddr_ll,
-    sockaddr_ptr:*const libc::sockaddr,
+    // sockaddr_ptr:*const libc::sockaddr,
     addr_len:u32
 }
 
@@ -49,22 +49,17 @@ impl PacketSender {
         Self {
             sock,
             sockaddr,
-            sockaddr_ptr: unsafe { mem::zeroed() },
+            // sockaddr_ptr: unsafe { mem::zeroed() },
             addr_len:mem::size_of_val(&sockaddr) as u32
         }
-    }
-
-
-    /// 指针转换
-    pub fn init(&mut self){
-        self.sockaddr_ptr = unsafe { mem::transmute(&self.sockaddr as *const libc::sockaddr_ll) };
     }
 
 
     /// 发送数据包
     #[inline]
     pub fn send_packet(&self, buf:&Vec<u8>) -> libc::ssize_t {
-        unsafe { libc::sendto(self.sock, buf.as_ptr() as *const libc::c_void, buf.len(), 0, self.sockaddr_ptr, self.addr_len) }
+        unsafe { libc::sendto(self.sock, buf.as_ptr() as *const libc::c_void, buf.len(), 0, 
+                              mem::transmute(&self.sockaddr as *const libc::sockaddr_ll), self.addr_len) }
     }
 
 

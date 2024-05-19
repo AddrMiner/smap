@@ -35,8 +35,8 @@ pub use windows_pcap::ipv4::send_v4;
 #[cfg(windows)]
 pub use windows_pcap::ipv4_port::send_v4_port;
 
-#[cfg(windows)]
-pub use windows_pcap::file_ipv4::send_file_v4;
+// #[cfg(windows)]
+// pub use windows_pcap::file_ipv4::send_file_v4;
 
 #[cfg(windows)]
 pub use windows_pcap::file_ipv4_port::send_file_v4_port;

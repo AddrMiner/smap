@@ -1,34 +1,35 @@
 use crate::SYS;
 use std::process::exit;
+use std::str::FromStr;
 use ahash::AHashSet;
 use log::error;
 use crate::tools::others::parse::parse_str;
 
-/// 解析端口范围
+/// 解析范围
 /// a-b => (a,b)
-pub fn parse_ports_range(ports_str:&str) -> (u16, u16) {
+pub fn parse_range<T:PartialOrd + Copy + FromStr>(ports_str:&str, info:&str) -> (T, T) {
 
 
     let s:Vec<&str> = ports_str.trim().split('-').collect();
 
     if s.len() == 2 {  // 两个端口
 
-        let first:u16 = parse_str(s[0].trim());
-        let end:u16 = parse_str(s[1].trim());
+        let first:T = parse_str(s[0].trim());
+        let end:T = parse_str(s[1].trim());
 
         if first <= end {
             return (first, end);
         }else {
-            error!("{} {}", SYS.get_info("err", "parse_ports_range_err"), ports_str);
+            error!("{} {}", SYS.get_info("err", info), ports_str);
             exit(1)
         }
 
     }else if s.len() == 1 { // 只有一个端口
 
-        let single:u16 = parse_str(s[0].trim());
+        let single:T = parse_str(s[0].trim());
         return (single, single);
     }else {
-        error!("{} {}", SYS.get_info("err", "parse_ports_range_err"), ports_str);
+        error!("{} {}", SYS.get_info("err", info), ports_str);
         exit(1)
     }
 
@@ -56,7 +57,7 @@ pub fn parse_ports_set(ports_str:&str) -> AHashSet<u16> {
 
         for ps in s {   // 每个端口范围分段
 
-            let (first, last) = parse_ports_range(ps);
+            let (first, last) = parse_range(ps, "parse_ports_range_err");
 
             for pi in first..=last {
 
@@ -90,7 +91,7 @@ pub fn parse_ports_vec(ports_str:&str) -> Vec<u16> {
 
         for ps in s {   // 每个端口范围分段
 
-            let (first, last) = parse_ports_range(ps);
+            let (first, last) = parse_range(ps, "parse_ports_range_err");
 
             for pi in first..=last {
 

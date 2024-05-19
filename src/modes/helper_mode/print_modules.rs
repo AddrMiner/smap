@@ -1,5 +1,6 @@
 use crate::modes::MODES;
 use crate::modules::output_modules::OUTPUT_MODS;
+use crate::modules::probe_modules::active_probe_ipv6_code::CODE_PROBE_MODS_V6;
 use crate::modules::probe_modules::probe_mod_v4::PROBE_MODS_V4;
 use crate::modules::probe_modules::probe_mod_v6::PROBE_MODS_V6;
 use crate::modules::probe_modules::topology_probe::topo_mod_v4::TOPO_MODS_V4;
@@ -45,6 +46,10 @@ pub fn print_probe_v6_modules(){
     }
 
     for probe in TOPO_MODS_V6 {
+        print!("{}  ", probe);
+    }
+
+    for probe in CODE_PROBE_MODS_V6 {
         print!("{}  ", probe);
     }
 

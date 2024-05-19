@@ -10,6 +10,7 @@ use crate::modes::ModeMethod;
 use crate::modes::v4::Topo4;
 use crate::modules::output_modules::OutputMod;
 use crate::modules::target_iterators::{TopoIterV4, TopoStateChainV4};
+use crate::tools::others::split::split_chains;
 
 impl ModeMethod for Topo4 {
     fn execute(&self) {
@@ -111,7 +112,7 @@ impl ModeMethod for Topo4 {
                     // 执行 辅助预扫描 发送线程
                     let mut sub_pre_scan_sender_threads = vec![];
                     let mut cur_start_index = 0;
-                    let split_chains = Self::split_chains(state_chain_for_sender, self.sender_conf.send_thread_num);
+                    let split_chains = split_chains(state_chain_for_sender, self.sender_conf.send_thread_num);
                     for split_chain in split_chains.into_iter() {
                         // 发送线程 数据准备
                         let max_ttl = self.max_ttl;
@@ -174,7 +175,7 @@ impl ModeMethod for Topo4 {
                     // 执行 拓扑扫描 发送线程
                     let mut topo_scan_sender_threads = vec![];
                     let mut cur_start_index = 0;
-                    let split_chains = Self::split_chains(state_chain_for_sender, self.sender_conf.send_thread_num);
+                    let split_chains = split_chains(state_chain_for_sender, self.sender_conf.send_thread_num);
                     for split_chain in split_chains.into_iter() {
                         // 发送线程 数据准备
                         

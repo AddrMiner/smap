@@ -19,6 +19,9 @@ impl OutputMod {
             exit(1);
         }
 
+        
+        // 警告: 输出模块将截断现有目标文件(定义输出模块时, 目标文件将置空), 一个模式只能使用一个输出模块
+        
         match name {        // 各类模块的构造方法
 
             "csv" => Csv::new(output_file, is_ipv6),

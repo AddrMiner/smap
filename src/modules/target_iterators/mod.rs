@@ -2,6 +2,7 @@ mod cycle_group;
 mod file_reader;
 mod pmap;
 mod topo;
+mod ipv6_space_tree;
 
 pub use cycle_group::cycle_group::cycle_group_ipv4::CycleIpv4;
 pub use cycle_group::cycle_group::cycle_group_ipv6::CycleIpv6;
@@ -28,6 +29,8 @@ pub use topo::TopoIterV4;
 
 pub use topo::TopoStateChainV6;
 pub use topo::TopoIterV6;
+
+pub use ipv6_space_tree::IPv6SpaceTree;
 
 
 
@@ -108,14 +111,6 @@ pub trait Ipv6IterF {
 pub trait Ipv6IterFP {
     ///  0:是否为非最终值, 1:当前值是否有效, 2:ip地址, 3:端口号
     fn get_next_ip_port(&mut self) -> (bool, bool, u128, u16);
-}
-
-
-/// 迭代器重置特质
-pub trait Reset {
-
-    /// 重置 引导迭代器 至 起始状态
-    fn reset(&mut self);
 }
 
 
