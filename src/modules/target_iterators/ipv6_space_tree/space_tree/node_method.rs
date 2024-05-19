@@ -95,7 +95,7 @@ impl IPv6SpaceTreeNode {
     pub fn gen_addrs(&mut self, region_budget:usize, tree:&IPv6SpaceTree) -> AHashSet<u128> {
 
         // 根据 [预算 和 已使用地址数量]  判断 是否需要进行 维度扩展
-        // 如果 需要进行维度扩展, 持续进行维度扩展, 直到 [预算 + 已使用地址数量 <= 空间大小的1/2] 或者 整个空间探索完毕
+        // 如果 需要进行维度扩展, 持续进行维度扩展, 直到 [预算 + 已使用地址数量 <= 空间大小] 或者 整个空间探索完毕
         // 区域空间扩展标识
         let mut expanded = false;
         {
