@@ -1,6 +1,6 @@
 # SMap: 为科研人员和专职工作者设计的网络探测器
 
-# Pmap是Smap工作的一部分, 请详见[Pmap](https://github.com/AddrMiner/smap?tab=readme-ov-file#pmap)
+# PMap是SMap工作的一部分, 请详见[PMap](https://github.com/AddrMiner/smap?tab=readme-ov-file#pmap)
 
 smap是为专职工作者设计的高性能网络探测器.  
 
