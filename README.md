@@ -216,7 +216,7 @@ AddrMiner-S是基于IPv6密度空间树的地址生成算法, 该实现版本结
 smap -m ipv6_addrs_gen -b 10m -f your_path -a budget=500000 -a no_allow_gen_seeds=true -a region_extraction_num=1000 --cool_seconds 1
 ```
 
-具体参数见[addrminer-s参数](./doc/addrminer-s.md)
+具体参数见[Addrminer-S参数](./doc/addrminer-s.md)
 
 # Pmap
 
@@ -233,7 +233,7 @@ smap -m p4 -b 10m -t 42.81.179.50-42.81.179.180 -p 80,443,22,21,53 -a pmap_sampl
 smap -m p6 -b 10m -t 240e:928:1400:105::b@125-128 -p 80,443,22,21,53 -a pmap_sampling_pro=0.1 -a pmap_budget=2 -a pmap_batch_num=2
 ```
 
-具体参数见[pmap参数](./doc/pmap.md)
+具体参数见[Pmap参数](./doc/pmap.md)
 
 # 6Top
 
@@ -245,7 +245,7 @@ smap -m p6 -b 10m -t 240e:928:1400:105::b@125-128 -p 80,443,22,21,53 -a pmap_sam
 smap -m ipv6_prefix_tree -b 50m --cool_seconds 1 -a seeds_path=your_seed_path -a prefix_path=your_prefix_path -a extra_node_num=10000  -a budget=1000000000 -a min_prefix_len=48  -a rand_ord=false 
 ```
 
-具体参数见[6top参数](./doc/6top)
+具体参数见[6Top参数](./doc/6top.md)
 
 ## IPv6 Aliased Prefixes Checker
 
@@ -255,7 +255,7 @@ IPv6 别名前缀检测工具, 请注意保证足够长的冷却时间(默认为
 smap -m ac6 -f your_path -a prefix_len=64  -a rand_addr_len=16 -a alia_ratio=0.8 -a output_alia_addrs=true -b 100m -a prefixes_len_per_batch=1000000
 ```
 
-具体参数见[ac6参数](./doc/IPv6_Aliased_Prefixes_Checker.md)
+具体参数见[Aliased Prefixes Checker参数](./doc/IPv6_Aliased_Prefixes_Checker.md)
 
 #### topo(拓扑探测示例算法)
 
