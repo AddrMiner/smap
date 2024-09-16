@@ -21,7 +21,7 @@ impl IPv6SpaceTree {
 
         // 划分维度必须 在[1, 32]范围内
         if divide_dim < 1 || 32 < divide_dim {
-            error!("{}", SYS.get_info("err", "ipv6_space_tree_divide_dim_err"));
+            error!("{} {}", SYS.get_info("err", "ipv6_space_tree_divide_dim_err"), "[1, 32]");
             exit(1)
         }
         
@@ -120,9 +120,7 @@ impl IPv6SpaceTree {
                                     Ok(ipv6) => {
                                         seeds.push(u128::from(ipv6));
                                     }
-                                    Err(_) => {
-                                        warn!("{} {}", SYS.get_info("warn","file_line_invalid"), addr.trim());
-                                    }
+                                    Err(_) => warn!("{} {}", SYS.get_info("warn","file_line_invalid"), addr.trim())
                                 }
                             }
                             Err(_) => {}
@@ -144,9 +142,7 @@ impl IPv6SpaceTree {
                                             last_val = cur_val;
                                         }
                                     }
-                                    Err(_) => {
-                                        warn!("{} {}", SYS.get_info("warn","file_line_invalid"), addr.trim());
-                                    }
+                                    Err(_) => warn!("{} {}", SYS.get_info("warn","file_line_invalid"), addr.trim())
                                 }
                             }
                             Err(_) => {}
@@ -154,9 +150,7 @@ impl IPv6SpaceTree {
                     }
                 }
             }
-            Err(_) => {
-                error!("{} {}", SYS.get_info("err", "open_targets_file_failed"), &self.seeds_path);
-            }
+            Err(_) => error!("{} {}", SYS.get_info("err", "open_targets_file_failed"), &self.seeds_path)
         }
         seeds
     }

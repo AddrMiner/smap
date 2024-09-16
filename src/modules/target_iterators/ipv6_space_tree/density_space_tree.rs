@@ -41,7 +41,7 @@ impl IPv6SpaceTree {
         self.id_num += 1;
         let root = Rc::new(RefCell::new(root));
 
-        // 裂解 种子地址集群, 生成 聚类区域队列
+        // 裂解 种子地址集群, 生成 空间树
         self.density_split_tree(root.clone());
         self.root = Some(root);
         

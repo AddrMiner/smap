@@ -47,7 +47,6 @@ impl SourceIpIterV6 {
 
 
     /// 按当前下标取出源地址
-    #[allow(dead_code)]
     pub fn get_src_ip(&self) -> u128 {
 
         self.addrs[self.index]

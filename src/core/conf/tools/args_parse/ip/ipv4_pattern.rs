@@ -123,7 +123,7 @@ pub fn parse_pattern_local_range_v4(part_str:&str) -> (u32, u32) {
         let end:u32 = parse_str(s[1].trim());
 
         if first <= end && 1 <= first && first <= 32 && 1 <= end && end <= 32{
-            return (first, end);
+            (first, end)
         } else {
             error!("{} {}", SYS.get_info("err", "ipv4_pattern_local_part_err"), part_str);
             exit(1)

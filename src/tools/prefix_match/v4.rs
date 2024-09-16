@@ -205,7 +205,31 @@ impl Ipv4PrefixMatcher {
 
     /// 获取 ip 对应的 最长前缀的  (右移长度, 前缀值, AS号码)
     #[allow(dead_code)]
-    pub fn get_asn(&self, ip_val:u32) -> (u8, u32, u16) {
+    pub fn get_asn(&self, ip_val:u32) -> Option<(u8, u32, u16)> {
+
+        for i in 0..self.len {
+
+            let now_prefix_val = ip_val >> self.right_move_len[i];
+
+            if self.prefix_val[i].contains_key(&now_prefix_val) {
+
+                // 如果对应 map 类型已经包含 该ip 对应的前缀值
+                // 说明 该ip 的对应网段 存在, 返回对应的 (右移长度, 前缀值, AS号码)
+                return Some((self.right_move_len[i], now_prefix_val, *self.prefix_val[i].get(&now_prefix_val).unwrap()))
+
+            }
+
+        }
+
+        // 如果查询完所有的 前缀类型 后，依然没有符合的
+        None
+    }
+
+
+
+
+    #[allow(dead_code)]
+    pub fn get_asn_by_default_move_len(&self, ip_val:u32) -> (u8, u32, u16) {
 
         for i in 0..self.len {
 

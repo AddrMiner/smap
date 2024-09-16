@@ -58,7 +58,6 @@ impl Csv {   // 定义构造方法和初始化方法
             .flexible(true)
             .from_path(output_file){
             Ok(csv_writer) => {
-
                 Csv{
                     csv_writer,
                 }

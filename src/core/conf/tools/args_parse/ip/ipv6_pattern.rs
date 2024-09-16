@@ -122,7 +122,7 @@ pub fn parse_pattern_local_range_v6(part_str:&str) -> (u32, u32) {
         let end:u32 = parse_str(s[1].trim());
 
         if first <= end && 1 <= first && first <= 128 && 1 <= end && end <= 128{
-            return (first, end);
+            (first, end)
         } else {
             error!("{} {}", SYS.get_info("err", "ipv6_pattern_local_part_err"), part_str);
             exit(1)

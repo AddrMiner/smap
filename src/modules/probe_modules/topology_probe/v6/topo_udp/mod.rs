@@ -25,6 +25,9 @@ pub struct TopoUdpV6 {
     // 当用于测量网络内部结构时 必须置为 false(默认)
     // 当以网络为单位测量 互联网的整体拓扑或比较大的网络时 建议置为 true
     allow_tar_network_respond:bool,
+    
+    // 注意: 该设置用于 允许来自目标主机的端口不可达响应
+    allow_port_unreach:bool,
 
     // 是否使用 时间戳 进行编码
     use_time_encoding:bool,
@@ -42,8 +45,8 @@ impl TopoUdpV6 {
         TopoModV6 {
             name: "topo_udp_v6",
             
-            max_packet_length_v6: 100,          //  70 + 16(可变长度) = 86
-            snap_len_v6: 150,                   //  14(以太网首部) + 40(ipv6首部) + 65 + 16(可变长度) = 135
+            max_packet_length_v6: 100,          //  71 + 16(可变长度) = 87
+            snap_len_v6: 150,                   //  14(以太网首部) + 40(ipv6首部) + 66 + 16(可变长度) = 136
             filter_v6: "icmp6 && (ip6[40] == 1 || ip6[40] == 3)".to_string(),
             
             conf: Some(mod_conf),
@@ -61,7 +64,8 @@ impl TopoUdpV6 {
             (topo_dest_port, u16, SYS.get_conf("conf", "topo_dest_port"), "topo_dest_port_parse_failed"),
             (topo_payload, String, SYS.get_conf("conf","topo_payload"), "topo_payload_parse_failed"),
             (topo_payload_allow_repeat, bool, true, "topo_payload_allow_repeat_parse_failed"),
-            (topo_allow_tar_network_respond, bool, true, "topo_allow_tar_network_respond_parse_failed")
+            (topo_allow_tar_network_respond, bool, true, "topo_allow_tar_network_respond_parse_failed"),
+            (topo_allow_port_unreach, bool, true, "topo_allow_port_unreach_parse_failed")
         );
 
         let udp_payload = get_topo_message(topo_payload, topo_payload_allow_repeat, "topo_payload_len_err", 20);
@@ -76,7 +80,8 @@ impl TopoUdpV6 {
             udp_payload,
 
             allow_tar_network_respond:topo_allow_tar_network_respond,
-
+            allow_port_unreach: topo_allow_port_unreach,
+            
             use_time_encoding,
             print_default_ttl,
             output_len,

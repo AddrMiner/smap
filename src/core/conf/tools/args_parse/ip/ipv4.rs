@@ -20,7 +20,7 @@ pub fn parse_ipv4_range(addrs:&str) -> (Ipv4Addr, Ipv4Addr){
         let end:Ipv4Addr = parse_str(s[1].trim());
 
         if first <= end {
-            return (first, end);
+            (first, end)
         }else {
             error!("{} {}", SYS.get_info("err","parse_ipv4_range_err"), addrs);
             exit(1)

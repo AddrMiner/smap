@@ -75,6 +75,8 @@ pub struct OutputMod {
 
     pub buffer_capacity:usize,
     pub output_file:Option<String>,
+
+    #[allow(dead_code)]
     pub conf:Option<ModuleConf>,
 }
 

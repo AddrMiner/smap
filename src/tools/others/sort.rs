@@ -41,7 +41,6 @@ pub fn quick_sort_from_big_to_small<T: PartialOrd + Copy, U>(arr:&mut Vec<T>, in
 }
 
 /// 按照 arr的元素大小对 arr和index进行排序, 从小到大
-#[allow(dead_code)]
 pub fn quick_sort_from_small_to_big<T: PartialOrd + Copy, U>(arr:&mut Vec<T>, index:&mut Vec<U>, left:usize, right:usize){
 
     if left < right {

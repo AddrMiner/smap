@@ -2,12 +2,16 @@ pub mod fields;
 mod v4;
 mod v6;
 
-
+#[allow(dead_code)]
 pub struct UdpPacket {
 
+    #[allow(dead_code)]
     pub sport:u16,    // 源端口
+    #[allow(dead_code)]
     pub dport:u16,      // 目的端口
+    #[allow(dead_code)]
     pub len:u16,            // UDP用户数据报的长度，其最小值是8（仅有首部）
+    #[allow(dead_code)]
     pub check_sum:u16,      // 校验和
 
 }

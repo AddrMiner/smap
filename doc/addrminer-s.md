@@ -1,0 +1,12 @@
+# AddrMiner-S 参数
+- space_tree_type: 空间树类型
+- budget: 默认预算
+- batch_size: 每轮次的预算(每轮次最大生成数量)
+- divide_dim: 划分维度, 如4代表半字节划分
+- divide_range: 划分范围, 指的是按照地址结构哪部分进行分裂, 其它部分将在输入时置换为0. 如设为1-64, 所有地址的后64位将被置换为0, 且不作为分裂和生成的部分
+- max_leaf_size: 聚类区域种子地址数量上限(小于等于该数量的节点不再继续分裂)
+- no_allow_gen_seeds: 不允许生成种子地址(但是可以生成输入文件中不用作种子地址的其它地址)
+- no_allow_gen_seeds_from_file: 不允许生成输入文件中的任何地址, 如果此项为真, no_allow_gen_seeds将强制为真
+- learning_rate: 学习率
+- region_extraction_num: 区域抽取数量, 每次地址生成时将选择前n个区域(奖励最大排名), n是区域抽取数量和队列长度中的最小值
+- seeds_num: 种子地址数量, 从输入文件中随机选取指定数量个地址作为种子地址

@@ -13,7 +13,7 @@ pub struct Mode {}
 pub use helper_mode::Helper;
 
 /// 激活的所有模块
-const MODES: [&str; 21] = ["cycle_v4","c4",
+const MODES: [&str; 25] = ["cycle_v4","c4",
                           "cycle_v6", "c6",
                           "cycle_v6_pattern", "c6p",
                           "file_v4", "f4",
@@ -23,7 +23,10 @@ const MODES: [&str; 21] = ["cycle_v4","c4",
                           "pmap_v6", "p6",
                           "topo_v4", "t4",
                           "topo_v6", "t6",
-                          "ipv6_addrs_gen"];
+                          "ipv6_addrs_gen",
+                          "ipv6_prefix_tree",
+                          "ipv6_aliased_prefixes_check", "ac6",
+                          "ipv6_double_tree_test"];
 impl Mode {
 
     pub fn new(args:&Args) -> Box<dyn ModeMethod> {
@@ -58,6 +61,15 @@ impl Mode {
             "topo_v6" | "t6" => Box::new(v6::Topo6::new(args)),
 
             "ipv6_addrs_gen" => Box::new(v6::SpaceTree6::new(args)),
+            
+            "ipv6_prefix_tree" => Box::new(v6::PrefixTree6::new(args)),
+            
+            "ipv6_prefix_fixed_tree" => Box::new(v6::PrefixFixedTree6::new(args)),
+
+            "ipv6_aliased_prefixes_check" | "ac6" => Box::new(v6::IPv6AliasedCheck::new(args)),
+
+            // 警告: 该模式只用作测试, 请及时删除
+            "ipv6_double_tree_test" => Box::new(v6::DoubleTreeTest::new(args)),
 
             _ => {
                 // 未查询到有效模式

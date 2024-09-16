@@ -3,6 +3,8 @@ mod file_reader;
 mod pmap;
 mod topo;
 mod ipv6_space_tree;
+mod ipv6_prefix_tree;
+mod ipv6_aliased_check;
 
 pub use cycle_group::cycle_group::cycle_group_ipv4::CycleIpv4;
 pub use cycle_group::cycle_group::cycle_group_ipv6::CycleIpv6;
@@ -31,7 +33,10 @@ pub use topo::TopoStateChainV6;
 pub use topo::TopoIterV6;
 
 pub use ipv6_space_tree::IPv6SpaceTree;
-
+pub use ipv6_prefix_tree::IPv6PrefixTree;
+pub use ipv6_prefix_tree::IPv6FixedPrefixTree;
+pub use ipv6_prefix_tree::Ipv6VecDoubleTree;
+pub use ipv6_aliased_check::IPv6AliaChecker;
 
 
 pub enum  CycleIpv4Type {

@@ -23,13 +23,17 @@ pub struct InterfaceConf {
 
     // 本地 ip 和 网络  注意 ip 和 net 的下标应该对应一致
     pub local_ipv4:Vec<Ipv4Addr>,
+    #[allow(dead_code)]
     pub local_ipv4_net:Vec<Netv4>,
 
     pub local_ipv6:Vec<Ipv6Addr>,
+    #[allow(dead_code)]
     pub local_ipv6_net:Vec<Netv6>,
 
     // 传输接收速度
+    #[allow(dead_code)]
     pub receive_speed:Option<u64>,
+    #[allow(dead_code)]
     pub transmit_speed:Option<u64>
 
 }

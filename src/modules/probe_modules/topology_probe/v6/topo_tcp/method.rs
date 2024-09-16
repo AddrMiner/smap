@@ -51,7 +51,7 @@ impl TopoMethodV6 for TopoTcpV6 {
         }.get_u8_vec_after_sequence());
     }
 
-    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, dest_port_offset:Option<u16>, hop_limit: u8, aes_rand: &AesRand) -> Vec<u8> {
+    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, dest_port_offset:Option<u16>, code:u8, hop_limit: u8, aes_rand: &AesRand) -> Vec<u8> {
         // 以太网首部(14字节) + ipv6首部(40字节) + tcp首部(20字节) = 74
         let mut packet = Vec::with_capacity(74);
 
@@ -99,16 +99,19 @@ impl TopoMethodV6 for TopoTcpV6 {
 
             // 将 序列号第1字节 设为 原始跳数限制
             packet.push(hop_limit);
+
+            // 将 序列号第2字节 设为 code
+            packet.push(code);
             
             if self.use_time_encoding {
-                // 获得当前时间戳的 后24位
+                // 获得当前时间戳的 后16位
                 let send_time = Utc::now().timestamp_millis();
-                let send_time = ((send_time & 0xff_ffff) as u32).to_le_bytes();
+                let send_time = ((send_time & 0xff_ff) as u16).to_le_bytes();
                 
-                packet.extend_from_slice(&send_time[0..3]);
+                packet.extend(send_time);
             } else {
-                // 将验证数据的 前3字节 作为 序列号后3字节
-                packet.extend_from_slice(&validation[0..3]);
+                // 将验证数据的 前2字节 作为 序列号后2字节
+                packet.extend_from_slice(&validation[0..2]);
             }
             
             // 写入 tcp首部 序列号以后的部分 (12字节)
@@ -180,16 +183,22 @@ impl TopoMethodV6 for TopoTcpV6 {
         let spent_time = if self.use_time_encoding {
 
             // 提取 发送时的 时间戳
-            let ori_time_bytes:[u8;4] = [inner_tcp_header_data[5], inner_tcp_header_data[6], inner_tcp_header_data[7], 0];
-            let original_time = u32::from_le_bytes(ori_time_bytes);
+            let ori_time_bytes:[u8;2] = [inner_tcp_header_data[6], inner_tcp_header_data[7]];
+            let original_time = u16::from_le_bytes(ori_time_bytes);
 
             // 此处注意严格检查
             let now_time = ((ts.tv_sec as u64) * 1000) + ((ts.tv_usec as u64) / 1000);
-            // 提取 毫秒时间戳 的最后24比特
-            let now_time = (now_time & 0xff_ffff) as u32;
+            // 提取 毫秒时间戳 的最后16比特
+            let now_time = (now_time & 0xffff) as u16;
 
-            // 计算 经过时间
-            now_time - original_time
+            // 警告: 由于只编码了16位的时间戳，当 实际往返时间 超过 65秒时, 得到的时延信息将出错
+            if now_time >= original_time {
+                // 如果 接收时的时间 大于等于 发送时 的 时间
+                now_time - original_time
+            } else {
+                // 如果 发送时的时间 小于 发送时 的 时间
+                now_time + (u16::MAX - original_time)
+            }
         } else { 0 };
         
         Some(
@@ -199,6 +208,8 @@ impl TopoMethodV6 for TopoTcpV6 {
                 distance,
                 from_destination,
                 rtt: spent_time as u64,
+                
+                code: inner_tcp_header_data[5],
             }
         )
     }

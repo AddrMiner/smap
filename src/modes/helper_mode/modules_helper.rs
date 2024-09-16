@@ -29,6 +29,12 @@ pub fn mode_help(mode_name:&str) -> String {
         "topo_v6" | "t6" => modes::v6::Topo6::print_help(),
 
         "ipv6_addrs_gen" => modes::v6::SpaceTree6::print_help(),
+        
+        "ipv6_prefix_tree" => modes::v6::PrefixTree6::print_help(),
+        
+        "ipv6_prefix_fixed_tree" => modes::v6::PrefixFixedTree6::print_help(),
+        
+        "ipv6_aliased_prefixes_check" | "ac6" => modes::v6::IPv6AliasedCheck::print_help(),
 
         _ => {
             "no mode help".to_string()

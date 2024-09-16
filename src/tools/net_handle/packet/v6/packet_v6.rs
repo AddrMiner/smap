@@ -1,15 +1,23 @@
 use std::net::Ipv6Addr;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub struct Ipv6Packet {
 
+    #[allow(dead_code)]
     pub traffic_class:u8,           // 通信类型
+    #[allow(dead_code)]
     pub flow_label:u32,             // 流标签
+    #[allow(dead_code)]
     pub payload_len:u16,            // 载荷长度
+    #[allow(dead_code)]
     pub next_header:u8,             // 下一头部
+    #[allow(dead_code)]
     pub hop_limit:u8,               // 跳数限制
 
+    #[allow(dead_code)]
     pub source_addr:Ipv6Addr,           // 源地址
+    #[allow(dead_code)]
     pub dest_addr:Ipv6Addr,             // 目的地址
 
 }

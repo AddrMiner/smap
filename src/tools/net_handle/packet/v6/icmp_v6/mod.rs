@@ -16,6 +16,7 @@ pub struct IcmpV6Packet {
     pub identifier:u16,
 
     // 用于标识请求、响应报文
+    #[allow(dead_code)]
     pub sequence_number:u16,
 }
 

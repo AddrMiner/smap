@@ -34,11 +34,10 @@ use crate::core::sys::packet_sender::PacketSender;
     target_os = "macos",
     target_os = "ios",
     target_os = "linux"))]
-pub fn send_v6_vec(
-    interface_index:usize, tar_addrs:Vec<(u16, u128)>,
+pub fn send_v6_u32code_vec(
+    interface_index:usize, tar_addrs:Vec<(u32, u128)>,
     probe_mod_v6: Arc<CodeProbeModV6>,
     base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>) -> (u64, u64) {
-
 
     // 初始化 数据包发送器
     let sender = PacketSender::new(
@@ -76,7 +75,7 @@ pub fn send_v6_vec(
 
         // 由探测模块生成数据包
         let packet = probe.make_packet_v6(cur_source_ip, dest_addr, region_code.to_be_bytes().into(), &aes_rand);
-        
+
         let mut sent_successfully = false;
         for _ in 0..send_attempts {
             let res = sender.send_packet(&packet);
@@ -91,7 +90,7 @@ pub fn send_v6_vec(
             total_send_success += 1;
         } else {
             // 统计发送失败的数据包
-            debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(dest_addr), 0);
+            debug!("{} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(dest_addr));
             total_send_failed += 1;
         }
 

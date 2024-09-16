@@ -50,8 +50,6 @@ impl CodeProbeMethodV6 for CodeIcmpEchoV6 {
             // 写入 ipv6目的地址
             packet.extend(dest_ip_bytes);
         }
-        
-        //println!("有效载荷长度: {}\n code_len:{}\n total_len:{}", u16::from_be_bytes([packet[18], packet[19]]), code.len(), total_len);
 
         {
             // icmp报头: [ 类型: {54}  代码: {55}  校验和: {56, 57} id: {58, 59} 序列号: {60, 61} ]

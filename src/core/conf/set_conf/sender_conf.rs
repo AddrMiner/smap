@@ -26,8 +26,11 @@ pub struct SenderBaseConf {
 
 
     // 源接口名称 和 对应的源地址, 注意下标是一一对应的
+    #[allow(dead_code)]
     pub source_interface_v4:Vec<String>,
     pub source_addrs_v4:Vec<Vec<Ipv4Addr>>,
+
+    #[allow(dead_code)]
     pub source_interface_v6:Vec<String>,
     pub source_addrs_v6:Vec<Vec<Ipv6Addr>>,
 

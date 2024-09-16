@@ -7,7 +7,7 @@ use crate::modes::v6::space_tree::new::SpaceTreeType;
 use crate::modes::v6::space_tree::SpaceTree6;
 use crate::{computing_time, creat_channels, ending_the_receiving_thread, init_var, prepare_data, recv_ready, SYS, wait_sender_threads, write_to_summary};
 use crate::core::receiver::pcap::PcapReceiver;
-use crate::core::sender::send_v6_vec;
+use crate::core::sender::send_v6_u16code_vec;
 use crate::modules::output_modules::OutputMod;
 use crate::tools::others::split::split_chains;
 
@@ -35,16 +35,11 @@ impl ModeMethod for SpaceTree6 {
             
             count += 1;
             
-            let mut end_flag:bool = false;
-            if total_used_budget + self.batch_size >= self.budget {
-                end_flag = true;
-            }
-            
             // 生成 目标地址集
             let tar_addrs: Vec<(u16, u128)>;
             {
-                info!("{} {}", SYS.get_info("info", "ipv6_addrs_gen_round"), count);
-                let cur_budget = if end_flag { self.budget - total_used_budget } else { self.batch_size };
+                info!("{} {}", SYS.get_info("info", "cur_round"), count);
+                let cur_budget = self.batch_size;
                 
                 loop {
                     let cur_tar_addrs = space_tree.gen_addrs(cur_budget);
@@ -86,7 +81,7 @@ impl ModeMethod for SpaceTree6 {
                 prepare_data!(self; clone; base_conf, sender_conf, probe);
 
                 sender_threads.push(thread::spawn(move || {
-                      send_v6_vec(0, tar_addrs_per, probe, base_conf, sender_conf)
+                      send_v6_u16code_vec(0, tar_addrs_per, probe, base_conf, sender_conf)
                 }));
             }
 
@@ -101,7 +96,7 @@ impl ModeMethod for SpaceTree6 {
 
             // 等待接收线程按照预定时间关闭
             if let Ok((cur_active_num, region_recorder, output)) = receiver_res.join() {
-                info!("{} {}", SYS.get_info("info", "ipv6_addrs_gen_round_active_num"),cur_active_num);
+                info!("{} {}", SYS.get_info("info", "cur_active_num"),cur_active_num);
                 total_active_num += cur_active_num as u64;
                 space_tree.update_tree(region_recorder);
                 out_mod = output;
@@ -109,7 +104,7 @@ impl ModeMethod for SpaceTree6 {
                 error!("{}", SYS.get_info("err", "recv_thread_err")); exit(1)
             }
             
-            if end_flag {
+            if total_used_budget >= self.budget {
                 break
             }
         }

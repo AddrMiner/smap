@@ -5,13 +5,13 @@ use crate::core::conf::set_conf::sender_conf::SenderBaseConf;
 use crate::core::sender::tools::rate_controller::RateController;
 use crate::core::sender::tools::source_ip_iter::source_ip_v6::SourceIpIterV6;
 use crate::core::sys::packet_sender::PcapSender;
-use crate::modules::probe_modules::active_probe_ipv6_code::CodeProbeModV6;
+use crate::modules::probe_modules::topology_probe::topo_mod_v6::TopoModV6;
 use crate::SYS;
 
-pub fn send_v6_vec(
-    interface_index:usize, tar_addrs:Vec<(u16, u128)>, 
-    probe_mod_v6: Arc<CodeProbeModV6>,
-    base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>) -> (u64, u64) {
+pub fn send_prefixes_v6(
+    interface_index:usize, targets:Vec<(u128, u8, u8)>,
+    probe_mod_v6: Arc<TopoModV6>, base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>
+) -> (u64, u64) {
 
     // 初始化 pcap 发包器
     let (mut pcap_sender, mut send_queue, batch_size) = PcapSender::init(
@@ -20,16 +20,18 @@ pub fn send_v6_vec(
 
     // 取出常用变量
     let send_attempts = sender_conf.send_attempt_num;
-    let send_attempts_sub_one = send_attempts - 1;
-
-    let mut total_send_success: u64 = 0;
-    let mut total_send_failed: u64 = 0;
+    let send_attempts_sub_one = sender_conf.send_attempt_num - 1;
+    
+    let mut total_send_success:u64 = 0;
+    let mut total_send_failed:u64 = 0;
 
     // 初始化 源地址迭代器
-    let mut source_ip_iter = SourceIpIterV6::new(&sender_conf.source_addrs_v6[interface_index]);
+    let source_ip_iter = SourceIpIterV6::new(&sender_conf.source_addrs_v6[interface_index]);
+    let cur_source_ip = source_ip_iter.get_src_ip();
+    drop(source_ip_iter);
 
-    // 初始化 探测模块
-    let mut probe = CodeProbeModV6::init(probe_mod_v6);
+    // 初始化 拓扑探测模块
+    let mut probe = TopoModV6::init(probe_mod_v6, sender_conf.source_ports.clone());
 
     // 探测模块线程初始化
     probe.thread_initialize_v6(&base_conf.interface[interface_index].local_mac,
@@ -39,24 +41,23 @@ pub fn send_v6_vec(
 
     // 初始化 PID速率控制器
     let mut rate_controller = RateController::from_conf(&sender_conf.global_rate_conf, 0, batch_size as f64);
-
+    
     drop(base_conf);
     drop(sender_conf);
 
     let mut batch_count = 0u32;
     let mut batch_send_success: u64 = 0;
     let mut batch_send_failed: u64 = 0;
-
-    for (region_code, dest_addr) in tar_addrs.into_iter() {
-        let cur_source_ip = source_ip_iter.get_src_ip_with_change();
+    
+    for (tar_addr, tar_ttl, code) in targets.into_iter() {
 
         // 由探测模块生成数据包
-        let packet = probe.make_packet_v6(cur_source_ip, dest_addr, region_code.to_be_bytes().into(), &aes_rand);
+        let packet = probe.make_packet_v6(cur_source_ip, tar_addr, None, code, tar_ttl, &aes_rand);
 
         let mut add_successfully = false;
         for _ in 0..send_attempts {
             // 使用pcap尝试将数据包添加到 发送队列
-            match send_queue.queue(None, &packet) {
+            match send_queue.queue(None,&packet) {
                 Ok(_) => {
                     // 如果成功就跳出
                     add_successfully = true;
@@ -65,7 +66,7 @@ pub fn send_v6_vec(
                 Err(_) => {}
             }
         }
-
+        
         if add_successfully {
             batch_send_success += 1;
         } else {

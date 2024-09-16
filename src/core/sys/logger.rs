@@ -33,11 +33,11 @@ pub fn set_logger(args:&Args){
             "2" | "info" => LevelFilter::Info,
             "3" | "warn" => LevelFilter::Warn,
             "4" | "error" => LevelFilter::Error,
-            _ => LevelFilter::Trace,
+            _ => LevelFilter::Info,
         };
 
     } else {
-        level = LevelFilter::Trace;
+        level = LevelFilter::Info;
     }
 
 

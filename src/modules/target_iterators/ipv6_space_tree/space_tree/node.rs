@@ -15,7 +15,7 @@ pub struct IPv6SpaceTreeNode {
     // 节点层级
     pub level:u8,
 
-    // 该节点的种子节点指针
+    // 该节点的子节点指针
     pub childs:Vec<Rc<RefCell<IPv6SpaceTreeNode>>>,
 
     // 该聚类区域的 种子地址

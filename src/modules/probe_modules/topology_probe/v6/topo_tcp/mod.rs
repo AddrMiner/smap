@@ -35,8 +35,8 @@ impl TopoTcpV6 {
         TopoModV6 {
             name: "topo_tcp_v6",
 
-            max_packet_length_v6: 82,   // 以太网首部(14字节) + ipv6首部(40字节) + tcp首部(20字节) + 负载(8字节) = 82
-            snap_len_v6: 140,           // 14(以太网首部) + 40(ipv6首部) + 8(外层icmp首部) + 40(内层ipv6首部) + 20(内层tcp首部) + 8(时间戳) = 130
+            max_packet_length_v6: 74,    // 以太网首部(14字节) + ipv6首部(40字节) + tcp首部(20字节) = 74
+            snap_len_v6: 130,           // 14(以太网首部) + 40(ipv6首部) + 8(外层icmp首部) + 40(内层ipv6首部) + 20(内层tcp首部) = 122
             filter_v6: "icmp6 && (ip6[40] == 1 || ip6[40] == 3)".to_string(),
 
             conf: Some(mod_conf),

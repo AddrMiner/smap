@@ -17,7 +17,7 @@ pub fn parse_u8_range(u8_str:&str) -> (u8, u8) {
         let end:u8 = parse_str(s[1].trim());
 
         if first <= end {
-            return (first, end);
+            (first, end)
         }else {
             error!("{} {}", SYS.get_info("err", "parse_u8_range_err"), u8_str);
             exit(1)

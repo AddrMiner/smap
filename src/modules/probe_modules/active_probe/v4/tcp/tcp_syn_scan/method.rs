@@ -223,7 +223,7 @@ impl ProbeMethodV4 for TcpSynScanV4 {
                 }
 
             }
-            _ => return (false, 0, None)
+            _ => (false, 0, None)
         }
     }
 

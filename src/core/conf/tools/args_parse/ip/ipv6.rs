@@ -19,7 +19,7 @@ pub fn parse_ipv6_range(addrs:&str) -> (Ipv6Addr, Ipv6Addr){
         let end:Ipv6Addr = parse_str(s[1].trim());
 
         if first <= end {
-            return (first, end);
+            (first, end)
         }else {
             error!("{} {}", SYS.get_info("err","parse_ipv6_range_err"), addrs);
             exit(1)

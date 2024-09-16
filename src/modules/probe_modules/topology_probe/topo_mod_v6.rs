@@ -60,7 +60,7 @@ pub trait TopoMethodV6 {
 
     fn thread_initialize_v6(&mut self, local_mac:&MacAddress, gateway_mac:&MacAddress);
 
-    fn make_packet_v6(&self, source_ip:u128, dest_ip:u128, dest_port_offset:Option<u16>, hop_limit:u8, aes_rand:&AesRand) -> Vec<u8>;
+    fn make_packet_v6(&self, source_ip:u128, dest_ip:u128, dest_port_offset:Option<u16>, code:u8, hop_limit:u8, aes_rand:&AesRand) -> Vec<u8>;
 
     fn parse_packet_v6(&self, ts:&libc::timeval, ipv6_header:&[u8], net_layer_data:&[u8], aes_rand:&AesRand) -> Option<TopoResultV6>;
 
@@ -94,5 +94,7 @@ pub struct TopoResultV6 {
 
     pub from_destination:bool, // 是否是来自 目的地址 的响应
 
-    pub rtt:u64         // 往返时延 以毫秒为单位
+    pub rtt:u64,        // 往返时延 以毫秒为单位
+    
+    pub code:u8,        // 编码字节: 一般用于
 }

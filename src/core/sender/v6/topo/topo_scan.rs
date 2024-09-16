@@ -47,8 +47,9 @@ pub fn topo_scan_send_v6<T:Topo6Iter>(interface_index:usize, mut target_iter:T, 
     let mut send_failed:u64 = 0;
 
     // 初始化 源地址迭代器
-    let mut source_ip_iter = SourceIpIterV6::new(&sender_conf.source_addrs_v6[interface_index]);
-    let cur_source_ip = source_ip_iter.get_src_ip_with_change();
+    let source_ip_iter = SourceIpIterV6::new(&sender_conf.source_addrs_v6[interface_index]);
+    let cur_source_ip = source_ip_iter.get_src_ip();
+    drop(source_ip_iter);
 
     // 初始化 拓扑探测模块
     let mut probe = TopoModV6::init(probe_mod_v6, sender_conf.source_ports.clone());
@@ -77,7 +78,7 @@ pub fn topo_scan_send_v6<T:Topo6Iter>(interface_index:usize, mut target_iter:T, 
 
                 // 由探测模块生成数据包
                 let packet = probe.make_packet_v6(
-                    cur_source_ip, cur_target.2, None, cur_target.3, &aes_rand);
+                    cur_source_ip, cur_target.2, None, 0, cur_target.3, &aes_rand);
 
                 let mut sent_successfully = false;
                 for _ in 0..send_attempts {
@@ -107,7 +108,7 @@ pub fn topo_scan_send_v6<T:Topo6Iter>(interface_index:usize, mut target_iter:T, 
 
                     // 由探测模块生成数据包
                     let packet = probe.make_packet_v6(
-                        cur_source_ip, cur_target.2, None, cur_target.3, &aes_rand);
+                        cur_source_ip, cur_target.2, None, 0, cur_target.3, &aes_rand);
 
                     let mut sent_successfully = false;
                     for _ in 0..send_attempts {

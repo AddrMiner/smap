@@ -78,6 +78,7 @@ pub struct CodeProbeModV6 {
     
     pub code_len:u16,
 
+    #[allow(dead_code)]
     pub conf:Option<ModuleConf>,
 }
 

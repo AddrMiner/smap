@@ -30,13 +30,13 @@ impl TopoMethodV6 for TopoUdpV6 {
         }.get_u8_vec_before_payload_len());
     }
 
-    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, dest_port_offset:Option<u16>, hop_limit: u8, aes_rand: &AesRand) -> Vec<u8> {
+    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, dest_port_offset:Option<u16>, code:u8, hop_limit: u8, aes_rand: &AesRand) -> Vec<u8> {
 
         let validation = aes_rand.validate_gen_v6_u128_without_sport(source_ip, dest_ip);
 
         // 计算 ipv6数据包的长度  主要目的是 使数据包长度可变, 避免被探查
         // validation[2]的最后四个比特决定 可变长度大小
-        let payload_len:u16 = 17 + (validation[2] & 0xf) as u16;
+        let payload_len:u16 = 18 + (validation[2] & 0xf) as u16;
         let payload_len_usize = payload_len as usize;
         let payload_len_be_bytes = payload_len.to_be_bytes();
             
@@ -74,8 +74,8 @@ impl TopoMethodV6 for TopoUdpV6 {
         {
             // udp 报头: [源端口: {54, 55}  目的端口: {56, 57}]
             //          [ udp长度: {58, 59}   udp校验和: {60, 61}, udp载荷:{62..(总长度 - 1)}]
-            // udp 载荷: [ 初始ttl:{62},  时间戳(如果有): {63, 64, 65, 66, 67, 68, 69, 70}, 预设载荷: {71 .. < total_len } ]
-            // 载荷udp索引:[初始ttl:{8},   时间戳(如果有): {9..<17} ]
+            // udp 载荷: [ 初始ttl:{62}, code:{63}, 时间戳(如果有): {64, 65, 66, 67, 68, 69, 70, 71}, 预设载荷: {72 .. < total_len } ]
+            // 载荷udp索引:[初始ttl:{8}, code:{9}, 时间戳(如果有): {10..<18} ]
 
             // 写入 源端口 (2字节)
             {   // 下标为 0..len-1(最大为65535),  以验证字段前两个字节作为随机索引, 从源端口向量中提取源端口
@@ -94,19 +94,19 @@ impl TopoMethodV6 for TopoUdpV6 {
             // 写入 udp长度  
             packet.extend(payload_len_be_bytes);
 
-            // 写入 填充为0的 check_sum字段 和 初始ttl
-            packet.extend([0u8,0, hop_limit]);
+            // 写入 填充为0的 check_sum字段, 初始ttl, code
+            packet.extend([0u8,0, hop_limit, code]);
 
             // 写入 时间戳 和 填充的udp数据部分
             if self.use_time_encoding {
                 // 写入 整个毫秒时间戳
                 packet.extend(Utc::now().timestamp_millis().to_be_bytes());
-                // 写入 预设载荷  长度为 udp_len - 首部(8字节) - 初始ttl(1字节) - 时间戳(8字节)
-                // 即, 长度为  udp_len - 17字节
-                packet.extend_from_slice(&self.udp_payload[..(payload_len_usize - 17)]);
+                // 写入 预设载荷  长度为 udp_len - 首部(8字节) - 初始ttl(1字节) - 时间戳(8字节) - code(1字节)
+                // 即, 长度为  udp_len - 18字节
+                packet.extend_from_slice(&self.udp_payload[..(payload_len_usize - 18)]);
             } else {
-                // 写入 预设载荷  长度为 udp_len - 首部(8字节) - 初始ttl(1字节), 即 udp_len - 9
-                packet.extend_from_slice(&self.udp_payload[..(payload_len_usize - 9)]);
+                // 写入 预设载荷  长度为 udp_len - 首部(8字节) - 初始ttl(1字节) - code(1字节), 即 udp_len - 10
+                packet.extend_from_slice(&self.udp_payload[..(payload_len_usize - 10)]);
             }
 
             // 计算并写入 udp校验和
@@ -120,8 +120,8 @@ impl TopoMethodV6 for TopoUdpV6 {
 
     fn parse_packet_v6(&self, ts: &timeval, ipv6_header: &[u8], net_layer_packet: &[u8], aes_rand: &AesRand) -> Option<TopoResultV6> {
         // ip报头协议字段必须为 icmp
-        // 如果存在内层数据包, 网络层应至少包含  外层icmp(8字节) + 内层ipv6报头(40字节) + 内层udp报头(8字节) + 初始ttl(1字节) + 时间戳(8字节) = 65
-        if ipv6_header[6] != 58 || net_layer_packet.len() < 65 { return None }
+        // 如果存在内层数据包, 网络层应至少包含  外层icmp(8字节) + 内层ipv6报头(40字节) + 内层udp报头(8字节) + 初始ttl(1字节) + 时间戳(8字节) + code(1字节) = 66
+        if ipv6_header[6] != 58 || net_layer_packet.len() < 66 { return None }
 
         // 是否是来自 目的地址 或 目标网络(主机不可达消息) 的响应
         let from_destination= match net_layer_packet[0] {
@@ -129,7 +129,7 @@ impl TopoMethodV6 for TopoUdpV6 {
             1 => {
                 match net_layer_packet[1] {
                     // 端口不可达
-                    4 => true,
+                    4 => if self.allow_port_unreach { true } else { return None },
                     // 主机不可达
                     3 => if self.allow_tar_network_respond { true } else { return None },
                     _ => return None,
@@ -171,7 +171,7 @@ impl TopoMethodV6 for TopoUdpV6 {
         // 提取 数据包 的 源ip
         let src_ip = Ipv6PacketU128::get_source_addr(ipv6_header);
 
-        // 载荷udp索引:[初始ttl:{8},   时间戳(如果有): {9..<17} ]
+        // 载荷udp索引:[初始ttl:{8}, code:{9}, 时间戳(如果有): {10..<18} ]
         // 提取 发送时 的 ttl
         let original_ttl = inner_udp_header_data[8];
 
@@ -182,7 +182,7 @@ impl TopoMethodV6 for TopoUdpV6 {
         let spent_time = if self.use_time_encoding {
 
             // 提取 发送时的 时间戳
-            let ori_time_bytes = &inner_udp_header_data[9..17];
+            let ori_time_bytes = &inner_udp_header_data[10..18];
             let original_time = u64::from_be_bytes(ori_time_bytes.try_into().unwrap());
             
             // 此处注意严格检查
@@ -199,6 +199,8 @@ impl TopoMethodV6 for TopoUdpV6 {
                 distance,
                 from_destination,
                 rtt: spent_time,
+                
+                code: inner_udp_header_data[9],
             }
         )
     }

@@ -1,9 +1,6 @@
-use std::cell::RefCell;
 use std::cmp::min;
-use std::rc::Rc;
 use ahash::AHashSet;
 use rand::seq::SliceRandom;
-use crate::modules::target_iterators::ipv6_space_tree::IPv6SpaceTreeNode;
 use crate::modules::target_iterators::ipv6_space_tree::space_tree::IPv6SpaceTree;
 use crate::tools::others::sort::quick_sort_from_big_to_small;
 
@@ -75,7 +72,7 @@ impl IPv6SpaceTree {
             let mut cur_node = self.region_queue[i].borrow_mut();
 
             // 更新 q值       q = (1-a) * q + a * [ 上次扫描活跃数量 / 当前搜索维度 ]
-            cur_node.q_value = one_sub_learning_rate * cur_node.q_value + learning_rate * ( (new_act_num as f64) / (cur_node.searched_dim as f64));
+            cur_node.q_value = one_sub_learning_rate * cur_node.q_value + learning_rate * ((new_act_num as f64) / (cur_node.searched_dim as f64));
             self.all_reward[i] = cur_node.q_value;
 
             if cur_node.no_used_generated_address.is_empty() && cur_node.split_stack.is_empty() {
@@ -127,21 +124,20 @@ impl IPv6SpaceTree {
         }
 
         {// 删除 已被用完的叶子区域
-            let high_regions: Vec<Rc<RefCell<IPv6SpaceTreeNode>>> = self.region_queue.drain(..tar_region_num).collect();
-            let high_rewards: Vec<f64> = self.all_reward.drain(..tar_region_num).collect();
+            let high_regions = self.region_queue.drain(..tar_region_num);
+            let high_rewards = self.all_reward.drain(..tar_region_num);
 
             let mut new_high_regions = Vec::with_capacity(tar_region_num);
             let mut new_high_rewards = Vec::with_capacity(tar_region_num);
 
-            for (index, region) in high_regions.into_iter().enumerate() {
+            for (reward, region) in high_rewards.into_iter().zip(high_regions.into_iter()) {
                 let node = region.borrow();
 
                 if !node.no_used_generated_address.is_empty() || !node.split_stack.is_empty() {
                     new_high_regions.push(region.clone());
-                    new_high_rewards.push(high_rewards[index]);
+                    new_high_rewards.push(reward);
                 }
             }
-            drop(high_rewards);
 
             self.region_queue.extend(new_high_regions);
             self.all_reward.extend(new_high_rewards);
@@ -151,7 +147,4 @@ impl IPv6SpaceTree {
         let node_queue_len =  self.all_reward.len();
         quick_sort_from_big_to_small(&mut self.all_reward, &mut self.region_queue, 0, node_queue_len-1);
     }
-
-   
-
 }

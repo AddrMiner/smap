@@ -30,7 +30,7 @@ impl TopoMethodV6 for TopoIcmpV6 {
         }.get_u8_vec_without_addr());
     }
 
-    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, _dest_port_offset:Option<u16>, hop_limit: u8, aes_rand: &AesRand) -> Vec<u8> {
+    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, _dest_port_offset:Option<u16>, code:u8, hop_limit: u8, aes_rand: &AesRand) -> Vec<u8> {
         // 按最大数据包长度设置 向量容量
         let mut packet = Vec::with_capacity(70);
 
@@ -80,8 +80,11 @@ impl TopoMethodV6 for TopoIcmpV6 {
             // 写入时间戳  序列号第2字节 至 数据第7字节
             packet.extend(send_time_le_bytes);
             
-            // 将 验证数据第12字节写入 数据第8字节
-            packet.push(validation[12]);
+            // 将 验证数据第12字节 写入 数据第8字节
+            // packet.push(validation[12]);
+            
+            // 将 编码数据 写入 数据第8字节
+            packet.push(code);
 
             let check_sum_bytes = IcmpV6Packet::get_check_sum(&source_ip_bytes, &dest_ip_bytes,
                                                               // len: 8字节(icmp首部) + 8字节(数据)
@@ -129,6 +132,8 @@ impl TopoMethodV6 for TopoIcmpV6 {
                 distance: infer_default_ttl_by_outer_ttl(outer_ttl) - outer_ttl + 1,
                 from_destination: true,
                 rtt,
+                
+                code: net_layer_data[15],
             })
         }
         // 如果存在内层数据包, 网络层应至少包含  外层icmp(8字节) + 内层ipv6报头(40字节) + 内层icmp报头(8字节) + 数据(8字节) = 64
@@ -139,6 +144,8 @@ impl TopoMethodV6 for TopoIcmpV6 {
             // 如果 ICMP类型字段 为 目标不可达
             1 => {
                 match net_layer_data[1] {
+                    // 端口不可达
+                    4 => true,
                     // 主机不可达
                     3 => if self.allow_tar_network_respond { true } else { return None },
                     _ => return None,
@@ -195,6 +202,8 @@ impl TopoMethodV6 for TopoIcmpV6 {
                 distance,
                 from_destination,
                 rtt,
+
+                code: inner_icmp_v6[15],
             }
         )
     }
