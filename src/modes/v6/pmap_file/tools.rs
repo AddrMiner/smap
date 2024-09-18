@@ -7,7 +7,7 @@ use crate::modes::v6::pmap_file::PmapFileV6;
 use crate::modules::output_modules::OutputMethod;
 use crate::modules::target_iterators::{PmapFileIterV6, PmapGraph, PmapState};
 use crate::{init_var, SYS};
-use crate::tools::check_duplicates::{ExtractActPortsV6, NotMarkedV6};
+use crate::tools::check_duplicates::{ExtractActPortsV6, NotMarkedV6Port};
 use crate::tools::others::split::split_chains;
 
 impl PmapFileV6 {
@@ -128,7 +128,7 @@ impl PmapFileV6 {
     }
 
 
-    pub fn pmap_receive<B:NotMarkedV6>(res:B, graph:&PmapGraph, states_map:&mut AHashMap<Vec<u16>, Arc<PmapState>>,
+    pub fn pmap_receive<B:NotMarkedV6Port>(res:B, graph:&PmapGraph, states_map:&mut AHashMap<Vec<u16>, Arc<PmapState>>,
                                        pmap_iter_queue:&mut Vec<PmapFileIterV6>){
 
         for pmap_iter in pmap_iter_queue.iter_mut() {
@@ -137,7 +137,8 @@ impl PmapFileV6 {
             let ip_structs_iter = pmap_iter.ips_struct.iter_mut();
 
             for (cur_ip, cur_ip_struct) in ips_iter.zip(ip_structs_iter) {
-                cur_ip_struct.receive(res.is_not_marked(*cur_ip), graph, states_map);
+                let cur_sent_port = cur_ip_struct.cur_sent_port;
+                cur_ip_struct.receive(res.is_not_marked(*cur_ip, cur_sent_port), graph, states_map);
             }
         }
     }

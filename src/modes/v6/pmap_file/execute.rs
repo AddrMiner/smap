@@ -12,7 +12,7 @@ use crate::modes::ModeMethod;
 use crate::modes::v6::pmap_file::PmapFileV6;
 use crate::modules::output_modules::OutputMod;
 use crate::modules::target_iterators::{PmapGraph, PmapState};
-use crate::tools::check_duplicates::hash_set::{HashSetV6, HashSetV6Port};
+use crate::tools::check_duplicates::hash_set::HashSetV6Port;
 use crate::tools::others::split::split_chains;
 
 impl ModeMethod for PmapFileV6 {
@@ -154,8 +154,8 @@ impl ModeMethod for PmapFileV6 {
                         prepare_data!(self; clone; base_conf, receiver_conf, probe);
                         let sports = self.sender_conf.source_ports.clone();
                         thread::spawn(move || {
-                            let hash_set = HashSetV6::new(cur_ips_num);
-                            PcapReceiver::pmap_recommend_scan_v6(0, base_conf, receiver_conf, probe, sports, hash_set,
+                            let hash_set = HashSetV6Port::new(cur_ips_num * 2);
+                            PcapReceiver::pmap_full_scan_v6(0, base_conf, receiver_conf, probe, sports, hash_set,
                                                                  recv_ready_sender, recv_close_time_receiver)
                         })
                     };

@@ -1,7 +1,7 @@
 
 
 use ahash::{AHashMap, AHashSet};
-use crate::tools::check_duplicates::{DuplicateCheckerV6Port, ExtractActPortsV6};
+use crate::tools::check_duplicates::{DuplicateCheckerV6Port, ExtractActPortsV6, NotMarkedV6Port};
 
 pub struct HashSetV6Port {
     map:AHashMap<u128, AHashSet<u16>>
@@ -36,6 +36,15 @@ impl DuplicateCheckerV6Port for HashSetV6Port {
     #[inline]
     fn not_marked_and_valid(&self, ip: u128, port: u16) -> bool {
 
+        match self.map.get(&ip) {
+            None => true,
+            Some(set) => !set.contains(&port),
+        }
+    }
+}
+
+impl NotMarkedV6Port for HashSetV6Port {
+    fn is_not_marked(&self, ip: u128, port: u16) -> bool {
         match self.map.get(&ip) {
             None => true,
             Some(set) => !set.contains(&port),

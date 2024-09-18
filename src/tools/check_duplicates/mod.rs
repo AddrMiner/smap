@@ -64,3 +64,7 @@ pub trait NotMarkedV6 {
     fn is_not_marked(&self, ip: u128) -> bool;
 }
 
+pub trait NotMarkedV6Port {
+    fn is_not_marked(&self, ip: u128, port:u16) -> bool;
+}
+
