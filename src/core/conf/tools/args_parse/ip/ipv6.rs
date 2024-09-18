@@ -1,7 +1,11 @@
+use std::fs::OpenOptions;
+use std::io::{BufRead, BufReader};
 use std::net::Ipv6Addr;
 use std::process::exit;
+use std::str::FromStr;
 use ahash::AHashSet;
-use log::error;
+use log::{error, warn};
+use rand::seq::SliceRandom;
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::tools::others::parse::parse_str;
 use crate::SYS;
@@ -138,4 +142,51 @@ pub fn parse_ipv6_range_ipaddr(input_addrs_str:&str) -> AHashSet<Ipv6Addr>{
     }
 
     addrs_set
+}
+
+
+/// 从文件中读取ipv6地址, 并返回随机化排序的地址列表
+/// 输入: 
+/// path: 文件路径
+/// cap: 预估的地址数量
+pub fn get_ipv6_addrs_from_file(path:&String, cap:Option<usize>) -> Vec<u128> {
+    
+    // 存放所有地址的集合
+    let mut addrs_set = match cap { 
+        Some(c) => AHashSet::with_capacity(c),
+        None => AHashSet::new()
+    };
+
+    match OpenOptions::new().read(true).write(false).open(path) {
+        Ok(file) => {
+            // 生成读取缓冲区
+            let lines = BufReader::with_capacity(SYS.get_conf("conf","max_read_buf_bytes"), file).lines();
+
+            for line in lines {
+                match line {
+                    Ok(addr) => {
+                        match Ipv6Addr::from_str(addr.trim()) {
+                            Ok(ipv6) => {
+                                // 将解析出的地址加入地址集合
+                                addrs_set.insert(u128::from(ipv6));
+                            }
+                            Err(_) => warn!("{} {}", SYS.get_info("warn","file_line_invalid"), addr.trim())
+                        }
+                    }
+                    Err(_) => {}
+                }
+            }
+
+        }
+        Err(_) => error!("{} {}", SYS.get_info("err", "open_targets_file_failed"), path)
+    }
+    
+    // 将 地址集合 转换为 地址列表
+    let mut addrs_vec:Vec<u128> = addrs_set.into_iter().collect();
+
+    // 随机化排序
+    let mut rng = rand::thread_rng();
+    addrs_vec.shuffle(&mut rng);
+    
+    addrs_vec
 }

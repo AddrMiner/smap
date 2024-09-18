@@ -24,6 +24,8 @@ pub fn mode_help(mode_name:&str) -> String {
 
         "pmap_v6" | "p6" => modes::v6::PmapV6::print_help(),
 
+        "pmap_file_v6" | "pf6" => modes::v6::PmapFileV6::print_help(),
+
         "topo_v4" | "t4" => modes::v4::Topo4::print_help(),
         
         "topo_v6" | "t6" => modes::v6::Topo6::print_help(),

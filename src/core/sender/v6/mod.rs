@@ -6,7 +6,7 @@ mod pmap;
 mod topo;
 mod space_tree;
 mod prefix_tree;
-
+mod pmap_file;
 
 pub use base::send_v6;
 pub use base::send_v6_port;
@@ -17,6 +17,10 @@ pub use base::send_file_v6_port;
 pub use pmap::pmap_full_scan_send_v6;
 pub use pmap::pmap_recommend_scan_send_v6_port;
 pub use pmap::pmap_recommend_new_scan_send_v6_port;
+
+pub use pmap_file::pmap_file_full_scan_send_v6;
+pub use pmap_file::pmap_file_recommend_scan_send_v6_port;
+pub use pmap_file::pmap_file_recommend_new_scan_send_v6_port;
 
 
 pub use topo::topo_pre_scan_send_v6;

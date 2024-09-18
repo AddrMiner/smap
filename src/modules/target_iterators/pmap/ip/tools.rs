@@ -5,10 +5,12 @@ use crate::tools::others::search::binary_search;
 impl IpStruct {
 
     #[inline]
-    pub fn get_label(&self) -> String {
+    pub fn get_label(&self) -> Vec<u16> {
 
         // 注意: 这里应该可以进行性能改进
-        format!("{:?}", self.open_ports).trim_matches(|c| {c == '[' || c == ']'}).replace(" ", "")
+        // format!("{:?}", self.open_ports).trim_matches(|c| {c == '[' || c == ']'}).replace(" ", "")
+        
+        self.open_ports.clone()
     }
 
 

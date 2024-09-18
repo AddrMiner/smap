@@ -233,6 +233,19 @@ smap -m p4 -b 10m -t 42.81.179.50-42.81.179.180 -p 80,443,22,21,53 -a pmap_sampl
 smap -m p6 -b 10m -t 240e:928:1400:105::b@125-128 -p 80,443,22,21,53 -a pmap_sampling_pro=0.1 -a pmap_budget=2 -a pmap_batch_num=2
 ```
 
+使用文件形式输入，每个文件为同一网络中的不同地址。
+
+该模式无法使用位图记录器，且黑名单拦截机制无效。建议batch_size设定较小值。
+
+```shell
+文件格式:
+地址1
+地址2
+...
+
+smap -m pf6 -b 10m --batch_size 1 -f your_path -p 80,443,22,21,53 -a pmap_sampling_pro=0.1 -a pmap_budget=2 -a pmap_batch_num=2
+```
+
 具体参数见[Pmap参数](./doc/pmap.md)
 
 # 6Top

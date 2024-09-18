@@ -13,7 +13,7 @@ pub struct Mode {}
 pub use helper_mode::Helper;
 
 /// 激活的所有模块
-const MODES: [&str; 25] = ["cycle_v4","c4",
+const MODES: [&str; 27] = ["cycle_v4","c4",
                           "cycle_v6", "c6",
                           "cycle_v6_pattern", "c6p",
                           "file_v4", "f4",
@@ -21,6 +21,7 @@ const MODES: [&str; 25] = ["cycle_v4","c4",
                           "cycle_v4_v6", "c46",
                           "pmap_v4", "p4",
                           "pmap_v6", "p6",
+                          "pmap_file_v6", "pf6",
                           "topo_v4", "t4",
                           "topo_v6", "t6",
                           "ipv6_addrs_gen",
@@ -55,6 +56,8 @@ impl Mode {
             "pmap_v4" | "p4" => Box::new(v4::PmapV4::new(args)),
 
             "pmap_v6" | "p6" => Box::new(v6::PmapV6::new(args)),
+
+            "pmap_file_v6" | "pf6" => Box::new(v6::PmapFileV6::new(args)),
 
             "topo_v4" | "t4" => Box::new(v4::Topo4::new(args)),
             

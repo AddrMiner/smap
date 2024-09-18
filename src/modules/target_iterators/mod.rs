@@ -25,6 +25,7 @@ pub use pmap::PmapState;
 pub use pmap::PmapIpStruct;
 pub use pmap::PmapIterV4;
 pub use pmap::PmapIterV6;
+pub use pmap::PmapFileIterV6;
 
 pub use topo::TopoStateChainV4;
 pub use topo::TopoIterV4;

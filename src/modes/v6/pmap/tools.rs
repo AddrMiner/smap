@@ -185,7 +185,7 @@ impl PmapV6 {
     }
 
 
-    pub fn pmap_receive<B:NotMarkedV6>(res:&B, graph:&PmapGraph, states_map:&mut AHashMap<String, Arc<PmapState>>,
+    pub fn pmap_receive<B:NotMarkedV6>(res:&B, graph:&PmapGraph, states_map:&mut AHashMap<Vec<u16>, Arc<PmapState>>,
                                        pmap_iter_queue:&mut Vec<PmapIterV6>, blocker:&BlackWhiteListV6){
 
         for pmap_iter in pmap_iter_queue.iter_mut() {

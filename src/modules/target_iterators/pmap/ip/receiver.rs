@@ -7,7 +7,7 @@ use crate::tools::others::insert::insert_to_sorted_array;
 
 impl IpStruct {
 
-    pub fn receive(&mut self, is_not_opened:bool, graph:&Graph, states_map:&mut AHashMap<String, Arc<State>>) {
+    pub fn receive(&mut self, is_not_opened:bool, graph:&Graph, states_map:&mut AHashMap<Vec<u16>, Arc<State>>) {
 
         if is_not_opened {
             // 如果 当前端口 为关闭状态

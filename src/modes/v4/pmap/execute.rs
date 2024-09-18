@@ -51,7 +51,7 @@ impl ModeMethod for PmapV4 {
 
             let full_scan_result = {
                 // 完全扫描 接收线程  数据准备
-                prepare_data!(self; clone; base_conf, receiver_conf, probe, tar_ports);
+                prepare_data!(self; clone; base_conf, receiver_conf, probe);
                 let sports = self.sender_conf.source_ports.clone();
                 // 执行接收线程
                 if self.pmap_use_hash_recorder {
@@ -63,6 +63,7 @@ impl ModeMethod for PmapV4 {
                     }))
                 } else {
                     prepare_data!(self; start_ip, end_ip, tar_ip_num);
+                    prepare_data!(self; clone; tar_ports);
                     Recorder4P::B4P(thread::spawn(move || {
                         // 注意: 这里应该用 全部目标范围, 而不是只有预探测目标范围
                         let bit_map = BitMapV4Port::new(start_ip, end_ip, tar_ip_num, tar_ports);
@@ -169,7 +170,7 @@ impl ModeMethod for PmapV4 {
                 // 状态库 (批次)
                 // 状态标签 -> 状态指针
                 // 状态由 有序(从小到大)开放端口集合 生成, 如 开放端口集合为[3, 1, 2], 状态标签为 1,2,3
-                let mut states_map:AHashMap<String, Arc<PmapState>> = AHashMap::new();
+                let mut states_map:AHashMap<Vec<u16>, Arc<PmapState>> = AHashMap::new();
 
                 // 生成 pmap迭代器 队列
                 let mut pmap_iter_queue= Self::create_pmap4_iter_queue(

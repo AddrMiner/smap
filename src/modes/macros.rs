@@ -54,7 +54,10 @@ macro_rules! recv_ready {
 #[macro_export]
 macro_rules! init_var {
     ($t:ty; $e:expr; $($field:ident),*) => (
-        $(let mut $field:$t = $e;)*
+        $(
+            #[allow(unused_mut)]
+            let mut $field:$t = $e;
+        )*
     );
 }
 
