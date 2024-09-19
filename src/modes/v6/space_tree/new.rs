@@ -49,7 +49,7 @@ impl SpaceTree6 {
         );
 
         // 发送模块基础配置
-        let sender_conf= SenderBaseConf::new(args, &base_conf.interface, Some(budget),
+        let sender_conf= SenderBaseConf::new(args, &base_conf.interface, Some(budget), Some((budget / batch_size) as i64 + 1),
                                              probe.max_packet_length_v6, false, true);
 
         // 接收模块基础配置

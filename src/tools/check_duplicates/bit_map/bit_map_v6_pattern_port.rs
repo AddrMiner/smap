@@ -5,7 +5,7 @@ use bitvec::vec::BitVec;
 use log::error;
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::SYS;
-use crate::tools::check_duplicates::{DuplicateCheckerV6Port, ExtractActPortsV6};
+use crate::tools::check_duplicates::{DuplicateCheckerV6Port, ExtractActPortsV6, NotMarkedV6Port};
 
 pub struct BitMapV6PatternPort {
     map:BitVec,
@@ -52,6 +52,37 @@ impl DuplicateCheckerV6Port for BitMapV6PatternPort {
         let tar_port_index = self.tar_ports_index[port as usize];
         // 如果目标端口中不存在该端口
         if tar_port_index == usize::MAX { return false }
+
+        // 将 ip 转化为 ip索引, 起始地址的索引为0, 以后顺序加一
+        let ip_index = self.ip_to_val(ip) as usize;
+
+        // 将 ip索引 和 端口索引 合并为 位图索引
+        let bit_map_index = (ip_index << self.bits_for_port) | tar_port_index;
+
+        match self.map.get(bit_map_index) {
+            Some(tar ) => {
+                tar.as_bool()
+            }
+
+            None => {
+                // 获取目标出错
+                error!("{} {}", SYS.get_info("err", "bitmap_get_target_failed"), bit_map_index);
+                exit(1)
+            }
+        }
+    }
+}
+
+impl NotMarkedV6Port for BitMapV6PatternPort {
+    fn is_not_marked(&self, ip: u128, port: u16) -> bool {
+        // 如果当前ip在模式字符串指定的范围之外
+        let cur_base_ip = ip & self.mask;
+        // 注意: 超出范围的, 回应 未被标记
+        if self.base_ip_val != cur_base_ip { return true }
+
+        let tar_port_index = self.tar_ports_index[port as usize];
+        // 如果目标端口中不存在该端口, 回应 未被标记
+        if tar_port_index == usize::MAX { return true }
 
         // 将 ip 转化为 ip索引, 起始地址的索引为0, 以后顺序加一
         let ip_index = self.ip_to_val(ip) as usize;

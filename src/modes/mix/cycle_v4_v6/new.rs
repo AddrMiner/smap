@@ -92,7 +92,7 @@ impl CycleV4V6 {
 
         // 发送模块基础配置
         let sender_conf= SenderBaseConf::new(args, &base_conf.interface,
-                                             SenderBaseConf::get_tar_num(total_ip_num, tar_ports.len()),
+                                             SenderBaseConf::get_tar_num(total_ip_num, tar_ports.len()), None,
                                              max_packet_length, total_p_sub_one_v4 != 0, total_p_sub_one_v6 != 0);
 
         // 计算为 ipv4 和 ipv6分配的发送线程数量

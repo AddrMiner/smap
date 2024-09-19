@@ -8,6 +8,7 @@ pub struct HashSetV4 {
 
 impl HashSetV4 {
 
+    #[allow(dead_code)]
     pub fn new(cap:usize) -> Self {
         Self {
             set: AHashSet::with_capacity(cap),

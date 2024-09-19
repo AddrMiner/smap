@@ -32,7 +32,7 @@ impl CycleV4 {
 
         // 发送模块基础配置
         let sender_conf= SenderBaseConf::new(args, &base_conf.interface,
-                                             SenderBaseConf::get_tar_num(tar_ip_num, tar_ports.len()),
+                                             SenderBaseConf::get_tar_num(tar_ip_num, tar_ports.len()), None,
                                              probe.max_packet_length_v4, true, false);
 
         // 创建目标迭代器

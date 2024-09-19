@@ -25,6 +25,9 @@ pub struct PmapV6 {
     pub tar_iter_without_port:CycleIpv6Pattern,
     //  完全(预扫描)阶段的最后一个索引, 其值加一为推荐扫描的第一个索引
     pub full_scan_last_index:u128,
+    
+    // 是否需要进行 推荐扫描
+    pub recommend_scan:bool,
 
     // 预算
     pub pmap_budget:u32,

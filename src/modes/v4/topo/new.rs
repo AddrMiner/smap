@@ -38,7 +38,7 @@ impl Topo4 {
 
         // 发送模块基础配置
         let sender_conf= SenderBaseConf::new(args, &base_conf.interface, // 警告: 预测时间估算和速率控制按照  总数量=目标地址数量*最大ttl进行计算
-                                             SenderBaseConf::get_tar_num(TarIterBaseConf::get_tar_ip_num_binary(ip_bits_num), topo_max_ttl),
+                                             SenderBaseConf::get_tar_num(TarIterBaseConf::get_tar_ip_num_binary(ip_bits_num), topo_max_ttl), Some(topo_max_ttl as i64),
                                              topo_probe.max_packet_length_v4, true, false);
 
         // 定义全局 黑白名单拦截器

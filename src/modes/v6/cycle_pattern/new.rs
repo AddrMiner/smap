@@ -43,7 +43,7 @@ impl CycleV6Pattern {
 
         // 发送模块基础配置
         let sender_conf= SenderBaseConf::new(args, &base_conf.interface,
-                                             SenderBaseConf::get_tar_num(TarIterBaseConf::get_tar_ip_num_binary(ip_bits_num),tar_ports.len()),
+                                             SenderBaseConf::get_tar_num(TarIterBaseConf::get_tar_ip_num_binary(ip_bits_num),tar_ports.len()), None,
                                              probe.max_packet_length_v6, false, true);
 
 

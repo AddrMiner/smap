@@ -154,7 +154,7 @@ impl ModeMethod for PmapFileV6 {
                         prepare_data!(self; clone; base_conf, receiver_conf, probe);
                         let sports = self.sender_conf.source_ports.clone();
                         thread::spawn(move || {
-                            let hash_set = HashSetV6Port::new(cur_ips_num * 2);
+                            let hash_set = HashSetV6Port::new(cur_ips_num);
                             PcapReceiver::pmap_full_scan_v6(0, base_conf, receiver_conf, probe, sports, hash_set,
                                                                  recv_ready_sender, recv_close_time_receiver)
                         })

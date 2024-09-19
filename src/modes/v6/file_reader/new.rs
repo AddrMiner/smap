@@ -32,8 +32,8 @@ impl V6FileReader {
 
         // 发送模块基础配置
         let tar_num = SenderBaseConf::get_tar_num_with_option(tar_ip_num, tar_ports.len());
-        let sender_conf= SenderBaseConf::new(args, &base_conf.interface,
-                                             tar_num, probe.max_packet_length_v6, false, true);
+        let sender_conf= SenderBaseConf::new(args, &base_conf.interface, tar_num, None,
+                                             probe.max_packet_length_v6, false, true);
 
 
         // 定义全局 黑白名单拦截器

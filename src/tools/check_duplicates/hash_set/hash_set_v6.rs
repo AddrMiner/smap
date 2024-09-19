@@ -3,6 +3,7 @@
 use ahash::AHashSet;
 use crate::tools::check_duplicates::{DuplicateCheckerV6, NotMarkedV6};
 
+#[allow(dead_code)]
 pub struct HashSetV6 {
     set:AHashSet<u128>
 }
@@ -10,6 +11,7 @@ pub struct HashSetV6 {
 
 impl HashSetV6 {
 
+    #[allow(dead_code)]
     pub fn new(cap:usize) -> Self {
         Self {
             set: AHashSet::with_capacity(cap),

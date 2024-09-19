@@ -23,6 +23,9 @@ pub struct PmapV4 {
     pub tar_iter_without_port:CycleIpv4,
     //  完全(预扫描)阶段的最后一个索引, 其值加一为推荐扫描的第一个索引
     pub full_scan_last_index:u64,
+    
+    // 是否需要进行 推荐扫描
+    pub recommend_scan:bool,
 
     // 预算
     pub pmap_budget:u32,

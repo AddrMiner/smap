@@ -56,10 +56,17 @@ pub trait ExtractActPortsV6 {
     fn get_active_ports_string(&self, ip:u128) -> (String, usize);
 }
 
+#[allow(dead_code)]
 pub trait NotMarkedV4 {
     fn is_not_marked(&self, ip: u32) -> bool;
 }
 
+pub trait NotMarkedV4Port {
+    fn is_not_marked(&self, ip: u32, port:u16) -> bool;
+}
+
+
+#[allow(dead_code)]
 pub trait NotMarkedV6 {
     fn is_not_marked(&self, ip: u128) -> bool;
 }

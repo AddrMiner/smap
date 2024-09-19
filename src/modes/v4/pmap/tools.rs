@@ -3,22 +3,18 @@ use std::process::exit;
 use std::sync::Arc;
 use ahash::AHashMap;
 use log::error;
-use crate::core::conf::modules_config::ModuleConf;
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::modes::v4::PmapV4;
 use crate::modules::output_modules::OutputMethod;
 use crate::modules::target_iterators::{CycleIpv4, Ipv4Iter, PmapGraph, PmapIterV4, PmapState};
 use crate::{init_var, SYS};
 use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
-use crate::tools::check_duplicates::{ExtractActPortsV4, NotMarkedV4};
+use crate::tools::check_duplicates::{ExtractActPortsV4, NotMarkedV4Port};
 
 
 impl PmapV4 {
 
-    pub fn get_sample_last_index(args:&ModuleConf, tar_ip_num:u64, p_sub_one:u64, pro:&str, min_num:&str) -> u64 {
-
-        // 从 自定义参数 或 系统配置 中提取 抽样比例
-        let sampling_pro:f64 = args.get_conf_or_from_sys(&pro.to_string());
+    pub fn get_sample_last_index(tar_ip_num:u64, p_sub_one:u64, sampling_pro:f64, min_sample_num:u64) -> u64 {
 
         // 采样比例 小于等于 0  或  大于 1 均为非法
         if sampling_pro <= 0.0 ||  1.0 < sampling_pro {
@@ -31,9 +27,6 @@ impl PmapV4 {
             // 注意这里的最终索引为:  p-1
             p_sub_one
         } else {
-
-            // 从 自定义参数 或 系统配置 中提取 最小采样数量
-            let min_sample_num = args.get_conf_or_from_sys(&min_num.to_string());
 
             if tar_ip_num <= min_sample_num {
                 // 如果 总目标数量  小于等于 最小采样数量
@@ -185,7 +178,7 @@ impl PmapV4 {
     }
 
 
-    pub fn pmap_receive<B:NotMarkedV4>(res:&B, graph:&PmapGraph, states_map:&mut AHashMap<Vec<u16>, Arc<PmapState>>,
+    pub fn pmap_receive<B:NotMarkedV4Port>(res:&B, graph:&PmapGraph, states_map:&mut AHashMap<Vec<u16>, Arc<PmapState>>,
                         pmap_iter_queue:&mut Vec<PmapIterV4>, blocker:&BlackWhiteListV4){
 
         for pmap_iter in pmap_iter_queue.iter_mut() {
@@ -203,7 +196,10 @@ impl PmapV4 {
                     if blocker.ip_is_avail(cur_ip.2) {
                         // 如果没被黑名单阻止
 
-                        ips_struct[cur_index].receive(res.is_not_marked(cur_ip.2), graph, states_map);
+                        let cur_struct_ptr = &mut ips_struct[cur_index];
+                        let cur_sent_port = cur_struct_ptr.cur_sent_port;
+
+                        cur_struct_ptr.receive(res.is_not_marked(cur_ip.2, cur_sent_port), graph, states_map);
                         cur_index += 1;
                     }
 
@@ -214,7 +210,10 @@ impl PmapV4 {
                     if cur_ip.1 && blocker.ip_is_avail(cur_ip.2) {
                         // 最终值有效  且  当前 ip 被放行
 
-                        ips_struct[cur_index].receive(res.is_not_marked(cur_ip.2), graph, states_map);
+                        let cur_struct_ptr = &mut ips_struct[cur_index];
+                        let cur_sent_port = cur_struct_ptr.cur_sent_port;
+
+                        cur_struct_ptr.receive(res.is_not_marked(cur_ip.2, cur_sent_port), graph, states_map);
                     }
                     break 'cur_iter
                 }

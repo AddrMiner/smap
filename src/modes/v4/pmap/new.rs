@@ -11,6 +11,7 @@ use crate::modes::v4::pmap::PmapV4;
 use crate::modules::probe_modules::probe_mod_v4::ProbeModV4;
 use crate::modules::target_iterators::CycleIpv4;
 use crate::{get_conf_from_mod_or_sys, SYS, write_to_summary};
+use crate::modes::v6::PmapFileV6;
 use crate::tools::blocker::ipv4_blocker::BlackWhiteListV4;
 
 impl PmapV4 {
@@ -31,14 +32,13 @@ impl PmapV4 {
 
         // 创建 无端口目标迭代器
         let tar_iter_without_port = CycleIpv4::new(start_ip, tar_ip_num, &mut base_conf.aes_rand.rng);
+        
+        // 从 自定义参数 或 系统配置 中读取 预算 和 推荐轮次, 是否允许概率相关图迭代
+        get_conf_from_mod_or_sys!(module_conf; pmap_budget, pmap_batch_num, pmap_allow_graph_iter, pmap_use_hash_recorder, pmap_sampling_pro, pmap_min_sample_num);
 
         // 计算 完全扫描(预扫描)最终索引
-        let full_scan_last_index = Self::get_sample_last_index(&module_conf, tar_ip_num, tar_iter_without_port.p_sub_one,
-                                                        // 自定义参数名称
-                                                        "pmap_sampling_pro", "pmap_min_sample_num");
-
-        // 从 自定义参数 或 系统配置 中读取 预算 和 推荐轮次, 是否允许概率相关图迭代
-        get_conf_from_mod_or_sys!(module_conf; pmap_budget, pmap_batch_num, pmap_allow_graph_iter, pmap_use_hash_recorder);
+        let full_scan_last_index = Self::get_sample_last_index(tar_ip_num, tar_iter_without_port.p_sub_one,
+                                                               pmap_sampling_pro, pmap_min_sample_num);
 
         // ipv4 探测模块
         let probe = ProbeModV4::new(                            // 一般默认为 tcp_syn
@@ -48,9 +48,22 @@ impl PmapV4 {
         // 如果 目标探测模块不使用端口, 直接报错并退出
         if !probe.use_tar_ports { error!("{}", SYS.get_info("err", "probe_not_use_ports")); exit(1) }
 
+        // 如果 两者不等, 说明 不只有完全扫描; 如果 两者相等, 说明 只有完全扫描
+        let recommend_scan = full_scan_last_index != tar_iter_without_port.p_sub_one;
+
+        // 推测出的 抽样数量
+        let guess_sample_num = PmapFileV6::get_sample_num(tar_ip_num as usize, pmap_sampling_pro, pmap_min_sample_num as usize) as u64;
+
         // 发送模块基础配置
         let sender_conf= SenderBaseConf::new(args, &base_conf.interface,
-                                             SenderBaseConf::get_tar_num(tar_ip_num, tar_ports.len()),
+                                             Some(if guess_sample_num < tar_ip_num {
+                                                 guess_sample_num * (tar_ports.len() as u64) + (tar_ip_num - guess_sample_num) * (pmap_budget as u64)
+                                             } else {
+                                                 tar_ip_num * (tar_ports.len() as u64)
+                                             }), 
+                                             if recommend_scan {
+                                                 Some((pmap_batch_num as i64) * (pmap_budget as i64) + 1) 
+                                             } else { None },
                                              probe.max_packet_length_v4, true, false);
 
         // 定义全局 黑白名单拦截器
@@ -67,6 +80,7 @@ impl PmapV4 {
             tar_iter_without_port,
             full_scan_last_index,
 
+            recommend_scan,
             pmap_budget,
             pmap_batch_num,
             pmap_allow_graph_iter,

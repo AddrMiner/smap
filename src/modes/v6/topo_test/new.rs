@@ -35,7 +35,7 @@ impl DoubleTreeTest {
             &SenderBaseConf::parse_probe_v6(&args.probe_v6, "topo6_default_probe_mod"), module_conf.clone());
 
         // 发送模块基础配置
-        let sender_conf= SenderBaseConf::new(args, &base_conf.interface, None,
+        let sender_conf= SenderBaseConf::new(args, &base_conf.interface, None, None,
                                              probe.max_packet_length_v6, false, true);
 
         // 接收模块基础配置

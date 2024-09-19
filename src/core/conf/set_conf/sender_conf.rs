@@ -57,8 +57,9 @@ impl SenderBaseConf {
 
     /// 构造<u>发送者</u>基础配置
     /// 包括: 源地址(ipv4, ipv6), 源端口, 发送重试次数, 发送线程数量
-    pub fn new(args:&Args, interface:&Vec<InterfaceConf>,
-               target_num:Option<u64>,max_packet_length:usize, have_v4:bool, have_v6:bool) -> Self {
+    /// 注意: 如需精确的时间估计, 请较为准确地计算冷却次数。冷却次数默认为1, 这意味着只有基础模式在不设冷却次数时的预测时间是较为准确的。
+    pub fn new(args:&Args, interface:&Vec<InterfaceConf>, target_num:Option<u64>, cool_num:Option<i64>,
+               max_packet_length:usize, have_v4:bool, have_v6:bool) -> Self {
 
 
         // 源地址拦截器, 主要用途是清除 用户设定 或 自动从系统中获取到的 无效源地址, 比如私有地址, 特殊用途的地址等
@@ -91,7 +92,7 @@ impl SenderBaseConf {
             // 设置全局发送速率
             global_rate_conf: Self::parse_send_rate(args.send_rate, &args.band_width,
                                                     max_packet_length,args.batch_size,
-                                                    args.must_sleep, target_num, send_thread_num, cool_seconds),
+                                                    args.must_sleep, target_num, send_thread_num, cool_seconds * cool_num.unwrap_or_else(|| 1)),
             cool_seconds,
         }
 

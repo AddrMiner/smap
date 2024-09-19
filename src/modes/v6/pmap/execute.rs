@@ -14,13 +14,8 @@ use crate::modes::ModeMethod;
 use crate::modes::v6::pmap::PmapV6;
 use crate::modules::output_modules::OutputMod;
 use crate::modules::target_iterators::{PmapGraph, PmapState};
-use crate::tools::check_duplicates::bit_map::{BitMapV6Pattern, BitMapV6PatternPort};
-use crate::tools::check_duplicates::hash_set::{HashSetV6, HashSetV6Port};
-
-enum Recorder6 {
-    B6(JoinHandle<BitMapV6Pattern>),
-    H6(JoinHandle<HashSetV6>)
-}
+use crate::tools::check_duplicates::bit_map::BitMapV6PatternPort;
+use crate::tools::check_duplicates::hash_set::HashSetV6Port;
 
 enum Recorder6P {
     B6P(JoinHandle<BitMapV6PatternPort>),
@@ -40,9 +35,6 @@ impl ModeMethod for PmapV6 {
         // 初始化全局 发送线程消息  接收线程消息
         init_var!(u64; 0; total_send_success, total_send_failed, total_blocked);
         init_var!(usize; 0; total_ip_count, total_pair_count);
-
-        // 如果 两者不等, 说明 不只有完全扫描; 如果 两者相等, 说明 只有完全扫描
-        let recommend_scan = self.full_scan_last_index != self.tar_iter_without_port.p_sub_one;
 
         // 预扫描阶段
         {
@@ -111,7 +103,7 @@ impl ModeMethod for PmapV6 {
                 Recorder6P::B6P(b) => {
                     match &b.join() {
                         Ok(bit_map) => {
-                            if recommend_scan {     // 将完全扫描阶段的结果进行输出, 使用结果对概率相关图进行训练
+                            if self.recommend_scan {     // 将完全扫描阶段的结果进行输出, 使用结果对概率相关图进行训练
                                 graph = Arc::new(PmapGraph::new(self.tar_ports.clone()));
                                 match Arc::get_mut(&mut graph) {
                                     Some(g_ptr) => {
@@ -134,7 +126,7 @@ impl ModeMethod for PmapV6 {
                 Recorder6P::H6P(h) => {
                     match &h.join() {
                         Ok(hash_set) => {
-                            if recommend_scan {     // 将完全扫描阶段的结果进行输出, 使用结果对概率相关图进行训练
+                            if self.recommend_scan {     // 将完全扫描阶段的结果进行输出, 使用结果对概率相关图进行训练
                                 graph = Arc::new(PmapGraph::new(self.tar_ports.clone()));
                                 match Arc::get_mut(&mut graph) {
                                     Some(g_ptr) => {
@@ -158,7 +150,7 @@ impl ModeMethod for PmapV6 {
         }
 
         // 活跃端口推荐探测阶段
-        if recommend_scan {
+        if self.recommend_scan {
 
             // 获取不同批次的索引段
             let batch_ranges = TarIterBaseConf::cycle_group_assign_targets_u128_part(
@@ -192,17 +184,17 @@ impl ModeMethod for PmapV6 {
                         // 执行接收线程
                         if self.pmap_use_hash_recorder {
                             prepare_data!(self; as_usize; tar_ip_num);
-                            Recorder6::H6(thread::spawn(move || {
-                                let hash_set = HashSetV6::new(tar_ip_num);
-                                PcapReceiver::pmap_recommend_scan_v6(0, base_conf, receiver_conf, probe, sports, hash_set,
+                            Recorder6P::H6P(thread::spawn(move || {
+                                let hash_set = HashSetV6Port::new(tar_ip_num);
+                                PcapReceiver::pmap_full_scan_v6(0, base_conf, receiver_conf, probe, sports, hash_set,
                                                                      recv_ready_sender, recv_close_time_receiver)
                             }))
                         } else {
                             prepare_data!(self; ip_bits_num, base_ip_val, mask);
-                            prepare_data!(self; clone; parts);
-                            Recorder6::B6(thread::spawn(move || {
-                                let bit_map = BitMapV6Pattern::new(ip_bits_num, base_ip_val, mask, parts);
-                                PcapReceiver::pmap_recommend_scan_v6(0, base_conf, receiver_conf, probe, sports, bit_map,
+                            prepare_data!(self; clone; parts, tar_ports);
+                            Recorder6P::B6P(thread::spawn(move || {
+                                let bit_map = BitMapV6PatternPort::new(ip_bits_num, base_ip_val, mask, parts, tar_ports);
+                                PcapReceiver::pmap_full_scan_v6(0, base_conf, receiver_conf, probe, sports, bit_map,
                                                                      recv_ready_sender, recv_close_time_receiver)
                             }))
                         }
@@ -247,11 +239,11 @@ impl ModeMethod for PmapV6 {
                     match Arc::get_mut(&mut graph) {
                         Some(g_ptr) => {
                             match recommend_scan_result {
-                                Recorder6::B6(b) =>
+                                Recorder6P::B6P(b) =>
                                     if let Ok(bit_map) = &b.join() {
                                         Self::pmap_receive(bit_map, g_ptr, &mut states_map, &mut pmap_iter_queue, &self.blocker);
                                     },
-                                Recorder6::H6(h) =>
+                                Recorder6P::H6P(h) =>
                                     if let Ok(hash_set) = &h.join() {
                                         Self::pmap_receive(hash_set, g_ptr, &mut states_map, &mut pmap_iter_queue, &self.blocker);
                                     },
