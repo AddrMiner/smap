@@ -104,7 +104,7 @@ impl ModeMethod for PmapV6 {
                     match &b.join() {
                         Ok(bit_map) => {
                             if self.recommend_scan {     // 将完全扫描阶段的结果进行输出, 使用结果对概率相关图进行训练
-                                graph = Arc::new(PmapGraph::new(self.tar_ports.clone()));
+                                graph = Arc::new(PmapGraph::new(self.tar_ports.clone(), self.port_num_limit));
                                 match Arc::get_mut(&mut graph) {
                                     Some(g_ptr) => {
                                         let (ip_count, pair_count) = Self::full_scan_output_and_train(full_scan_iter, bit_map,  &self.blocker, &mut out_mod, g_ptr);
@@ -127,7 +127,7 @@ impl ModeMethod for PmapV6 {
                     match &h.join() {
                         Ok(hash_set) => {
                             if self.recommend_scan {     // 将完全扫描阶段的结果进行输出, 使用结果对概率相关图进行训练
-                                graph = Arc::new(PmapGraph::new(self.tar_ports.clone()));
+                                graph = Arc::new(PmapGraph::new(self.tar_ports.clone(), self.port_num_limit));
                                 match Arc::get_mut(&mut graph) {
                                     Some(g_ptr) => {
                                         let (ip_count, pair_count) = Self::full_scan_output_and_train(full_scan_iter, hash_set, &self.blocker, &mut out_mod, g_ptr);

@@ -49,6 +49,10 @@ pub struct PmapV6 {
     pub parts:Vec<(u32, u32)>,
     pub tar_ports:Vec<u16>,
 
+    // 端口数量限制
+    // 开放端口超过该限制的地址将被视为异常地址, 不参与概率相关图训练
+    pub port_num_limit:usize,
+
     pub blocker:BlackWhiteListV6,
 }
 

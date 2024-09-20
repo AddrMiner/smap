@@ -31,12 +31,16 @@ pub struct Graph {
     pub tar_ports:Vec<u16>,
     // 目标端口长度
     pub tar_ports_len:usize,
+    
+    // 端口数量限制
+    // 开放端口超过该限制的地址将被视为异常地址, 不参与概率相关图训练
+    pub port_num_limit:usize,
 }
 
 
 impl Graph {
 
-    pub fn new(mut tar_ports:Vec<u16>) -> Self {
+    pub fn new(mut tar_ports:Vec<u16>, port_num_limit:usize) -> Self {
 
         tar_ports.sort();
         let sorted_tar_ports = Self::sort_tar_ports(tar_ports);
@@ -58,6 +62,7 @@ impl Graph {
 
             tar_ports:sorted_tar_ports,
             tar_ports_len,
+            port_num_limit,
         }
 
     }
@@ -75,6 +80,7 @@ impl Graph {
             port_to_ab_probability: Box::new([0.0; 65536]),
             tar_ports: vec![],
             tar_ports_len: 0,
+            port_num_limit: 0,
         }
     }
 
@@ -83,10 +89,15 @@ impl Graph {
     /// 将同一个ip的全部探活端口作为输入, 训练概率相关图
     pub fn update_from_ip(&mut self, active_ports:&Vec<u16>) {
 
-        self.ip_cnt += 1;
-
         // 取得当前ip活跃端口的数量
         let active_ports_len = active_ports.len();
+        
+        if active_ports_len > self.port_num_limit {
+            return
+        }
+
+        self.ip_cnt += 1;
+        
         if active_ports_len == 0 {
             return
         }

@@ -26,7 +26,8 @@ impl PmapFileV6 {
         let module_conf = ModuleConf::new_from_vec_args(&args.custom_args, vec!["not_check_sport=false".to_string()]);
 
         // 从 自定义参数 或 系统配置 中读取 预算 和 推荐轮次, 是否允许概率相关图迭代
-        get_conf_from_mod_or_sys!(module_conf; pmap_budget, pmap_batch_num, pmap_allow_graph_iter, pmap_sampling_pro, pmap_min_sample_num);
+        get_conf_from_mod_or_sys!(module_conf; pmap_budget, pmap_batch_num, pmap_allow_graph_iter, 
+            pmap_sampling_pro, pmap_min_sample_num, pmap_port_num_limit);
 
         // ipv6 探测模块
         let probe = ProbeModV6::new(
@@ -81,6 +82,7 @@ impl PmapFileV6 {
             min_sample_num: pmap_min_sample_num,
             
             tar_ports,
+            port_num_limit: pmap_port_num_limit,
         }
     }
     

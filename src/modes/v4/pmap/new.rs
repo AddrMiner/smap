@@ -34,7 +34,8 @@ impl PmapV4 {
         let tar_iter_without_port = CycleIpv4::new(start_ip, tar_ip_num, &mut base_conf.aes_rand.rng);
         
         // 从 自定义参数 或 系统配置 中读取 预算 和 推荐轮次, 是否允许概率相关图迭代
-        get_conf_from_mod_or_sys!(module_conf; pmap_budget, pmap_batch_num, pmap_allow_graph_iter, pmap_use_hash_recorder, pmap_sampling_pro, pmap_min_sample_num);
+        get_conf_from_mod_or_sys!(module_conf; pmap_budget, pmap_batch_num, pmap_allow_graph_iter, pmap_use_hash_recorder, 
+            pmap_sampling_pro, pmap_min_sample_num, pmap_port_num_limit);
 
         // 计算 完全扫描(预扫描)最终索引
         let full_scan_last_index = Self::get_sample_last_index(tar_ip_num, tar_iter_without_port.p_sub_one,
@@ -94,6 +95,7 @@ impl PmapV4 {
             end_ip,
             tar_ip_num,
             tar_ports,
+            port_num_limit: pmap_port_num_limit,
             blocker: blocker.gen_local_constraints(start_ip, end_ip),
         }
     }

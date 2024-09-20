@@ -97,7 +97,7 @@ impl ModeMethod for PmapFileV6 {
                 Ok(hash_set) => {
                     if recommend_scan {
                         // 将完全扫描阶段的结果进行输出, 使用结果对概率相关图进行训练
-                        graph = Arc::new(PmapGraph::new(self.tar_ports.clone()));
+                        graph = Arc::new(PmapGraph::new(self.tar_ports.clone(), self.port_num_limit));
                         match Arc::get_mut(&mut graph) {
                             Some(g_ptr) => {
                                 let (ip_count, pair_count) = Self::full_scan_output_and_train(pre_scan_targets, hash_set, &mut out_mod, g_ptr);
