@@ -258,7 +258,7 @@ smap -m pf6 -b 10m --batch_size 1 -f your_path -p 80,443,22,21,53 -a pmap_sampli
 smap -m ipv6_prefix_tree -b 50m --cool_seconds 1 -a seeds_path=your_seed_path -a prefix_path=your_prefix_path -a extra_node_num=10000  -a budget=1000000000 -a min_prefix_len=48  -a rand_ord=false 
 ```
 
-具体参数见[6Top参数](./doc/6top.md)
+具体参数见[6Topo参数](./doc/6topo.md)
 
 ## IPv6 Aliased Prefixes Checker
 
