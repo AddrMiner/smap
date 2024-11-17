@@ -56,6 +56,8 @@ if ($npcap_installed -ne "y") {
     }
 }
 
+$Env:RUSTFLAGS="-L $libPath"
+
 # 4. Install with cargo
 cargo install --path . --root $installPath
 
