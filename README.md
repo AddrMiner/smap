@@ -248,18 +248,6 @@ smap -m pf6 -b 10m --batch_size 1 -f your_path -p 80,443,22,21,53 -a pmap_sampli
 
 具体参数见[Pmap参数](./doc/pmap.md)
 
-# 6Topo
-
-6Topo是一种基于前缀空间树的全网范围IPv6拓扑探测算法，其核心观察为前缀间的层级关系与在拓扑空间中的分布之间存在相关性。6Topo以IPv6种子地址和前缀列表为输入，在前缀信息的指导下进行可变维度的DHC层级聚类并生成前缀空间树。首先，6Topo从根节点开始层级遍历，直到遇到叶子节点或前缀长度大于等于指定起始前缀长度的节点，并将这些节点对应的前缀作为预扫描的探测目标。在预扫描结束以后，6Topo根据前缀间的层级关系和探测反馈，选择性地对前缀空间树进行层次遍历, 生成探测前缀并进行迭代式的拓扑探测。探测反馈不仅决定了需要遍历的子树，更决定了遍历的先后顺序。
-
-示例用法:
-
-```shell
-smap -m ipv6_prefix_tree -b 50m --cool_seconds 1 -a seeds_path=your_seed_path -a prefix_path=your_prefix_path -a extra_node_num=10000  -a budget=1000000000 -a min_prefix_len=48  -a rand_ord=false 
-```
-
-具体参数见[6Topo参数](./doc/6topo.md)
-
 ## IPv6 Aliased Prefixes Checker
 
 IPv6 别名前缀检测工具, 请注意保证足够长的冷却时间(默认为8秒)
