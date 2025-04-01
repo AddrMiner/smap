@@ -62,7 +62,7 @@ impl Cyclic {
     pub fn get_prim_root(group:&CyclicGroup, rng:&mut StdRng, max_root:u128) -> u128 {
 
         // 生成一个随机数
-        let mut candidate:u128 = rng.gen_range(2..group.prime);
+        let mut candidate:u128 = rng.random_range(2..group.prime);
 
         // 获得足够小的 原根
         loop {

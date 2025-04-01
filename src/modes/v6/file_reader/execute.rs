@@ -24,8 +24,6 @@ impl ModeMethod for V6FileReader {
             let tar_num = self.tar_num.map_or(256, |v| {v as usize});
 
             receiver_res = thread::spawn(move || {
-                // PcapReceiver::run_v6_port_hash(0, base_conf, receiver_conf, probe, tar_num, sports,
-                //                      recv_ready_sender, recv_close_time_receiver);
                 // 初始化 哈希集合查重器
                 let hash_set = HashSetV6Port::new(tar_num);
                 PcapReceiver::run_v6_port(0, base_conf, receiver_conf, probe, sports, hash_set, recv_ready_sender, recv_close_time_receiver)

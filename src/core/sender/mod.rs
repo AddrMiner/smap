@@ -35,6 +35,8 @@ pub use v6::topo_pre_scan_send_v6;
 pub use v6::topo_scan_send_v6;
 
 
-pub use v6::send_v6_u16code_vec;
-pub use v6::send_v6_u32code_vec;
+pub use v6::send_v6_code_vec;
+pub use v6::send_v6_code_port_vec;
 pub use v6::send_prefixes_v6;
+
+pub use v6::send_prefixes_v6_2;

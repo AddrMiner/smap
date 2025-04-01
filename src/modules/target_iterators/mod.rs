@@ -5,6 +5,10 @@ mod topo;
 mod ipv6_space_tree;
 mod ipv6_prefix_tree;
 mod ipv6_aliased_check;
+mod tree_trace;
+mod scour6;
+mod asset6;
+mod edge6;
 
 pub use cycle_group::cycle_group::cycle_group_ipv4::CycleIpv4;
 pub use cycle_group::cycle_group::cycle_group_ipv6::CycleIpv6;
@@ -33,7 +37,14 @@ pub use topo::TopoIterV4;
 pub use topo::TopoStateChainV6;
 pub use topo::TopoIterV6;
 
+pub use tree_trace::TreeTraceIter;
+
+pub use scour6::Scour6Iter;
+
+pub use edge6::EdgeIter6;
+
 pub use ipv6_space_tree::IPv6SpaceTree;
+pub use asset6::IPv6PortSpaceTree;
 pub use ipv6_prefix_tree::IPv6PrefixTree;
 pub use ipv6_prefix_tree::IPv6FixedPrefixTree;
 pub use ipv6_prefix_tree::Ipv6VecDoubleTree;

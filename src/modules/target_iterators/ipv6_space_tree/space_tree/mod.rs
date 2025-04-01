@@ -72,4 +72,8 @@ pub struct IPv6SpaceTree {
     
     // 种子数量
     pub seeds_num:usize,
+    
+    // 扫描标志字段
+    pub scan_flag:u8,
+    
 }

@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::cmp::min;
 use std::rc::Rc;
 use ahash::AHashMap;
+use rand::rng;
 use crate::modules::target_iterators::ipv6_prefix_tree::prefix_tree::IPv6PrefixTree;
 use crate::modules::target_iterators::ipv6_prefix_tree::prefix_tree::node::IPv6PrefixNode;
 
@@ -26,7 +27,7 @@ impl IPv6PrefixTree {
         let allow_leaf_expand = self.allow_leaf_expand;
         let default_dim = self.default_dim;
         let max_prefix_len = self.max_prefix_len;
-        let mut rng = rand::thread_rng();
+        let mut rng = rng();
         
         let mut count = 0usize;
         for node in nodes_to_be_split.into_iter() {

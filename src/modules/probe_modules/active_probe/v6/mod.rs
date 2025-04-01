@@ -11,6 +11,10 @@ pub use tcp::tcp_syn_ack_scan::TcpSynAckScanV6;
 
 pub use tcp::tcp_syn_opt::TcpSynOptV6;
 
+pub use tcp::tcp_syn_payload::TcpSynPayloadScan;
+
 pub use udp::udp_scan::UdpScanV6;
+
+
 
 

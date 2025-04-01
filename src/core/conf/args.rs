@@ -19,6 +19,9 @@ pub struct Args{
     #[arg(short = 'i', long = "interface", help = "设置本机的网络接口")]
     pub interface:Vec<String>,
 
+    #[arg(short = 'g', long = "set_gateway_mac", help = "当系统无法获取网关的硬件地址时, 使用用户传入的信息进行替代(系统能够获取时对应信息无效). 格式: -g 接口1名称|网关1硬件地址 -g 接口2名称|网关2硬件地址...")]
+    pub set_gateway_mac:Vec<String>,
+
     #[arg(long, help = "随机数种子, 用来 设置加密密钥 和 生成随机数")]
     pub seed:Option<u64>,
 
@@ -105,7 +108,7 @@ pub struct Args{
     #[arg(short = 'o', long = "output", help = "设置输出模块")]
     pub output_mod:Option<String>,
 
-    #[arg(long = "allow_no_succ", default_value_t = false, help = "允许探测失败但验证成功的输出, 如Icmp包裹原始数据包, Rst标志数据包等")]
+    #[arg(long = "allow_no_succ", default_value_t = false, help = "允许探测失败但验证成功的输出, 如ICMP包裹原始数据包, RST标志数据包等")]
     pub allow_no_succ:bool,
 
     #[arg(long = "output_file_v4", help = "设置ipv4探测模块输出文件路径")]
@@ -124,7 +127,7 @@ pub struct Args{
     #[arg(short = 'q', long = "disable_sys_log", default_value_t = false, help = "关闭日志终端输出")]
     pub disable_sys_log:bool,
 
-    #[arg(long = "log_level", help = "日志等级 示例: 0 1 2 3 4 5 从0到5依次升高, 小写形式的 trace debug info warn error. 默认值为trace")]
+    #[arg(long = "log_level", help = "日志等级 示例: 0 1 2 3 4 5 从0到5依次升高, 小写形式的 trace debug info warn error. 默认值为info")]
     pub log_level:Option<String>,
 
     #[arg(long = "log_file", help = "日志输出文件")]
@@ -145,6 +148,9 @@ pub struct Args{
 
     #[arg(long = "output_help", help = "打印 输出模块 帮助")]
     pub output_help:Option<String>,
+
+    #[arg(long = "no_allow_summary", default_value_t = false, help = "是否允许记录探测摘要")]
+    pub no_allow_summary:bool,
 
 }
 

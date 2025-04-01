@@ -37,6 +37,12 @@ pub fn mode_help(mode_name:&str) -> String {
         "ipv6_prefix_fixed_tree" => modes::v6::PrefixFixedTree6::print_help(),
         
         "ipv6_aliased_prefixes_check" | "ac6" => modes::v6::IPv6AliasedCheck::print_help(),
+        
+        "asset6" | "a6" => modes::v6::Asset6::print_help(),
+        
+        "scour6" | "s6" => modes::v6::Scour6::print_help(),
+        
+        "e6" => modes::v6::Edge6::print_help(),
 
         _ => {
             "no mode help".to_string()
@@ -90,6 +96,9 @@ pub fn probe_v6_help(name:&str) -> String {
         "topo_tcp_v6" => probe_modules::topology_probe::topo_mod_v6::TopoTcpV6::print_help(),
         
         "code_icmp_v6" => probe_modules::active_probe_ipv6_code::CodeIcmpEchoV6::print_help(),
+        "code_tcp_syn_scan_v6" => probe_modules::active_probe_ipv6_code::CodeTcpSynScanV6::print_help(),
+        
+        "tcp_syn_payload_scan_v6" => probe_modules::probe_mod_v6::TcpSynPayloadScan::print_help(),
 
         _ => {
             "no help".to_string()

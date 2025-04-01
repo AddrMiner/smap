@@ -5,6 +5,9 @@ mod topo;
 mod space_tree;
 mod prefix_tree;
 mod aliased_prefixes_check;
+mod tree_trace;
+mod scour6;
+mod asset;
 
 use pcap::{Active, Capture};
 

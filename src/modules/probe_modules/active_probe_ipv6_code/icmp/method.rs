@@ -26,7 +26,7 @@ impl CodeProbeMethodV6 for CodeIcmpEchoV6 {
         }.get_u8_vec_without_addr());
     }
 
-    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, code: Vec<u8>, aes_rand: &AesRand) -> Vec<u8> {
+    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, _:u16,  code: Vec<u8>, aes_rand: &AesRand) -> Vec<u8> {
         // 按最大数据包长度设置 向量容量
         let mut packet = Vec::with_capacity(self.total_len);
 
@@ -83,7 +83,7 @@ impl CodeProbeMethodV6 for CodeIcmpEchoV6 {
         packet
     }
 
-    fn receive_packet_v6(&self, net_layer_header: &[u8], net_layer_data:&[u8], aes_rand: &AesRand) -> Option<(u128, Vec<u8>)> {
+    fn receive_packet_v6(&self, net_layer_header: &[u8], net_layer_data:&[u8], aes_rand: &AesRand) -> Option<(u128, u16, Vec<u8>)> {
         
         // 判断是否为icmp协议, 回应报文
         if net_layer_header[6] != 58 || net_layer_data[0] != 129 { return None }
@@ -114,6 +114,6 @@ impl CodeProbeMethodV6 for CodeIcmpEchoV6 {
         if !icmp6_val_data.eq(&validation[0..4]) { return None }
         
         // 从数据包中 提取 区域编码
-        Some((source_addr, net_layer_data[12..].into()))
+        Some((source_addr, 0, net_layer_data[12..].into()))
     }
 } 

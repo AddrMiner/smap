@@ -39,12 +39,12 @@ impl AesRand {
 
         // 填充密钥
         for i in 0..16usize {
-            k[i] = rng.gen();
+            k[i] = rng.random();
         }
 
         let key = GenericArray::from(k);
 
-        let rand_u16:u16 = rng.gen();
+        let rand_u16:u16 = rng.random();
 
         AesRand {
             cipher: Aes128::new(&key),

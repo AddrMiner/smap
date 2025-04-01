@@ -1,9 +1,9 @@
 
 
-$npcap = "npcap-1.79"
-$npcap_sdk = "npcap-sdk-1.13"
+$npcap = "npcap-1.81"
+$npcap_sdk = "npcap-sdk-1.15"
 $defaultInstallPath = "${env:USERPROFILE}\smap"
-$resourceFolder = @(".\\block_list",".\\probe_modules_payload")
+$resourceFolder = @(".\\block_list",".\\probe_modules_payload",".\\others")
 $libPath = "C:\Users\$env:UserName\.rustup\toolchains\stable-x86_64-pc-windows-gnu\lib\rustlib\x86_64-pc-windows-gnu\lib"
 if (-not (Test-Path $libPath)) {
     Write-Error "Target lib path '$libPath' does not exist"
@@ -55,6 +55,8 @@ if ($npcap_installed -ne "y") {
         Copy-Item "$sdkFile\Lib\wpcap.lib" $libPath
     }
 }
+
+$Env:RUSTFLAGS="-L $libPath"
 
 # 4. Install with cargo
 cargo install --path . --root $installPath

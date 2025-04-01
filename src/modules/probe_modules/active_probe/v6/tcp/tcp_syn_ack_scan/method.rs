@@ -298,8 +298,9 @@ impl ProbeMethodV6 for TcpSynAckScanV6 {
                     push_fields_val!(self; output_data; (source_addr, ""));
                 }
 
+                push_fields_val!(self; output_data; (sport, ""));
                 if self.fields_flag.tcp_fields_exist {
-                    push_fields_val!(self; output_data; (sport, ""), (dport, ""),
+                    push_fields_val!(self; output_data; (dport, ""),
                     (sequence_num, ""), (ack_num, ""), (window_size, ""));
                 }
 

@@ -5,7 +5,7 @@ use chrono::Local;
 use log::{error, info};
 use crate::{computing_time, creat_channels, ending_the_receiving_thread, init_var, prepare_data, recv_ready, wait_sender_threads, write_to_summary, SYS};
 use crate::core::receiver::pcap::PcapReceiver;
-use crate::core::sender::send_v6_u32code_vec;
+use crate::core::sender::send_v6_code_port_vec;
 use crate::modes::ModeMethod;
 use crate::modes::v6::aliased_prefixes_check::IPv6AliasedCheck;
 use crate::modules::output_modules::OutputMod;
@@ -36,7 +36,7 @@ impl ModeMethod for IPv6AliasedCheck {
             let cur_targets_len = cur_targets.len();
             if cur_targets_len <= 0 { break 'scan }
             // 当前探测前缀数量
-            let cur_tar_prefixes_len = checker.cur_prefixes.len();
+            let cur_tar_prefixes_len = checker.cur_prefixes_port.len();
 
             // 创建信息传递管道
             creat_channels!((recv_ready_sender, recv_ready_receiver, bool),(recv_close_time_sender, recv_close_time_receiver, i64));
@@ -45,8 +45,10 @@ impl ModeMethod for IPv6AliasedCheck {
             let receiver_res;
             {
                 prepare_data!(self; clone; base_conf, receiver_conf, probe);
+                let scan_flag = checker.scan_flag;
+                let sports = self.sender_conf.source_ports.clone();
                 receiver_res = thread::spawn(move || {
-                    PcapReceiver::run_alia_v6_vec(0, base_conf, receiver_conf, probe, cur_targets_len, cur_tar_prefixes_len,
+                    PcapReceiver::run_alia_v6_vec(0, base_conf, receiver_conf, probe, cur_targets_len, cur_tar_prefixes_len, scan_flag, sports,
                                                   recv_ready_sender, recv_close_time_receiver)
                 });
             }
@@ -61,7 +63,7 @@ impl ModeMethod for IPv6AliasedCheck {
                 prepare_data!(self; clone; base_conf, sender_conf, probe);
 
                 sender_threads.push(thread::spawn(move || {
-                    send_v6_u32code_vec(0, tar_addrs_per, probe, base_conf, sender_conf)
+                    send_v6_code_port_vec(0, tar_addrs_per, probe, base_conf, sender_conf)
                 }));
             }
 
@@ -84,6 +86,9 @@ impl ModeMethod for IPv6AliasedCheck {
                 // 记录 唯一活跃地址数量
                 toal_act_addrs_len += act_addrs_len as u64;
             } else { error!("{}", SYS.get_info("err", "recv_thread_err"));exit(1) }
+            
+            // 改变标识字段
+            checker.change_scan_flag();
         }
         
         // 计算 结束时间 和 格式化后的运行时间 并显示
@@ -94,9 +99,17 @@ impl ModeMethod for IPv6AliasedCheck {
         
         // 判断并输出别名地址
         let mut aliased_addrs_len = 0;
-        if self.output_alia_addrs {
+        if self.output_alia_addrs || checker.not_aliased_records_path.is_some() {
             let alia_prefixes_set:AHashSet<u128> = alia_prefixes.into_iter().collect();
-            aliased_addrs_len = checker.get_alia_addrs(alia_prefixes_set, &mut out_mod);
+            
+            if self.output_alia_addrs {
+                aliased_addrs_len = checker.get_alia_addrs(&alia_prefixes_set, &mut out_mod);
+            }
+            
+            if checker.not_aliased_records_path.is_some() {
+                let not_alia_save_path = checker.not_aliased_records_path.as_ref().unwrap();
+                checker.save_not_aliased_records(not_alia_save_path, &alia_prefixes_set);
+            }
         }
         
         // 输出模块关闭输出, 刷新缓冲区

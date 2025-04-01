@@ -5,6 +5,7 @@ use std::process::exit;
 use std::str::FromStr;
 use ahash::AHashSet;
 use log::{error, warn};
+use rand::rng;
 use rand::seq::SliceRandom;
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::tools::others::parse::parse_str;
@@ -185,7 +186,7 @@ pub fn get_ipv6_addrs_from_file(path:&String, cap:Option<usize>) -> Vec<u128> {
     let mut addrs_vec:Vec<u128> = addrs_set.into_iter().collect();
 
     // 随机化排序
-    let mut rng = rand::thread_rng();
+    let mut rng = rng();
     addrs_vec.shuffle(&mut rng);
     
     addrs_vec

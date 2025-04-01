@@ -2,6 +2,7 @@ use std::process::exit;
 use ahash::AHashSet;
 use log::error;
 use rand::prelude::IteratorRandom;
+use rand::rng;
 use crate::modules::target_iterators::ipv6_space_tree::IPv6SpaceTreeNode;
 use crate::modules::target_iterators::IPv6SpaceTree;
 use crate::SYS;
@@ -140,7 +141,7 @@ impl IPv6SpaceTreeNode {
         let mut selected_ips:AHashSet<u128> = AHashSet::with_capacity(region_budget);
         {
             // 生成随机种子
-            let mut rng = rand::thread_rng();
+            let mut rng = rng();
 
             // 随机选择 目标地址, 并生成 目标地址列表
             selected_ips = self.no_used_generated_address

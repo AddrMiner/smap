@@ -34,7 +34,7 @@ impl UdpScanV6 {
         // 得到 payload文件路径
         let payload_path = get_current_path(&SYS.get_info("conf", "default_payload_file"));
         let payload = get_payload(mod_conf.get_info(&"payload".to_string()),
-                                  payload_path, seed, 1, 508);
+                                  payload_path, seed, 0, 508);
 
         ProbeModV6 {
             name: "udp_scan_v6",

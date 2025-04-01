@@ -20,6 +20,10 @@ impl PcapReceiver {
         match probe.parse_packet_v6(ts, net_layer_header_and_data, net_layer_data, aes_rand){
             Some(res) => {
                 // 如果数据包验证通过
+
+                // 如果 响应地址 和 目的地址 相等, 将被视为异常情况, 
+                // 不统计该接口地址, 并且不参与reward计算
+                if res.dest_ip == res.responder { return }
                 
                 // 交由 double_tree 算法处理
                 if double_tree_struct.receive(&res, all_nodes) {

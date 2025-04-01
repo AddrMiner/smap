@@ -1,3 +1,4 @@
+use crate::modes::helper_mode::modules_helper::mode_help;
 use crate::modes::MODES;
 use crate::modules::output_modules::OUTPUT_MODS;
 use crate::modules::probe_modules::active_probe_ipv6_code::CODE_PROBE_MODS_V6;
@@ -13,7 +14,7 @@ pub fn print_modes(){
     println!("{}", SYS.get_info("print","print_modes"));
 
     for mode in MODES {
-        print!("{}  ",mode);
+        println!("{}  -- {}", mode, mode_help(mode));
     }
 
     print!("\n");

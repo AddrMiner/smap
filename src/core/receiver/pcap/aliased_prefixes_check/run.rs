@@ -17,7 +17,7 @@ impl PcapReceiver {
     pub fn run_alia_v6_vec(interface_index:usize, 
                                  base_conf:Arc<BaseConf>, receiver_conf:Arc<ReceiverBaseConf>,
                                  // 探测模块用来验证信息, 处理数据包
-                                 probe_mod:Arc<CodeProbeModV6>, addrs_len:usize, code_len:usize,
+                                 probe_mod:Arc<CodeProbeModV6>, addrs_len:usize, code_len:usize, scan_flag:u8, sports:Vec<u16>,
                                  recv_ready_sender:Sender<bool>, recv_close_time_receiver:Receiver<i64>) -> (usize, Vec<u8>) {
 
         // 初始化 数据包捕获器
@@ -26,7 +26,7 @@ impl PcapReceiver {
             probe_mod.snap_len_v6, &receiver_conf.filter);
 
         // 初始化 探测模块
-        let probe = CodeProbeModV6::init(probe_mod);
+        let probe = CodeProbeModV6::init(probe_mod, sports);
 
         // 复制加密器
         let aes_rand = base_conf.aes_rand.clone();
@@ -68,7 +68,7 @@ impl PcapReceiver {
                     if ip_ver == 6 {
                         // 如果是ipv6的数据包
 
-                        Self::handle_packet_v6_alia(net_layer_data, &aes_rand, &probe, &mut hash_set, &mut recorder);
+                        Self::handle_packet_v6_alia(net_layer_data, &aes_rand, &probe, &mut hash_set, &mut recorder, scan_flag);
                     }
                     // 如果是 ipv4 的包, 或者其它特殊类型, 不进行处理
 

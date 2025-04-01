@@ -24,7 +24,7 @@ impl Ipv6FileReader {
 
     fn get_ip_port(&self, line:String) -> (bool, u128, u16) {
 
-        let s:Vec<&str> = line.split('|').collect();
+        let s:Vec<&str> = line.split(|c| c == '|' || c == ',').collect();
 
         if self.tar_port_from_file {
             // 从文件中获取目标端口

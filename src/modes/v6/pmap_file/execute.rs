@@ -125,6 +125,10 @@ impl ModeMethod for PmapFileV6 {
             let targets_list = split_chains(tar_ips, self.pmap_batch_num as usize);
             
             for cur_ips in targets_list {
+                // 如果 发送的数据包总数量 大于等于 被允许的最大端口对数量 (max_pairs_num)
+                if total_send_success >= self.max_pairs_num { break }
+
+                // 如果当前轮次的目标列表为空
                 if cur_ips.is_empty() { continue }
 
                 // 状态库 (批次)
@@ -141,6 +145,9 @@ impl ModeMethod for PmapFileV6 {
                 let mut sent_port_count_add_one: u32 = 0;
                 loop {
                     // 在一个循环内, 所有待探测地址被探测一个端口
+
+                    // 如果 发送的数据包总数量 大于等于 被允许的最大端口对数量 (max_pairs_num)
+                    if total_send_success >= self.max_pairs_num { break }
 
                     // 如果  每个地址发送的端口数量加一  大于 预算时, 结束 推荐扫描
                     sent_port_count_add_one += 1;

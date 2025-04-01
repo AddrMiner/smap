@@ -1,5 +1,6 @@
 use ahash::AHashMap;
 use num_traits::FromPrimitive;
+use rand::rng;
 use rand::seq::SliceRandom;
 use rust_decimal::Decimal;
 use crate::modules::target_iterators::ipv6_prefix_tree::prefix_tree::IPv6PrefixTree;
@@ -124,7 +125,7 @@ impl IPv6PrefixTree {
 
         if self.rand_ord {
             // 随机化排序, 用于测试
-            let mut rng = rand::thread_rng();
+            let mut rng = rng();
             new_node_queue.shuffle(&mut rng);
         } else {
             quick_sort_from_big_to_small(&mut all_reward, &mut new_node_queue, 0, node_queue_len - 1);

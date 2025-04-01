@@ -9,50 +9,55 @@ opt-level = 3
 
 [dependencies]
 # ini
-configparser = "3.0.4"
+configparser = "3.1.0"
 
 # cli
-clap = { version = "4.5.4", features = ["derive"] }
+clap = { version = "4.5.34", features = ["derive"] }
 
 # log
-log = "0.4.21"
+log = "0.4.27"
 log4rs = "1.3.0"
 
 # time
-chrono = "0.4.38"
+chrono = "0.4.40"
 
 #hash
 ahash = "0.8.11"
 
 # input output
-csv = "1.3.0"
+csv = "1.3.1"
 
 # static
-once_cell = { version = "1.19.0", features = [] }
+once_cell = { version = "1.21.3", features = [] }
 
+rayon = "1.10.0"
 # dns
-trust-dns-resolver = "0.23.2"
+hickory-resolver = "0.25.1"
 
 # network interface
-default-net = "0.18.0"
-rand = "0.8.5"
+netdev = "0.33.0"
+rand = "0.9.0"
+rand_distr = "0.5.1"
 aes = { version = "0.8.4", features = [] }
 
 # big number
-num-bigint = "0.4.5"
+num-bigint = "0.4.6"
 num-traits = "0.2.19"
 
 # receiver
-pcap = "2.0.0"
+pcap = "2.2.0"
 
 # bitmap
 bitvec = "1.0.1"
 
-libc = "0.2.154"
+libc = "0.2.171"
 
-serde = "1.0.201"
-serde_derive = "1.0.201"
-regex = "1.10.4"
+regex = "1.11.1"
 
-rust_decimal = "1.35.0"
-rust_decimal_macros = "1.34.2"
+rust_decimal = "1.37.1"
+
+ordered-float = "5.0.0"
+
+uint = "0.10.0"
+tokio = "1.44.1"
+

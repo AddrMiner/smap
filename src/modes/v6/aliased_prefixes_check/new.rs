@@ -21,11 +21,11 @@ impl IPv6AliasedCheck {
         let module_conf = ModuleConf::new_from_vec_args(&args.custom_args, vec!["payload_len=4".to_string()]);
         
         // 获取自定义参数: 前缀长度, 前缀数量, 每个前缀随机地址的数量, 占比多少会被计为别名前缀, 是否输出别名地址, 每轮次探测前缀的数量
-        get_conf_from_mod_or_sys!(module_conf; prefix_len, prefix_count, rand_addr_len, alia_ratio, output_alia_addrs, prefixes_len_per_batch);
+        get_conf_from_mod_or_sys!(module_conf; prefix_len, prefix_count, rand_addr_len, aliased_threshold, output_alia_addrs, prefixes_len_per_batch, not_aliased_records_path);
         
         // 初始化 别名前缀检查器
         let ipv6_aliased_checker = IPv6AliaChecker::new(TarIterBaseConf::parse_targets_file(&args.target_file), 
-                                                        prefix_len, prefix_count, rand_addr_len, alia_ratio, prefixes_len_per_batch);
+                                                        prefix_len, prefix_count, rand_addr_len, aliased_threshold, prefixes_len_per_batch, not_aliased_records_path);
         
         //  ipv6探测模块(区域编码)
         let probe = CodeProbeModV6::new(

@@ -18,7 +18,7 @@ pub fn parse_range<T:PartialOrd + Copy + FromStr>(ports_str:&str, info:&str) -> 
         let end:T = parse_str(s[1].trim());
 
         if first <= end {
-            return (first, end);
+            (first, end)
         }else {
             error!("{} {}", SYS.get_info("err", info), ports_str);
             exit(1)

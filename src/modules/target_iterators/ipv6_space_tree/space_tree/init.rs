@@ -31,7 +31,7 @@ impl IPv6SpaceTree {
             exit(1)
         }
 
-        if region_extraction_num > (u16::MAX as u32)  {
+        if region_extraction_num >= (u32::MAX >> 8)  {
             error!("{}", SYS.get_info("err", "ipv6_space_tree_region_extraction_num_err"));
             exit(1)
         }
@@ -88,6 +88,8 @@ impl IPv6SpaceTree {
             root: None,
             cur_extra_region_num: 0,
             seeds_num,
+            
+            scan_flag: 1,
         }
     }
 

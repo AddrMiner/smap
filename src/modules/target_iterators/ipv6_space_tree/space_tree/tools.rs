@@ -70,5 +70,16 @@ impl IPv6SpaceTree {
         }
         stat
     }
+
+    /// 改变标志字段
+    pub fn change_scan_flag(&mut self){
+        let next_scan_flag = ((self.scan_flag as u16) + 1) % 254;
+
+        if next_scan_flag == 0 {
+            self.scan_flag = 1;
+        } else {
+            self.scan_flag = next_scan_flag as u8;
+        }
+    }
     
 }

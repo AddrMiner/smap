@@ -1,5 +1,6 @@
 use ahash::AHashMap;
 use rand::prelude::SliceRandom;
+use rand::rng;
 use crate::modules::output_modules::OutputMethod;
 use crate::modules::probe_modules::topology_probe::topo_mod_v6::TopoMethodV6;
 use crate::modules::target_iterators::Ipv6VecDoubleTree;
@@ -24,7 +25,7 @@ impl Ipv6VecDoubleTree {
 
         // 随机化目标队列
         {
-            let mut rng = rand::thread_rng();
+            let mut rng = rng();
             targets.shuffle(&mut rng);
         }
         
@@ -144,7 +145,7 @@ impl Ipv6VecDoubleTree {
         }
 
         // 随机化目标队列
-        let mut rng = rand::thread_rng();
+        let mut rng = rng();
         targets.shuffle(&mut rng);
         
         targets

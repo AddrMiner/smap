@@ -1,5 +1,5 @@
 use std::process::exit;
-use default_net::{get_default_interface, get_interfaces, Interface};
+use netdev::{get_default_interface, get_interfaces, Interface};
 use log::error;
 use crate::SYS;
 
@@ -55,15 +55,11 @@ impl NetInterface {
                 tar_interface.name = format!("{}{}","\\Device\\NPF_", tar_interface.name);
             }
 
-            return NetInterface {
+            NetInterface {
                 // 使用默认接口
                 interface: tar_interface,
-            };
+            }
 
         }
-
     }
-
-
-
 }

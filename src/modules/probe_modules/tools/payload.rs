@@ -80,7 +80,7 @@ fn parse_payload(input:&str, seed:u64) -> Vec<u8> {
             let tar_byte:u8;
             if byte_str == "*" {
                 // 如果载荷数组中存在 * 标记, 对该字节进行随机填充
-                tar_byte = rng.gen();
+                tar_byte = rng.random();
             } else {
                 tar_byte = byte_str.parse().map_err(|_|{
                     error!("{} {}", SYS.get_info("err", "payload_byte_parse_failed"), input);

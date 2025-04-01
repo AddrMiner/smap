@@ -1,4 +1,5 @@
 mod icmp;
+mod tcp_syn;
 
 use std::process::exit;
 use std::sync::Arc;
@@ -9,8 +10,9 @@ use crate::tools::encryption_algorithm::aes::AesRand;
 use crate::tools::net_handle::net_interface::mac_addr::MacAddress;
 
 pub use crate::modules::probe_modules::active_probe_ipv6_code::icmp::CodeIcmpEchoV6;
+pub use crate::modules::probe_modules::active_probe_ipv6_code::tcp_syn::CodeTcpSynScanV6;
 
-pub const CODE_PROBE_MODS_V6: [&str; 1] = ["code_icmp_v6"];
+pub const CODE_PROBE_MODS_V6: [&str; 2] = ["code_icmp_v6", "code_tcp_syn_scan_v6"];
 
 
 impl CodeProbeModV6 {
@@ -25,6 +27,8 @@ impl CodeProbeModV6 {
         match name {        // 各类模块的构造方法
 
             "code_icmp_v6" => CodeIcmpEchoV6::new(conf),
+            
+            "code_tcp_syn_scan_v6" => CodeTcpSynScanV6::new(),
 
             _ => {
                 error!("{}", SYS.get_info("err", "v6_probe_mod_not_exist"));
@@ -33,13 +37,15 @@ impl CodeProbeModV6 {
         }
     }
 
-    pub fn init(p:Arc<CodeProbeModV6>) -> Box<dyn CodeProbeMethodV6> {
+    pub fn init(p:Arc<CodeProbeModV6>, sports:Vec<u16>) -> Box<dyn CodeProbeMethodV6> {
 
         let name = p.name;
 
         match name {        // 各类模块的构造方法
 
             "code_icmp_v6" => Box::new(CodeIcmpEchoV6::init(p)),
+
+            "code_tcp_syn_scan_v6" => Box::new(CodeTcpSynScanV6::init(p, sports)),
             
             _ => {
                 error!("{}", SYS.get_info("err", "v6_probe_mod_not_exist"));
@@ -57,12 +63,12 @@ pub trait CodeProbeMethodV6 {
 
     
     // 生成数据包
-    fn make_packet_v6(&self, source_ip:u128, dest_ip:u128, code:Vec<u8>, aes_rand:&AesRand) -> Vec<u8>;
+    fn make_packet_v6(&self, source_ip:u128, dest_ip:u128, dest_port:u16, code:Vec<u8>, aes_rand:&AesRand) -> Vec<u8>;
     
     
     // 接收并验证数据包
     // 如果 验证成功, 返回 (区域编码, ipv6地址); 如果 验证失败, 返回 空
-    fn receive_packet_v6(&self, net_layer_header:&[u8], net_layer_data:&[u8],  aes_rand:&AesRand) -> Option<(u128, Vec<u8>)>;
+    fn receive_packet_v6(&self, net_layer_header:&[u8], net_layer_data:&[u8],  aes_rand:&AesRand) -> Option<(u128, u16, Vec<u8>)>;
 }
 
 

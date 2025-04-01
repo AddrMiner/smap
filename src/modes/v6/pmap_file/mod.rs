@@ -38,6 +38,9 @@ pub struct PmapFileV6 {
     // 端口数量限制
     // 开放端口超过该限制的地址将被视为异常地址, 不参与概率相关图训练
     pub port_num_limit:usize,
+    
+    // 总预算限制 (允许发送的最大端口对数量)
+    pub max_pairs_num:u64,
 }
 
 impl Helper for PmapFileV6 {

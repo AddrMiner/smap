@@ -1,12 +1,14 @@
 use std::str::FromStr;
-use default_net::interface::MacAddr;
+use netdev::mac::MacAddr;
 
 
 /// 网络接口 硬件地址
+#[derive(Clone)]
 pub struct MacAddress {
     pub bytes: [u8; 6],
 }
 
+#[derive(Debug)]
 pub enum MacAddressErr {
     Invalid
 }

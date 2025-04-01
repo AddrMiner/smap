@@ -13,21 +13,21 @@ pub struct Mode {}
 pub use helper_mode::Helper;
 
 /// 激活的所有模块
-const MODES: [&str; 27] = ["cycle_v4","c4",
-                          "cycle_v6", "c6",
-                          "cycle_v6_pattern", "c6p",
-                          "file_v4", "f4",
-                          "file_v6", "f6",
-                          "cycle_v4_v6", "c46",
-                          "pmap_v4", "p4",
-                          "pmap_v6", "p6",
-                          "pmap_file_v6", "pf6",
-                          "topo_v4", "t4",
-                          "topo_v6", "t6",
+const MODES: [&str; 18] = ["c4",
+                          "c6",
+                          "c6p",
+                          "f4",
+                          "f6",
+                          "c46",
+                          "p4",
+                          "p6",
+                          "pf6",
+                          "t4",
+                          "t6",
                           "ipv6_addrs_gen",
-                          "ipv6_prefix_tree",
-                          "ipv6_aliased_prefixes_check", "ac6",
-                          "ipv6_double_tree_test"];
+                          "ac6",
+                          "ipv6_double_tree_test", 
+                          "tt6", "s6", "a6","e6"];
 impl Mode {
 
     pub fn new(args:&Args) -> Box<dyn ModeMethod> {
@@ -41,38 +41,46 @@ impl Mode {
         match mode.as_str() {
 
 
-            "cycle_v4" | "c4"  => Box::new(v4::CycleV4::new(args)),
+            "c4"  => Box::new(v4::CycleV4::new(args)),
 
-            "cycle_v6" | "c6" => Box::new(v6::CycleV6::new(args)),
+            "c6" => Box::new(v6::CycleV6::new(args)),
 
-            "cycle_v6_pattern" | "c6p" => Box::new(v6::CycleV6Pattern::new(args)),
+            "c6p" => Box::new(v6::CycleV6Pattern::new(args)),
 
-            "file_v4" | "f4"  => Box::new(v4::V4FileReader::new(args)),
+            "f4"  => Box::new(v4::V4FileReader::new(args)),
 
-            "file_v6" | "f6"  => Box::new(v6::V6FileReader::new(args)),
+            "f6"  => Box::new(v6::V6FileReader::new(args)),
 
-            "cycle_v4_v6" | "c46" => Box::new(mix::CycleV4V6::new(args)),
+            "c46" => Box::new(mix::CycleV4V6::new(args)),
 
-            "pmap_v4" | "p4" => Box::new(v4::PmapV4::new(args)),
+            "p4" => Box::new(v4::PmapV4::new(args)),
 
-            "pmap_v6" | "p6" => Box::new(v6::PmapV6::new(args)),
+            "p6" => Box::new(v6::PmapV6::new(args)),
 
-            "pmap_file_v6" | "pf6" => Box::new(v6::PmapFileV6::new(args)),
+            "pf6" => Box::new(v6::PmapFileV6::new(args)),
 
-            "topo_v4" | "t4" => Box::new(v4::Topo4::new(args)),
+            "t4" => Box::new(v4::Topo4::new(args)),
             
-            "topo_v6" | "t6" => Box::new(v6::Topo6::new(args)),
+            "t6" => Box::new(v6::Topo6::new(args)),
 
             "ipv6_addrs_gen" => Box::new(v6::SpaceTree6::new(args)),
-            
-            "ipv6_prefix_tree" => Box::new(v6::PrefixTree6::new(args)),
-            
-            "ipv6_prefix_fixed_tree" => Box::new(v6::PrefixFixedTree6::new(args)),
 
-            "ipv6_aliased_prefixes_check" | "ac6" => Box::new(v6::IPv6AliasedCheck::new(args)),
+            "ac6" => Box::new(v6::IPv6AliasedCheck::new(args)),
+
+            // 暂时废弃， 但是其中包含可重用的算法代码
+            "ipv6_prefix_tree" => Box::new(v6::PrefixTree6::new(args)),
+            "ipv6_prefix_fixed_tree" => Box::new(v6::PrefixFixedTree6::new(args)),
 
             // 警告: 该模式只用作测试, 请及时删除
             "ipv6_double_tree_test" => Box::new(v6::DoubleTreeTest::new(args)),
+
+            "tt6" => Box::new(v6::TreeTrace6::new(args)),
+
+            "s6" => Box::new(v6::Scour6::new(args)),
+            
+            "a6" => Box::new(v6::Asset6::new(args)),
+            
+            "e6" => Box::new(v6::Edge6::new(args)),
 
             _ => {
                 // 未查询到有效模式

@@ -15,7 +15,7 @@ echo "smap will be installed to $installPath"
 cargo install --path . --root "$installPath"
 
 # 2. copy resource folder
-cp -r   ./block_list  ./probe_modules_payload  "$installPath"
+cp -r   ./block_list  ./probe_modules_payload  ./others  "$installPath"
 
 # 3. clear
 rm -rf ./target

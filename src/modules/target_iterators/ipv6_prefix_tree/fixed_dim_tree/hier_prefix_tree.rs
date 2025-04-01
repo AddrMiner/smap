@@ -49,6 +49,7 @@ impl IPv6FixedPrefixTree {
             // 取出该节点 分裂点
             if split_move_len == u8::MAX {
                 // 地址数量达到分裂要求, 但是不存在非零熵值位, 说明出现错误
+                error!("3");
                 error!("{}", SYS.get_info("err", "ipv6_space_tree_no_entropy_err"));
                 exit(1)
             }

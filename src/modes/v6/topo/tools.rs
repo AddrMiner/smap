@@ -21,7 +21,7 @@ impl Topo6 {
                 // 注意: 在模式位中的随机位无效
 
                 // 生成随机ip值
-                let rand_ip_val: u128 = rng.gen();
+                let rand_ip_val: u128 = rng.random();
 
                 // 生成真正的随机值
                 let rand_mask = Self::get_rand_mask(rand_bits, mask);
@@ -36,7 +36,7 @@ impl Topo6 {
         } else {
             // 如果未给定目标ip
             // 生成随机ip值
-            let rand_ip_val: u128 = rng.gen();
+            let rand_ip_val: u128 = rng.random();
 
             let rand_ip = Ipv6Addr::from(rand_ip_val);
             parse_ipv6_pattern(&String::from(format!("{}@{}", rand_ip, tar_ips_str)))

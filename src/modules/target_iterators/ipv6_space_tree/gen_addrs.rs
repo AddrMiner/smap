@@ -1,23 +1,30 @@
 use std::cmp::min;
 use ahash::AHashSet;
+use rand::rng;
 use rand::seq::SliceRandom;
 use crate::modules::target_iterators::ipv6_space_tree::space_tree::IPv6SpaceTree;
 use crate::tools::others::sort::quick_sort_from_big_to_small;
 
 impl IPv6SpaceTree {
     
-    pub fn gen_addrs(&mut self, cur_budget:u64) -> Vec<(u16, u128)> {
+    pub fn gen_addrs(&mut self, cur_budget:u64) -> Vec<(Vec<u8>, u128)> {
         let node_queue_len =  self.all_reward.len();
         // 区域抽取数量 和 叶子节点数量 中的最小值
         let cur_extra_region_num = min(self.region_extraction_num as usize, node_queue_len);
         self.cur_extra_region_num = cur_extra_region_num;
 
         // 目标队列
-        let mut targets:Vec<(u16, u128)> = Vec::with_capacity(cur_budget as usize);
+        let mut targets:Vec<(Vec<u8>, u128)> = Vec::with_capacity(cur_budget as usize);
 
         // 计算 前max_node_num个 奖励的总和
         let sum_reward:f64 = self.all_reward.iter().take(cur_extra_region_num).sum();
+        
+        let scan_flag = self.scan_flag;
         for i in 0..cur_extra_region_num {
+            let i_u32 = i as u32;
+            let mut cur_code = i_u32.to_be_bytes();
+            cur_code[0] = scan_flag;
+            let cur_code = cur_code.to_vec();
 
             let mut node = (&self.region_queue[i]).borrow_mut();
 
@@ -38,7 +45,7 @@ impl IPv6SpaceTree {
 
             // 将 (区域编码, 本区域地址) 写入目标队列
             for &ip in &cur_ips_set {
-                targets.push((i as u16, ip));
+                targets.push((cur_code.clone(), ip));
             }
 
             // 向 已使用的地址 集合中添加 当前集合
@@ -47,7 +54,7 @@ impl IPv6SpaceTree {
 
         // 随机化目标队列
         {
-            let mut rng = rand::thread_rng();
+            let mut rng = rng();
             targets.shuffle(&mut rng);
         }
 

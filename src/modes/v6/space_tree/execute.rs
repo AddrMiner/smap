@@ -7,7 +7,7 @@ use crate::modes::v6::space_tree::new::SpaceTreeType;
 use crate::modes::v6::space_tree::SpaceTree6;
 use crate::{computing_time, creat_channels, ending_the_receiving_thread, init_var, prepare_data, recv_ready, SYS, wait_sender_threads, write_to_summary};
 use crate::core::receiver::pcap::PcapReceiver;
-use crate::core::sender::send_v6_u16code_vec;
+use crate::core::sender::send_v6_code_vec;
 use crate::modules::output_modules::OutputMod;
 use crate::tools::others::split::split_chains;
 
@@ -36,7 +36,7 @@ impl ModeMethod for SpaceTree6 {
             count += 1;
             
             // 生成 目标地址集
-            let tar_addrs: Vec<(u16, u128)>;
+            let tar_addrs: Vec<(Vec<u8>, u128)>;
             {
                 info!("{} {}", SYS.get_info("info", "cur_round"), count);
                 let cur_budget = self.batch_size;
@@ -63,10 +63,11 @@ impl ModeMethod for SpaceTree6 {
             {
                 let addrs_len = tar_addrs.len();
                 let regions_len = space_tree.cur_extra_region_num;
+                let scan_flag = space_tree.scan_flag;
                 prepare_data!(self; clone; base_conf, receiver_conf, probe);
 
                 receiver_res = thread::spawn(move || {
-                    PcapReceiver::space_tree_run_v6_vec(0, out_mod, base_conf, receiver_conf, probe, addrs_len, regions_len,
+                    PcapReceiver::space_tree_run_v6_vec(0, out_mod, base_conf, receiver_conf, probe, addrs_len, regions_len, scan_flag,
                                                         recv_ready_sender, recv_close_time_receiver)
                 });
             }
@@ -81,7 +82,7 @@ impl ModeMethod for SpaceTree6 {
                 prepare_data!(self; clone; base_conf, sender_conf, probe);
 
                 sender_threads.push(thread::spawn(move || {
-                      send_v6_u16code_vec(0, tar_addrs_per, probe, base_conf, sender_conf)
+                    send_v6_code_vec(0, tar_addrs_per, probe, base_conf, sender_conf)
                 }));
             }
 
@@ -104,9 +105,9 @@ impl ModeMethod for SpaceTree6 {
                 error!("{}", SYS.get_info("err", "recv_thread_err")); exit(1)
             }
             
-            if total_used_budget >= self.budget {
-                break
-            }
+            if total_used_budget >= self.budget { break }
+            
+            space_tree.change_scan_flag();
         }
 
         // 计算 结束时间 和 格式化后的运行时间 并显示

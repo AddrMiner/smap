@@ -1,10 +1,11 @@
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::net::{Ipv4Addr, Ipv6Addr};
 use libc::{c_int};
 use crate::tools::net_handle::net_interface::interface::NetInterface;
 use crate::tools::net_handle::net_interface::mac_addr::MacAddress;
 use crate::tools::net_handle::net_type::net_v4::Netv4;
 use crate::tools::net_handle::net_type::net_v6::Netv6;
 use std::process::exit;
+use ahash::AHashMap;
 use log::error;
 use crate::SYS;
 
@@ -15,7 +16,7 @@ pub struct InterfaceConf {
 
     // 网关地址
     pub gateway_mac:MacAddress,
-    pub gateway_ip:IpAddr,
+    //pub gateway_ip:IpAddr,
 
 
     // 本地硬件地址
@@ -45,7 +46,7 @@ impl InterfaceConf {
     /// 网络接口配置
     /// 如果传入 Some(接口名称)，查询对应接口的信息并配置
     /// 如果传入 None, 将使用默认网络接口
-    pub fn new(interface_name:Option<String>) -> Self {
+    pub fn new(interface_name:Option<String>, interface_to_gateway:&AHashMap<String, MacAddress>) -> Self {
 
         let selected_interface = NetInterface::new(interface_name);
 
@@ -54,18 +55,23 @@ impl InterfaceConf {
 
         // 解析网关 mac 和 ip
         let gateway_mac;
-        let gateway_ip;
+        //let gateway_ip;
         {
             // 未给定 网关mac地址, 将从 interface 获取
             let gateway = selected_interface.interface.gateway;
 
             // 获取网关 ip
             if let Some(g) = gateway {
-                gateway_ip = g.ip_addr;
+                //gateway_ip = g.ip_addr;
                 gateway_mac = MacAddress::from_mac_addr(g.mac_addr);
             } else {
-                error!("{} {}", SYS.get_info("err", "gateway_info_not_found"), selected_interface_name);
-                exit(1)
+                if let Some(g) = interface_to_gateway.get(&selected_interface_name) {
+                    // 如果用户指定了网关硬件地址
+                    gateway_mac = (*g).clone();
+                } else {
+                    error!("{} {}", SYS.get_info("err", "gateway_info_not_found"), selected_interface_name);
+                    exit(1)
+                }
             }
         }
 
@@ -90,13 +96,13 @@ impl InterfaceConf {
             let local_ipv6_info = selected_interface.interface.ipv6;
 
             for net_v4 in local_ipv4_info.iter() {
-                local_ipv4.push(net_v4.addr);
-                local_ipv4_net.push(Netv4::new(net_v4.addr, net_v4.prefix_len));
+                local_ipv4.push(net_v4.addr());
+                local_ipv4_net.push(Netv4::new(net_v4.addr(), net_v4.prefix_len()));
             }
 
             for net_v6 in local_ipv6_info.iter() {
-                local_ipv6.push(net_v6.addr);
-                local_ipv6_net.push(Netv6::new(net_v6.addr, net_v6.prefix_len));
+                local_ipv6.push(net_v6.addr());
+                local_ipv6_net.push(Netv6::new(net_v6.addr(), net_v6.prefix_len()));
             }
         }
 
@@ -104,7 +110,7 @@ impl InterfaceConf {
             name_index: (selected_interface_name, selected_interface.interface.index as c_int),
 
             gateway_mac,
-            gateway_ip,
+            //gateway_ip,
 
             local_mac,
 
@@ -131,10 +137,10 @@ impl InterfaceConf {
 
     /// 设置 网关ip地址
     /// 需要注意与 网络接口 的网关地址不一致造成的影响
-    #[allow(dead_code)]
-    pub fn set_gateway_ip(&mut self, ip:IpAddr){
-        self.gateway_ip = ip;
-    }
+    // #[allow(dead_code)]
+    // pub fn set_gateway_ip(&mut self, ip:IpAddr){
+    //     self.gateway_ip = ip;
+    // }
 
 
     /// 设置 本地硬件地址

@@ -24,7 +24,7 @@ impl SpaceTree6 {
         let base_conf = BaseConf::new(args);
 
         // 解析自定义参数   注意: 这里将编码长度设为两个字节
-        let module_conf = ModuleConf::new_from_vec_args(&args.custom_args, vec!["payload_len=2".to_string()]);
+        let module_conf = ModuleConf::new_from_vec_args(&args.custom_args, vec!["payload_len=4".to_string()]);
         let space_tree_type:String = module_conf.get_conf_or_from_sys(&String::from("space_tree_type"));
         // 预算, 每轮次的地址数量, 划分维度, 分割范围, 聚类区域数量上限, 不允许生成种子地址, 学习率, 区域提取数量, 种子地址默认数量
         get_conf_from_mod_or_sys!(module_conf; budget, batch_size, divide_dim, divide_range, max_leaf_size, no_allow_gen_seeds, learning_rate, region_extraction_num, seeds_num, no_allow_gen_seeds_from_file);
@@ -38,7 +38,7 @@ impl SpaceTree6 {
         // 生成 ipv6地址空间树
         let tree_type= match space_tree_type.as_str() {
             // 生成 密度空间树
-            "den" => SpaceTreeType::DENSITY,
+            "density" => SpaceTreeType::DENSITY,
             // 暂不支持的空间树类型
             _ => { error!("{}", SYS.get_info("err", "ipv6_space_tree_no_exist")); exit(1) }
         };
@@ -49,11 +49,11 @@ impl SpaceTree6 {
         );
 
         // 发送模块基础配置
-        let sender_conf= SenderBaseConf::new(args, &base_conf.interface, Some(budget), Some((budget / batch_size) as i64 + 1),
+        let sender_conf = SenderBaseConf::new(args, &base_conf.interface, Some(budget), Some((budget / batch_size) as i64 + 1),
                                              probe.max_packet_length_v6, false, true);
 
         // 接收模块基础配置
-        let receiver_conf= ReceiverBaseConf::new(args, vec![probe.filter_v6.clone()]);
+        let receiver_conf = ReceiverBaseConf::new(args, vec![probe.filter_v6.clone()]);
 
         write_to_summary!(base_conf; "SpaceTree6"; "args"; args;);
 

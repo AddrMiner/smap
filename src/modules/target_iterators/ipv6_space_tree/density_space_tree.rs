@@ -2,6 +2,7 @@ use std::cell::{RefCell, RefMut};
 use std::process::exit;
 use std::rc::Rc;
 use log::error;
+use rand::rng;
 use rand::seq::IteratorRandom;
 use crate::modules::target_iterators::ipv6_space_tree::IPv6SpaceTreeNode;
 use crate::modules::target_iterators::ipv6_space_tree::space_tree::IPv6SpaceTree;
@@ -22,7 +23,7 @@ impl IPv6SpaceTree {
                 self.used_addrs = all_seeds.iter().cloned().collect();
             }
 
-            let mut rng = rand::thread_rng();
+            let mut rng = rng();
             // 随机选择 目标地址, 并生成 目标地址列表
             seeds = all_seeds.into_iter().choose_multiple(&mut rng, self.seeds_num).into_iter().collect();
             seeds.shrink_to_fit();
