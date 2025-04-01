@@ -40,5 +40,3 @@ pub fn count_file_lines(filename: &String) -> Option<u64> {
     }
 }
 
-
-
