@@ -28,14 +28,14 @@ smap -m ipv6_addrs_gen \
 | 参数                           | 说明                                                         |
 | ------------------------------ | ------------------------------------------------------------ |
 | `space_tree_type`              | 空间树类型（如密度空间树）                             |
-| `budget`                       | 生成地址的总数量（默认值）                                   |
+| `budget`                       | 生成地址的总数量                                  |
 | `batch_size`                   | 每轮生成的地址数量上限                                       |
 | `divide_dim`                   | 划分维度（例如 `4` 表示按半字节划分）                        |
 | `divide_range`                 | 划分范围（如 `1-64` 表示仅对地址前64位分裂，其余置零）       |
 | `max_leaf_size`                | 聚类区域种子数上限（≤此值的节点不再分裂）                    |
-| `no_allow_gen_seeds`           | 禁止生成种子地址（但仍可生成非种子地址）                     |
+| `no_allow_gen_seeds`           | 禁止生成种子地址（但仍可生成输入文件中的其他地址）                     |
 | `no_allow_gen_seeds_from_file` | 禁止生成输入文件中的任何地址（启用时会强制 `no_allow_gen_seeds=true`） |
-| `learning_rate`                | 学习率（影响生成策略调整速度）                               |
+| `learning_rate`                | 学习率                             |
 | `region_extraction_num`        | 每次生成时提取的聚类区域数量（按奖励排名前N个）              |
 | `seeds_num`                    | 从输入文件中随机选取的种子地址数量                           |
 
