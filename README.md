@@ -3,6 +3,7 @@
 > 为科研人员和专职工作者设计的大规模网络测量框架
 >
 > 详细文档请参见[SMap文档](https://addrminer.github.io/smap/#/)
+> 请查看我们的主页[AddrMiner](https://addrminer.github.io/IPv6_hitlist.github.io/#)
 
 ## 概述
 
