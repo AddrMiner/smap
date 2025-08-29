@@ -1,7 +1,7 @@
 use std::process::exit;
 use std::thread;
 use chrono::{Local};
-use log::error;
+use log::{error, info};
 use crate::core::receiver::pcap::PcapReceiver;
 use crate::core::sender::{send_file_v4_port};
 use crate::modes::ModeMethod;
@@ -24,11 +24,8 @@ impl ModeMethod for V4FileReader {
             let tar_num = self.tar_num.map_or(256, |v| {v as usize});
 
             receiver_res = thread::spawn(move || {
-                // PcapReceiver::run_v4_port_hash(0, base_conf, receiver_conf, probe, tar_num,  sports,
-                //                      recv_ready_sender, recv_close_time_receiver)
-                // 初始化 哈希集合查重器
-                let hash_set = HashSetV4Port::new(tar_num);
-                PcapReceiver::run_v4_port(0, base_conf, receiver_conf, probe, sports, hash_set, recv_ready_sender, recv_close_time_receiver)
+                let hash_set = if receiver_conf.close_check_dup { None } else { Some( HashSetV4Port::new(tar_num) ) };
+                PcapReceiver::run_v4_port::<HashSetV4Port>(0, base_conf, receiver_conf, probe, sports, hash_set, recv_ready_sender, recv_close_time_receiver)
             });
         }
 
@@ -68,7 +65,7 @@ impl ModeMethod for V4FileReader {
             });
         }
 
-        println!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
+        info!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
 
         // 计算终止时间 并向接收线程传递
         ending_the_receiving_thread!(self; recv_close_time_sender);
@@ -79,7 +76,7 @@ impl ModeMethod for V4FileReader {
 
             // 计算 结束时间 和 格式化后的运行时间 并显示
             computing_time!(start_time; end_time, running_time);
-            println!("{} {} {} {}", SYS.get_info("print", "recv_finished"), receiver_info.recv_success, receiver_info.recv_repeat, receiver_info.recv_failed);
+            info!("{} {} {} {}", SYS.get_info("print", "recv_finished"), receiver_info.recv_success, receiver_info.recv_repeat, receiver_info.recv_failed);
 
             write_to_summary!(self; "V4FileReader"; "result";
                 [start_time, end_time, running_time, total_send_success, total_send_failed, total_blocked;];

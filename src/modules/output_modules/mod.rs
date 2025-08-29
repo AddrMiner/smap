@@ -2,14 +2,16 @@ use std::process::exit;
 use log::error;
 use crate::core::conf::modules_config::ModuleConf;
 pub use crate::modules::output_modules::csv::Csv;
+use crate::modules::output_modules::json::Json;
+use crate::modules::output_modules::print::Print;
 use crate::SYS;
 
 mod csv;
-
-
+pub mod print;
+pub mod json;
 
 /// 激活的 输出模块名称
-pub const OUTPUT_MODS: [&str; 1] = ["csv"];
+pub const OUTPUT_MODS: [&str; 3] = ["csv", "print", "json"];
 
 impl OutputMod {
     pub fn new(name: &str, _conf:Option<ModuleConf>, output_file:&Option<String>, is_ipv6:bool) -> OutputMod {   // 传递出去一个实现了输出模块方法的 struct
@@ -25,7 +27,8 @@ impl OutputMod {
         match name {        // 各类模块的构造方法
 
             "csv" => Csv::new(output_file, is_ipv6),
-
+            "print" => Print::new(),
+            "json" => Json::new(),
 
             _ => {
                 error!("{}", SYS.get_info("err", "output_mod_not_exist"));
@@ -42,6 +45,9 @@ impl OutputMod {
         match name {        // 各类模块的构造方法
 
             "csv" => Box::new(Csv::init(o)),
+            
+            "print" => Box::new(Print::init(o)),
+            "json" => Box::new(Json::init(o)),
 
 
             _ => {

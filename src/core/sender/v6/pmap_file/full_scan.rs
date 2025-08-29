@@ -72,37 +72,38 @@ pub fn pmap_file_full_scan_send_v6(interface_index:usize, probe_mod_v6: Arc<Prob
         for ip in tar_ips.iter() {
             let cur_source_ip = source_ip_iter.get_src_ip_with_change();
             // 由探测模块生成数据包
-            let packet = probe.make_packet_v6(cur_source_ip, *ip, port, None, &aes_rand);
+            let packets = probe.make_packet_v6(cur_source_ip, *ip, port, None, &aes_rand);
 
-            let mut sent_successfully = false;
-            for _ in 0..send_attempts {
-                let res = sender.send_packet(&packet);
+            for packet in packets {
+                let mut sent_successfully = false;
+                for _ in 0..send_attempts {
+                    let res = sender.send_packet(&packet);
 
-                if res >= 0 {
-                    sent_successfully = true;
-                    break;
+                    if res >= 0 {
+                        sent_successfully = true;
+                        break;
+                    }
+                }
+                if sent_successfully {
+                    // 统计发送成功的数据包
+                    send_success += 1;
+                } else {
+                    // 统计发送失败的数据包
+                    debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(*ip), port);
+                    send_failed += 1;
+                }
+
+                batch_count += 1;
+                if batch_count % batch_size == 0 {
+                    // 当 发送的数量 达到一个批次数量
+
+                    // 批次内计数重置
+                    batch_count = 0;
+
+                    // 批次速率控制
+                    rate_controller.sleep();
                 }
             }
-            if sent_successfully {
-                // 统计发送成功的数据包
-                send_success += 1;
-            } else {
-                // 统计发送失败的数据包
-                debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(*ip), port);
-                send_failed += 1;
-            }
-
-            batch_count += 1;
-            if batch_count % batch_size == 0 {
-                // 当 发送的数量 达到一个批次数量
-
-                // 批次内计数重置
-                batch_count = 0;
-
-                // 批次速率控制
-                rate_controller.sleep();
-            }
-
         }
     }
 

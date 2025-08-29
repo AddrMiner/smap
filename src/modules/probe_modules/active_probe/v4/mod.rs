@@ -13,6 +13,8 @@ pub use tcp::tcp_syn_ack_scan::TcpSynAckScanV4;
 
 pub use udp::udp_scan::UdpScanV4;
 
+pub use udp::udp_scan_mul_payload::UdpScanMulPayloadV4;
+
 
 
 

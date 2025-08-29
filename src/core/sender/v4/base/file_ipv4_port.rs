@@ -73,23 +73,24 @@ pub fn send_file_v4_port<T:Ipv4IterFP>(interface_index:usize, mut target_iter:T,
     drop(base_conf);
     drop(sender_conf);
 
+    let mut batch_count = 0;
+
     'big_batch:loop {
 
-        for _ in 0..batch_size {
+        if cur_target.0 {
+            // 如果不是最终值
+            if cur_target.1 {
+                // 如果当前值有效
+                if blocker.ip_is_avail(cur_target.2) {
+                    // 如果没被黑名单阻止
 
-            if cur_target.0 {
-                // 如果不是最终值
-                if cur_target.1 {
-                    // 如果当前值有效
-                    if blocker.ip_is_avail(cur_target.2) {
-                        // 如果没被黑名单阻止
+                    let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
-                        let cur_source_ip = source_ip_iter.get_src_ip_with_change();
+                    // 由探测模块生成数据包
+                    let packets = probe.make_packet_v4(
+                        cur_source_ip, cur_target.2, cur_target.3, ttl, &aes_rand);
 
-                        // 由探测模块生成数据包
-                        let packet = probe.make_packet_v4(
-                            cur_source_ip, cur_target.2, cur_target.3, ttl, &aes_rand);
-
+                    for packet in packets {
                         let mut sent_successfully = false;
                         for _ in 0..send_attempts {
                             let res = sender.send_packet(&packet);
@@ -107,30 +108,38 @@ pub fn send_file_v4_port<T:Ipv4IterFP>(interface_index:usize, mut target_iter:T,
                             debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv4Addr::from(cur_target.2), cur_target.3);
                             send_failed += 1;
                         }
-                    } else {
-                        total_blocked += 1;
+
+                        batch_count += 1;
+                        if batch_count >= batch_size {
+                            rate_controller.sleep();
+                            batch_count = 0;
+                        }
                     }
                 } else {
-                    // 如果读取到的值无效, 当作发送失败处理
-                    send_failed += 1;
+                    total_blocked += 1;
                 }
-
-                // 获取下一个目标
-                cur_target = target_iter.get_next_ip_port();
             } else {
-                // 如果是最终值
+                // 如果读取到的值无效, 当作发送失败处理
+                send_failed += 1;
+            }
 
-                if cur_target.1 {
-                    // 最终值有效
-                    if blocker.ip_is_avail(cur_target.2) {
-                        // 如果当前 ip 被放行
+            // 获取下一个目标
+            cur_target = target_iter.get_next_ip_port();
+        } else {
+            // 如果是最终值
 
-                        let cur_source_ip = source_ip_iter.get_src_ip_with_change();
+            if cur_target.1 {
+                // 最终值有效
+                if blocker.ip_is_avail(cur_target.2) {
+                    // 如果当前 ip 被放行
 
-                        // 由探测模块生成数据包
-                        let packet = probe.make_packet_v4(
-                            cur_source_ip, cur_target.2, cur_target.3, ttl, &aes_rand);
+                    let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
+                    // 由探测模块生成数据包
+                    let packets = probe.make_packet_v4(
+                        cur_source_ip, cur_target.2, cur_target.3, ttl, &aes_rand);
+
+                    for packet in packets {
                         let mut sent_successfully = false;
                         for _ in 0..send_attempts {
                             let res = sender.send_packet(&packet);
@@ -148,19 +157,18 @@ pub fn send_file_v4_port<T:Ipv4IterFP>(interface_index:usize, mut target_iter:T,
                             debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv4Addr::from(cur_target.2), cur_target.3);
                             send_failed += 1;
                         }
-                    } else {
-                        total_blocked += 1;
                     }
                 } else {
-                    // 如果读取到的值无效, 当作发送失败处理
-                    send_failed += 1;
+                    total_blocked += 1;
                 }
-
-                // 处理完最终值, 直接退出大循环
-                break 'big_batch;
+            } else {
+                // 如果读取到的值无效, 当作发送失败处理
+                send_failed += 1;
             }
+
+            // 处理完最终值, 直接退出大循环
+            break 'big_batch;
         }
-        rate_controller.sleep();
     }
 
     (send_success, send_failed, total_blocked)

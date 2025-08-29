@@ -3,7 +3,7 @@ use std::process::exit;
 use std::thread;
 use bitvec::macros::internal::funty::Fundamental;
 use chrono::{Local};
-use log::error;
+use log::{error, info};
 use crate::core::receiver::pcap::PcapReceiver;
 use crate::core::sender::{send_v4_port, send_v6_port};
 use crate::modes::mix::cycle_v4_v6::CycleV4V6;
@@ -23,8 +23,9 @@ impl ModeMethod for CycleV4V6 {
             let sports = self.sender_conf.source_ports.clone();
 
             receiver_res = thread::spawn(move || {
-                PcapReceiver::run_v4_v6(0, base_conf, receiver_conf, probe_v4,probe_v6, sports, tar_num_v4, tar_num_v6,
-                                     recv_ready_sender, recv_close_time_receiver)
+                PcapReceiver::run_v4_v6
+                    (0, base_conf, receiver_conf, probe_v4, probe_v6, sports, tar_num_v4, tar_num_v6,
+                     recv_ready_sender, recv_close_time_receiver)
             });
         }
 
@@ -102,7 +103,7 @@ impl ModeMethod for CycleV4V6 {
             total_blocked += blocked;
         });
 
-        println!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
+        info!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
 
         // 计算终止时间 并向接收线程传递
         ending_the_receiving_thread!(self; recv_close_time_sender);
@@ -114,7 +115,7 @@ impl ModeMethod for CycleV4V6 {
             // 记录结束发送的时间
             computing_time!(start_time; end_time, running_time);
 
-            println!("{} {} {} {} {} {} {}", SYS.get_info("print", "recv_finished_mix"),
+            info!("{} {} {} {} {} {} {}", SYS.get_info("print", "recv_finished_mix"),
                      receiver_info_v4.recv_success, receiver_info_v4.recv_repeat, receiver_info_v4.recv_failed,
                      receiver_info_v6.recv_success, receiver_info_v6.recv_repeat, receiver_info_v6.recv_failed);
 

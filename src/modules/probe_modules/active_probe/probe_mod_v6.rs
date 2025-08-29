@@ -11,9 +11,9 @@ use crate::tools::encryption_algorithm::aes::AesRand;
 use crate::tools::net_handle::net_interface::mac_addr::MacAddress;
 use crate::tools::net_handle::packet::v6::packet_v6_u128::Ipv6PacketU128;
 
-pub use crate::modules::probe_modules::v6::{IcmpEchoV6, TcpSynScanV6, TcpSynAckScanV6, TcpSynOptV6, UdpScanV6, TcpSynPayloadScan};
+pub use crate::modules::probe_modules::v6::{IcmpEchoV6, TcpSynScanV6, TcpSynAckScanV6, TcpSynOptV6, UdpScanV6, TcpSynPayloadScan, UdpScanMulPayloadV6};
 
-pub const PROBE_MODS_V6: [&str; 6] = ["icmp_v6", "tcp_syn_scan_v6", "tcp_syn_ack_scan_v6", "tcp_syn_opt_v6", "udp_scan_v6", "tcp_syn_payload_scan_v6"];
+pub const PROBE_MODS_V6: [&str; 7] = ["icmp_v6", "tcp_syn_scan_v6", "tcp_syn_ack_scan_v6", "tcp_syn_opt_v6", "udp_scan_v6", "tcp_syn_payload_scan_v6", "udp_scan_mul_payload_v6"];
 
 impl ProbeModV6 {
     pub fn new(name: &str, conf:ModuleConf, tar_ports:&Vec<u16>, seed:u64, fields:&Vec<String>) -> ProbeModV6 {   // 传递出去一个实现了输出模块方法的 struct
@@ -34,6 +34,8 @@ impl ProbeModV6 {
             "udp_scan_v6" => UdpScanV6::new(conf, seed, fields),
             
             "tcp_syn_payload_scan_v6" => TcpSynPayloadScan::new(conf, seed, fields),
+
+            "udp_scan_mul_payload_v6" => UdpScanMulPayloadV6::new(conf, seed, fields),
 
             _ => {
                 error!("{}", SYS.get_info("err", "v6_probe_mod_not_exist"));
@@ -59,6 +61,8 @@ impl ProbeModV6 {
             
             "tcp_syn_payload_scan_v6" => Box::new(TcpSynPayloadScan::init(p, sports)),
 
+            "udp_scan_mul_payload_v6" => Box::new(UdpScanMulPayloadV6::init(p, sports)),
+
 
             _ => {
                 error!("{}", SYS.get_info("err", "v6_probe_mod_not_exist"));
@@ -77,7 +81,7 @@ pub trait ProbeMethodV6 {
     fn thread_initialize_v6(&mut self, local_mac:&MacAddress, gateway_mac:&MacAddress);
 
 
-    fn make_packet_v6(&self, source_ip:u128, dest_ip:u128, dest_port:u16, hop_limit:Option<u8>, aes_rand:&AesRand) -> Vec<u8>;
+    fn make_packet_v6(&self, source_ip:u128, dest_ip:u128, dest_port:u16, hop_limit:Option<u8>, aes_rand:&AesRand) -> Vec<Vec<u8>>;
 
     fn is_successful(&self, data_link_header:&[u8], ipv6_header:&Ipv6PacketU128, net_layer_data:&[u8], aes_rand:&AesRand) -> bool;
 

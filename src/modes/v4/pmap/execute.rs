@@ -5,7 +5,7 @@ use std::thread::JoinHandle;
 use ahash::AHashMap;
 use bitvec::macros::internal::funty::Fundamental;
 use chrono::Local;
-use log::{error};
+use log::{error, info};
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
 use crate::core::receiver::pcap::PcapReceiver;
 use crate::core::sender::{pmap_full_scan_send_v4, pmap_recommend_new_scan_send_v4_port, pmap_recommend_scan_send_v4_port};
@@ -49,7 +49,7 @@ impl ModeMethod for PmapV4 {
                     prepare_data!(self; as_usize; tar_ip_num);
                     Recorder4P::H4P(thread::spawn(move || {
                         let recorder = HashSetV4Port::new(tar_ip_num);
-                        PcapReceiver::pmap_full_scan_v4(0, base_conf, receiver_conf, probe, sports, recorder,
+                        PcapReceiver::pmap_full_scan_v4::<HashSetV4Port>(0, base_conf, receiver_conf, probe, sports, recorder,
                                                             recv_ready_sender, recv_close_time_receiver)
                     }))
                 } else {
@@ -58,7 +58,7 @@ impl ModeMethod for PmapV4 {
                     Recorder4P::B4P(thread::spawn(move || {
                         // 注意: 这里应该用 全部目标范围, 而不是只有预探测目标范围
                         let bit_map = BitMapV4Port::new(start_ip, end_ip, tar_ip_num, tar_ports);
-                        PcapReceiver::pmap_full_scan_v4(0, base_conf, receiver_conf, probe, sports, bit_map,
+                        PcapReceiver::pmap_full_scan_v4::<BitMapV4Port>(0, base_conf, receiver_conf, probe, sports, bit_map,
                                                         recv_ready_sender, recv_close_time_receiver)
                     }))
                 }
@@ -276,8 +276,8 @@ impl ModeMethod for PmapV4 {
             drop(graph);
         }
         // 探测 和 接收 执行完毕
-        println!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
-        println!("{} {} {}", SYS.get_info("print", "pmap_scan_finished"), total_ip_count, total_pair_count);
+        info!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
+        info!("{} {} {}", SYS.get_info("print", "pmap_scan_finished"), total_ip_count, total_pair_count);
         computing_time!(start_time; end_time, running_time);
 
         write_to_summary!(self; "PmapV4"; "result";

@@ -111,6 +111,9 @@ pub struct Args{
     #[arg(long = "allow_no_succ", default_value_t = false, help = "允许探测失败但验证成功的输出, 如ICMP包裹原始数据包, RST标志数据包等")]
     pub allow_no_succ:bool,
 
+    #[arg(long = "close_check_dup", default_value_t = false, help = "如果输入该参数，所有查重器将被禁止（该参数仅对基础模式生效，包括c4、c6、c46、f4、f6）")]
+    pub close_check_dup:bool,
+
     #[arg(long = "output_file_v4", help = "设置ipv4探测模块输出文件路径")]
     pub output_file_v4:Option<String>,
 

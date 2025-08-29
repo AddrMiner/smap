@@ -3,7 +3,7 @@
 use std::process::exit;
 use std::thread;
 use chrono::Local;
-use log::error;
+use log::{error, info};
 use crate::core::receiver::pcap::PcapReceiver;
 use crate::{computing_time, creat_channels, ending_the_receiving_thread, init_var, prepare_data, recv_ready, SYS, wait_sender_threads, write_to_summary};
 use crate::core::conf::tools::args_parse::target_iterator::TarIterBaseConf;
@@ -210,7 +210,7 @@ impl ModeMethod for Topo6 {
         }
 
         // 探测 和 接收 执行完毕
-        println!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
+        info!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
 
         computing_time!(start_time; end_time, running_time);
         write_to_summary!(self; "TopoV6"; "result";

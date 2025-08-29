@@ -78,11 +78,11 @@ macro_rules! computing_time {
     ($start_time:ident; $end_time:ident, $running_time:ident) => (
         let $end_time = chrono::Local::now();
         let $running_time = crate::tools::others::time::get_fmt_duration(($end_time - $start_time).num_seconds(), crate::SYS.get_info("print", "running_time_pattern"));
-        println!("{} {}", crate::SYS.get_info("print", "show_running_time"), $running_time);
+        info!("{} {}", crate::SYS.get_info("print", "show_running_time"), $running_time);
     );
     ($start_time:ident, $end_time:ident; $running_time:ident) => (
         let $running_time = crate::tools::others::time::get_fmt_duration(($end_time - $start_time).num_seconds(), crate::SYS.get_info("print", "running_time_pattern"));
-        println!("{} {}", crate::SYS.get_info("print", "show_running_time"), $running_time);
+        info!("{} {}", crate::SYS.get_info("print", "show_running_time"), $running_time);
     );
 }
 

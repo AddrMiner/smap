@@ -73,6 +73,8 @@ pub fn send_v4_port<T:Ipv4IterP>(interface_index:usize, mut target_iter:T, tar_n
     drop(base_conf);
     drop(sender_conf);
 
+    let mut batch_count = 0;
+
     'big_batch:loop {
 
         for _ in 0..batch_size {
@@ -86,25 +88,33 @@ pub fn send_v4_port<T:Ipv4IterP>(interface_index:usize, mut target_iter:T, tar_n
                     let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
                     // 由探测模块生成数据包
-                    let packet = probe.make_packet_v4(
+                    let packets = probe.make_packet_v4(
                         cur_source_ip, cur_target.2, cur_target.3, ttl, &aes_rand);
 
-                    let mut sent_successfully = false;
-                    for _ in 0..send_attempts {
-                        let res = sender.send_packet(&packet);
+                    for packet in packets {
+                        let mut sent_successfully = false;
+                        for _ in 0..send_attempts {
+                            let res = sender.send_packet(&packet);
 
-                        if res >= 0 {
-                            sent_successfully = true;
-                            break;
+                            if res >= 0 {
+                                sent_successfully = true;
+                                break;
+                            }
                         }
-                    }
-                    if sent_successfully {
-                        // 统计发送成功的数据包
-                        send_success += 1;
-                    } else {
-                        // 统计发送失败的数据包
-                        debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv4Addr::from(cur_target.2), cur_target.3);
-                        send_failed += 1;
+                        if sent_successfully {
+                            // 统计发送成功的数据包
+                            send_success += 1;
+                        } else {
+                            // 统计发送失败的数据包
+                            debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv4Addr::from(cur_target.2), cur_target.3);
+                            send_failed += 1;
+                        }
+
+                        batch_count += 1;
+                        if batch_count >= batch_size {
+                            rate_controller.sleep();
+                            batch_count = 0;
+                        }
                     }
                 } else {
                     total_blocked += 1;
@@ -124,25 +134,27 @@ pub fn send_v4_port<T:Ipv4IterP>(interface_index:usize, mut target_iter:T, tar_n
                         let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
                         // 由探测模块生成数据包
-                        let packet = probe.make_packet_v4(
+                        let packets = probe.make_packet_v4(
                             cur_source_ip, cur_target.2, cur_target.3, ttl, &aes_rand);
 
-                        let mut sent_successfully = false;
-                        for _ in 0..send_attempts {
-                            let res = sender.send_packet(&packet);
+                        for packet in packets {
+                            let mut sent_successfully = false;
+                            for _ in 0..send_attempts {
+                                let res = sender.send_packet(&packet);
 
-                            if res >= 0 {
-                                sent_successfully = true;
-                                break;
+                                if res >= 0 {
+                                    sent_successfully = true;
+                                    break;
+                                }
                             }
-                        }
-                        if sent_successfully {
-                            // 统计发送成功的数据包
-                            send_success += 1;
-                        } else {
-                            // 统计发送失败的数据包
-                            debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv4Addr::from(cur_target.2), cur_target.3);
-                            send_failed += 1;
+                            if sent_successfully {
+                                // 统计发送成功的数据包
+                                send_success += 1;
+                            } else {
+                                // 统计发送失败的数据包
+                                debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv4Addr::from(cur_target.2), cur_target.3);
+                                send_failed += 1;
+                            }
                         }
                     } else {
                         total_blocked += 1;

@@ -206,7 +206,7 @@ impl ModeMethod for Asset6 {
         let hit_rate = (total_active_num as f64) / (total_send_success as f64);
 
         // 终端显示结果
-        println!("{} {}% {} {} {}", SYS.get_info("print", "ipv6_addrs_gen_finished"), hit_rate * 100.0, total_active_num, total_send_success, total_send_failed);
+        info!("{} {}% {} {} {}", SYS.get_info("print", "ipv6_addrs_gen_finished"), hit_rate * 100.0, total_active_num, total_send_success, total_send_failed);
 
         // 计算命中率
         let a_hit_rate = (total_active_num as f64) / (all_sent as f64);

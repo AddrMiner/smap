@@ -41,7 +41,7 @@ impl ProbeMethodV4 for UdpScanV4 {
         }.get_u8_vec_without_addr());
     }
 
-    fn make_packet_v4(&self, source_ip: u32, dest_ip: u32, dest_port: u16, ttl: Option<u8>, aes_rand: &AesRand) -> Vec<u8> {
+    fn make_packet_v4(&self, source_ip: u32, dest_ip: u32, dest_port: u16, ttl: Option<u8>, aes_rand: &AesRand) -> Vec<Vec<u8>> {
         // 按最大数据包长度设置 向量容量
         let mut packet = Vec::with_capacity(self.max_len);
 
@@ -105,7 +105,7 @@ impl ProbeMethodV4 for UdpScanV4 {
             packet[40] = udp_check_sum_bytes[0];
             packet[41] = udp_check_sum_bytes[1];
         }
-        packet
+        vec![packet]
     }
 
     fn is_successful(&self, _data_link_header:&[u8], ipv4_header:&Ipv4PacketU32, net_layer_data:&[u8], aes_rand:&AesRand) -> bool {

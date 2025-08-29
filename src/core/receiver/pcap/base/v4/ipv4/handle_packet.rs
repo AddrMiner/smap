@@ -12,7 +12,7 @@ impl PcapReceiver  {
 
     #[inline]
     pub fn handle_packet_v4<B:DuplicateCheckerV4>(header:&PacketHeader, data_link_header:&[u8], net_layer_header_and_data:&[u8],
-                            aes_rand:&AesRand, bit_map:&mut B, receiver_info:&mut ReceiverInfoV4, allow_no_succ:bool,
+                            aes_rand:&AesRand, bit_map:Option<&mut B>, receiver_info:&mut ReceiverInfoV4, allow_no_succ:bool,
                             probe:&Box<dyn ProbeMethodV4>, output:&mut Box<dyn OutputMethod>){
 
         // ipv4 数据包头部
@@ -37,8 +37,37 @@ impl PcapReceiver  {
         // 如果有内层源地址, 源地址为内层源地址; 如果没有内层源地址, 源地址为数据包的源地址
         let src_ip = inner_src_ip.unwrap_or_else(|| v4_header.source_addr);
 
-        if bit_map.not_marked_and_valid(src_ip) {
-            // 对 源地址(如果存在内层源地址, 则为内层源ip) 进行重复检查
+        if let Some(bit_map) = bit_map {
+            if bit_map.not_marked_and_valid(src_ip) {
+                // 对 源地址(如果存在内层源地址, 则为内层源ip) 进行重复检查
+
+                let (is_successful, output_line_data) = probe.process_packet_v4(header, data_link_header,
+                                                                                &v4_header, &net_layer_data, inner_src_ip);
+
+                if is_successful {
+                    // 如果 探测成功
+
+                    if output_line_data.len() != 0 {
+                        output.writer_line(&output_line_data);
+                    }
+
+                    receiver_info.recv_success += 1;
+                } else {
+
+                    if allow_no_succ && output_line_data.len() != 0 {
+                        output.writer_line(&output_line_data);
+                    }
+
+                    receiver_info.recv_failed += 1;
+                }
+
+                // 为 该源地址 做重复标记
+                bit_map.set(src_ip);
+            } else {
+                receiver_info.recv_repeat += 1;
+            }
+        } else {
+            // 如果不进行查重
 
             let (is_successful, output_line_data) = probe.process_packet_v4(header, data_link_header,
                                                                             &v4_header, &net_layer_data, inner_src_ip);
@@ -59,11 +88,6 @@ impl PcapReceiver  {
 
                 receiver_info.recv_failed += 1;
             }
-
-            // 为 该源地址 做重复标记
-            bit_map.set(src_ip);
-        } else {
-            receiver_info.recv_repeat += 1;
         }
 
     }

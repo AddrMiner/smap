@@ -1,7 +1,7 @@
 use std::process::exit;
 use std::thread;
 use chrono::{Local};
-use log::error;
+use log::{error, info};
 use crate::core::receiver::pcap::PcapReceiver;
 use crate::core::sender::{send_v6, send_v6_port};
 use crate::modes::ModeMethod;
@@ -27,8 +27,8 @@ impl ModeMethod for CycleV6Pattern {
             match &self.target_iter {
                 CycleIpv6PatternType::CycleIpv6Pattern(_) => {
                     receiver_res = thread::spawn(move || {
-                        let bit_map = BitMapV6Pattern::new(ip_bits_num, base_ip_val, mask, parts);
-                        PcapReceiver::run_v6(0, base_conf, receiver_conf, probe, bit_map,
+                        let bit_map = if receiver_conf.close_check_dup { None } else { Some(BitMapV6Pattern::new(ip_bits_num, base_ip_val, mask, parts)) };
+                        PcapReceiver::run_v6::<BitMapV6Pattern>(0, base_conf, receiver_conf, probe, bit_map,
                                                      recv_ready_sender, recv_close_time_receiver)
                     });
                 }
@@ -37,8 +37,8 @@ impl ModeMethod for CycleV6Pattern {
                     let tar_ports = t.tar_ports.clone();
 
                     receiver_res = thread::spawn(move || {
-                        let bit_map = BitMapV6PatternPort::new(ip_bits_num, base_ip_val, mask, parts, tar_ports);
-                        PcapReceiver::run_v6_port(0, base_conf, receiver_conf, probe, sports, bit_map,
+                        let bit_map = if receiver_conf.close_check_dup { None } else { Some(BitMapV6PatternPort::new(ip_bits_num, base_ip_val, mask, parts, tar_ports)) };
+                        PcapReceiver::run_v6_port::<BitMapV6PatternPort>(0, base_conf, receiver_conf, probe, sports, bit_map,
                                                           recv_ready_sender, recv_close_time_receiver)
                     });
                 }
@@ -84,7 +84,7 @@ impl ModeMethod for CycleV6Pattern {
             total_send_failed += send_failed;
             total_blocked += blocked;
         });
-        println!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
+        info!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, total_blocked);
 
         // 计算终止时间 并向接收线程传递
         ending_the_receiving_thread!(self; recv_close_time_sender);
@@ -95,7 +95,7 @@ impl ModeMethod for CycleV6Pattern {
 
             // 计算 结束时间 和 格式化后的运行时间 并显示
             computing_time!(start_time; end_time, running_time);
-            println!("{} {} {} {}", SYS.get_info("print", "recv_finished_with_out_of_range"), receiver_info.recv_success, receiver_info.recv_repeat, receiver_info.recv_failed);
+            info!("{} {} {} {}", SYS.get_info("print", "recv_finished_with_out_of_range"), receiver_info.recv_success, receiver_info.recv_repeat, receiver_info.recv_failed);
 
             write_to_summary!(self; "CycleV6Pattern"; "result";
                 [start_time, end_time, running_time, total_send_success, total_send_failed, total_blocked;];

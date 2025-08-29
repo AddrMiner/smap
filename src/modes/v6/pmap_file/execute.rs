@@ -3,7 +3,7 @@ use std::sync::Arc;
 use std::thread;
 use ahash::AHashMap;
 use chrono::Local;
-use log::error;
+use log::{error, info};
 use crate::{computing_time, creat_channels, ending_the_receiving_thread, init_var, prepare_data, recv_ready, wait_sender_threads, write_to_summary, SYS};
 use crate::core::conf::tools::args_parse::ip::ipv6::get_ipv6_addrs_from_file;
 use crate::core::receiver::pcap::PcapReceiver;
@@ -243,8 +243,8 @@ impl ModeMethod for PmapFileV6 {
         }
 
         // 探测 和 接收 执行完毕
-        println!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, 0);
-        println!("{} {} {}", SYS.get_info("print", "pmap_scan_finished"), total_ip_count, total_pair_count);
+        info!("{} {} {} {}", SYS.get_info("print", "send_finished"), total_send_success, total_send_failed, 0);
+        info!("{} {} {}", SYS.get_info("print", "pmap_scan_finished"), total_ip_count, total_pair_count);
         computing_time!(start_time; end_time, running_time);
 
         write_to_summary!(self; "PmapFileV6"; "result";

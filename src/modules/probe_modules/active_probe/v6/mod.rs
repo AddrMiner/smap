@@ -15,6 +15,7 @@ pub use tcp::tcp_syn_payload::TcpSynPayloadScan;
 
 pub use udp::udp_scan::UdpScanV6;
 
+pub use udp::udp_scan_mul_payload::UdpScanMulPayloadV6;
 
 
 

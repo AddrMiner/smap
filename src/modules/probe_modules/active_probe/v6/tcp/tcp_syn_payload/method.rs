@@ -50,7 +50,7 @@ impl ProbeMethodV6 for TcpSynPayloadScan {
         }.get_u8_vec_after_sequence());
     }
 
-    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, dest_port: u16, hop_limit: Option<u8>, aes_rand: &AesRand) -> Vec<u8> {
+    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, dest_port: u16, hop_limit: Option<u8>, aes_rand: &AesRand) -> Vec<Vec<u8>> {
         // 按最大数据包长度设置 向量容量
         let mut packet = Vec::with_capacity(self.max_len);
 
@@ -110,7 +110,7 @@ impl ProbeMethodV6 for TcpSynPayloadScan {
             packet[70] = tcp_check_sum_bytes[0];
             packet[71] = tcp_check_sum_bytes[1];
         }
-        packet
+        vec![packet]
     }
 
     fn is_successful(&self, _data_link_header: &[u8], ipv6_header: &Ipv6PacketU128, net_layer_data: &[u8], aes_rand: &AesRand) -> bool {

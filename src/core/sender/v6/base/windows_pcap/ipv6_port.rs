@@ -12,9 +12,9 @@ use crate::tools::blocker::ipv6_blocker::BlackWhiteListV6;
 
 
 pub fn send_v6_port<T:Ipv6IterP>(interface_index:usize,
-                           mut target_iter:T, local_tar_num:u64,
-                           blocker:BlackWhiteListV6, probe_mod_v6: Arc<ProbeModV6>, hop_limit:Option<u8>,
-                           base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>) -> (u64, u64, u64) {
+                                 mut target_iter:T, local_tar_num:u64,
+                                 blocker:BlackWhiteListV6, probe_mod_v6: Arc<ProbeModV6>, hop_limit:Option<u8>,
+                                 base_conf:Arc<BaseConf>, sender_conf:Arc<SenderBaseConf>) -> (u64, u64, u64) {
 
     // 初始化 pcap 发包器
     let (mut pcap_sender, mut send_queue, batch_size) = PcapSender::init(
@@ -53,25 +53,26 @@ pub fn send_v6_port<T:Ipv6IterP>(interface_index:usize,
     drop(base_conf);
     drop(sender_conf);
 
+    let mut batch_count = 0;
+
     'big_batch:loop {
 
         let mut batch_send_success:u64 = 0;
         let mut batch_send_failed:u64 = 0;
 
-        for _ in 0..batch_size {
+        if cur_target.0 {
+            // 如果不是最终值
 
-            if cur_target.0 {
-                // 如果不是最终值
+            if blocker.ip_is_avail(cur_target.2) {
+                // 如果没被黑名单阻止
 
-                if blocker.ip_is_avail(cur_target.2) {
-                    // 如果没被黑名单阻止
+                let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
-                    let cur_source_ip = source_ip_iter.get_src_ip_with_change();
+                // 由探测模块生成数据包
+                let packets = probe.make_packet_v6(
+                    cur_source_ip, cur_target.2, cur_target.3, hop_limit, &aes_rand);
 
-                        // 由探测模块生成数据包
-                    let packet = probe.make_packet_v6(
-                            cur_source_ip, cur_target.2, cur_target.3, hop_limit, &aes_rand);
-
+                for packet in packets {
                     let mut add_successfully = false;
                     for _ in 0..send_attempts {
                         // 使用pcap尝试将数据包添加到 发送队列
@@ -89,31 +90,58 @@ pub fn send_v6_port<T:Ipv6IterP>(interface_index:usize,
                     } else {
                         batch_send_failed += 1;
                     }
-                } else {
-                    total_blocked += 1;
+
+                    batch_count += 1;
+                    if batch_count >= batch_size {
+                        for a in 0..send_attempts {
+                            match send_queue.transmit(&mut pcap_sender, pcap::sendqueue::SendSync::Off) {
+                                Ok(_) => {
+                                    // 警告: 如果整个队列都被成功发送, 成功的数量按照 成功进入队列的数据包进行计算, 失败的数量按照 添加队列失败的进行计算
+                                    total_send_success += batch_send_success;
+                                    total_send_failed += batch_send_failed;
+                                    break;
+                                }
+                                Err(_) => {
+                                    if a == send_attempts_sub_one {
+                                        // 如果是最后一次尝试
+                                        // 失败数量是 成功添加 和 添加失败的数量相加
+                                        total_send_failed = total_send_failed + batch_send_success + batch_send_failed;
+                                        debug!("{} {}", SYS.get_info("debug", "send_queue_failed"), total_send_failed);
+                                    }
+                                }
+                            }
+                        }
+
+                        rate_controller.sleep();
+                        batch_count = 0;
+                    }
                 }
-
-                // 获取下一个目标
-                cur_target = target_iter.get_next_ip_port();
             } else {
-                // 如果是最终值
+                total_blocked += 1;
+            }
 
-                if cur_target.1 {
-                    // 最终值有效
+            // 获取下一个目标
+            cur_target = target_iter.get_next_ip_port();
+        } else {
+            // 如果是最终值
 
-                    if blocker.ip_is_avail(cur_target.2) {
-                        // 如果当前 ip 被放行
+            if cur_target.1 {
+                // 最终值有效
 
-                        let cur_source_ip = source_ip_iter.get_src_ip_with_change();
+                if blocker.ip_is_avail(cur_target.2) {
+                    // 如果当前 ip 被放行
 
-                        // 由探测模块生成数据包
-                        let packet = probe.make_packet_v6(
-                            cur_source_ip, cur_target.2, cur_target.3, hop_limit, &aes_rand);
+                    let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
+                    // 由探测模块生成数据包
+                    let packets = probe.make_packet_v6(
+                        cur_source_ip, cur_target.2, cur_target.3, hop_limit, &aes_rand);
+
+                    for packet in packets {
                         let mut add_successfully = false;
                         for _ in 0..send_attempts {
                             // 使用pcap尝试将数据包添加到 发送队列
-                            match send_queue.queue(None,&packet) {
+                            match send_queue.queue(None, &packet) {
                                 Ok(_) => {
                                     // 如果成功就跳出
                                     add_successfully = true;
@@ -127,60 +155,37 @@ pub fn send_v6_port<T:Ipv6IterP>(interface_index:usize,
                         } else {
                             batch_send_failed += 1;
                         }
-                    } else {
-                        total_blocked += 1;
                     }
-
+                } else {
+                    total_blocked += 1;
                 }
+            }
 
 
-                for a in 0..send_attempts {
-                    match send_queue.transmit(&mut pcap_sender, pcap::sendqueue::SendSync::Off) {
-                        Ok(_) => {
-                            // 警告: 如果整个队列都被成功发送, 成功的数量按照 成功进入队列的数据包进行计算, 失败的数量按照 添加队列失败的进行计算
-                            total_send_success += batch_send_success;
-                            total_send_failed += batch_send_failed;
-                            break;
-                        }
-                        Err(_) => {
-
-                            if a == send_attempts_sub_one {
-                                // 如果是最后一次尝试
-                                // 失败数量是 成功添加 和 添加失败的数量相加
-                                total_send_failed = total_send_failed + batch_send_success + batch_send_failed;
-                                debug!("{} {}", SYS.get_info("debug", "send_queue_failed"), total_send_failed);
-                            }
+            for a in 0..send_attempts {
+                match send_queue.transmit(&mut pcap_sender, pcap::sendqueue::SendSync::Off) {
+                    Ok(_) => {
+                        // 警告: 如果整个队列都被成功发送, 成功的数量按照 成功进入队列的数据包进行计算, 失败的数量按照 添加队列失败的进行计算
+                        total_send_success += batch_send_success;
+                        total_send_failed += batch_send_failed;
+                        break;
+                    }
+                    Err(_) => {
+                        if a == send_attempts_sub_one {
+                            // 如果是最后一次尝试
+                            // 失败数量是 成功添加 和 添加失败的数量相加
+                            total_send_failed = total_send_failed + batch_send_success + batch_send_failed;
+                            debug!("{} {}", SYS.get_info("debug", "send_queue_failed"), total_send_failed);
                         }
                     }
                 }
-
-                // 处理完最终值, 直接退出大循环
-                break 'big_batch;
             }
+
+            // 处理完最终值, 直接退出大循环
+            break 'big_batch;
         }
-
-        for a in 0..send_attempts {
-            match send_queue.transmit(&mut pcap_sender, pcap::sendqueue::SendSync::Off) {
-                Ok(_) => {
-                    // 警告: 如果整个队列都被成功发送, 成功的数量按照 成功进入队列的数据包进行计算, 失败的数量按照 添加队列失败的进行计算
-                    total_send_success += batch_send_success;
-                    total_send_failed += batch_send_failed;
-                    break;
-                }
-                Err(_) => {
-
-                    if a == send_attempts_sub_one {
-                        // 如果是最后一次尝试
-                        // 失败数量是 成功添加 和 添加失败的数量相加
-                        total_send_failed = total_send_failed + batch_send_success + batch_send_failed;
-                        debug!("{} {}", SYS.get_info("debug", "send_queue_failed"), total_send_failed);
-                    }
-                }
-            }
-        }
-
-        rate_controller.sleep();
     }
+
 
     (total_send_success, total_send_failed, total_blocked)
 }

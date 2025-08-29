@@ -13,7 +13,7 @@ impl PcapReceiver  {
 
     #[inline]
     pub fn handle_packet_v6_port<B:DuplicateCheckerV6Port>(header:&PacketHeader, data_link_header:&[u8], net_layer_header_and_data:&[u8],
-                            aes_rand:&AesRand, bit_map:&mut B, receiver_info:&mut ReceiverInfoV6, allow_no_succ:bool,
+                            aes_rand:&AesRand, bit_map:Option<&mut B>, receiver_info:&mut ReceiverInfoV6, allow_no_succ:bool,
                             probe:&Box<dyn ProbeMethodV6>, output:&mut Box<dyn OutputMethod>){
 
         // ipv6 数据包头部
@@ -37,10 +37,39 @@ impl PcapReceiver  {
         // 如果有内层源地址, 源地址为内层源地址; 如果没有内层源地址, 源地址为数据包的源地址
         let src_ip = inner_src_ip.unwrap_or_else(|| v6_header.source_addr);
 
-        if bit_map.not_marked_and_valid(src_ip, sport) {
-            // 对 源地址(如果存在内层源地址, 则为内层源ip) 进行重复检查
-            // 同一端口对 只有一次输出
-            // 注意:所有icmp错误报文均被标记为 0端口, 所有运输层以下协议也均标记为 0端口
+        if let Some(bit_map) = bit_map {
+            if bit_map.not_marked_and_valid(src_ip, sport) {
+                // 对 源地址(如果存在内层源地址, 则为内层源ip) 进行重复检查
+                // 同一端口对 只有一次输出
+                // 注意:所有icmp错误报文均被标记为 0端口, 所有运输层以下协议也均标记为 0端口
+
+                let (is_successful, output_line_data) = probe.process_packet_v6(header, data_link_header,
+                                                                                &v6_header, &net_layer_data, inner_src_ip);
+
+                if is_successful {
+                    // 如果 探测成功
+
+                    if output_line_data.len() != 0 {
+                        output.writer_line(&output_line_data);
+                    }
+
+                    receiver_info.recv_success += 1;
+                } else {
+
+                    if allow_no_succ && output_line_data.len() != 0 {
+                        output.writer_line(&output_line_data);
+                    }
+
+                    receiver_info.recv_failed += 1;
+                }
+
+                // 为 该源地址 做重复标记
+                bit_map.set(src_ip, sport);
+            } else {
+                receiver_info.recv_repeat += 1;
+            }
+        } else {
+            // 如果不进行查重
 
             let (is_successful, output_line_data) = probe.process_packet_v6(header, data_link_header,
                                                                             &v6_header, &net_layer_data, inner_src_ip);
@@ -61,11 +90,6 @@ impl PcapReceiver  {
 
                 receiver_info.recv_failed += 1;
             }
-
-            // 为 该源地址 做重复标记
-            bit_map.set(src_ip, sport);
-        } else {
-            receiver_info.recv_repeat += 1;
         }
     }
 }

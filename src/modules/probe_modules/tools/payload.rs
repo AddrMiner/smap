@@ -1,6 +1,8 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::process::exit;
+use std::str::FromStr;
+use ahash::AHashMap;
 use log::error;
 use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
@@ -141,5 +143,68 @@ fn parse_payload_from_file(path:String, target:&str, seed:u64) -> Vec<u8> {
         }
     }
     error!("{} {} {}", SYS.get_info("err", "match_payload_failed"), target, path);  exit(1)
+}
+
+
+pub fn parse_payload_from_file2(path:String, seed:u64) -> (AHashMap<u16, Vec<Vec<u8>>>, usize) {
+    // 最大负载长度
+    let mut max_payload_len:usize = 0;
+
+    // 标签 -> 负载
+    let mut port_payload:AHashMap<u16, Vec<Vec<u8>>> = AHashMap::new();
+
+    let path = if cfg!(target_os = "windows") {
+        path.replace("/", "\\")
+    } else {
+        path
+    };
+
+    let path = path.trim();
+
+    let list_file = File::open(path).map_err(
+        |_| {
+            error!("{} {}", SYS.get_info("err", "open_payload_file_failed"), path);
+            exit(1)
+        }
+    ).unwrap();
+
+    let lines = BufReader::new(list_file).lines();
+    for line in lines {
+        match line {
+            // 成功获取到该行
+            Ok(l) => {
+
+                // 清除注释和无效行
+                match parse_line_with_annotation(l) {
+
+                    Some(template) => {
+                        let target_bytes:Vec<&str> = template.split(":").collect();
+
+                        if target_bytes.len() == 2 {
+                            let port = u16::from_str(target_bytes[0].trim()).unwrap();
+                            let payload = parse_payload(target_bytes[1], seed);
+
+                            // 如果 当前payload长度 大于 最大payload长度
+                            if payload.len() > max_payload_len {
+                                max_payload_len = payload.len();
+                            }
+
+
+                            if let Some(p) = port_payload.get_mut(&port) {
+                                p.push(payload);
+                            } else {
+                                port_payload.insert(port, vec![payload]);
+                            }
+                        }
+                    },
+                    None => {}
+                }
+
+            }
+            Err(_) => {}
+        }
+    }
+
+    (port_payload, max_payload_len)
 }
 

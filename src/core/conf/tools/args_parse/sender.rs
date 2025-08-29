@@ -2,7 +2,7 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 use std::process::exit;
 use std::thread::available_parallelism;
 use chrono::{DateTime, Local, TimeZone, Utc};
-use log::{error, warn};
+use log::{error, info, warn};
 use crate::core::conf::set_conf::sender_conf::{RateGlobalConf, SenderBaseConf};
 use crate::core::conf::tools::args_parse::ip::mix::parse_mix_ip_range_ipaddr;
 use crate::core::conf::tools::args_parse::port::parse_ports_vec;
@@ -243,7 +243,7 @@ impl SenderBaseConf {
                         let end_time = DateTime::from_timestamp(end_time, 0).unwrap().naive_local();
                         let end_time: DateTime<Local> =  Local.from_utc_datetime(&end_time);
 
-                        println!("{} {}", SYS.get_info("print", "forecast_completion_time"),
+                        info!("{} {}", SYS.get_info("print", "forecast_completion_time"),
                                  end_time.format(&SYS.get_info("print", "forecast_completion_time_pattern")));
                     }
 
@@ -291,7 +291,7 @@ impl SenderBaseConf {
                         let end_time = DateTime::from_timestamp(end_time, 0).unwrap().naive_local();
                         let end_time: DateTime<Local> =  Local.from_utc_datetime(&end_time);
 
-                        println!("{} {}", SYS.get_info("print", "forecast_completion_time"),
+                        info!("{} {}", SYS.get_info("print", "forecast_completion_time"),
                                  end_time.format(&SYS.get_info("print", "forecast_completion_time_pattern")));
                     }
 
@@ -309,7 +309,7 @@ impl SenderBaseConf {
                     match target_num {
                         Some(tar_num) => {
                             // 请求 用户 输入 运行时间 或 截止时间
-                            println!("{}", SYS.get_info("print", "input_end_time"));
+                            info!("{}", SYS.get_info("print", "input_end_time"));
 
                             // 2023-10-26 21:15:00+08:00   注意时区
                             let mut input_end_time = String::new();

@@ -21,7 +21,7 @@ impl PcapReceiver {
                   interface_index:usize,
                   base_conf:Arc<BaseConf>, receiver_conf:Arc<ReceiverBaseConf>,
                   // 探测模块用来验证信息, 处理数据包
-                  probe_mod:Arc<ProbeModV6>, sports:Vec<u16>, mut bit_map:B,
+                  probe_mod:Arc<ProbeModV6>, sports:Vec<u16>, mut bit_map:Option<B>,
                   // 接收准备完成管道: 用于在接收线程准备好进行接收时,向主线程发送允许执行发送线程的信号
                   // 接收关闭时间管道: 用于接收从主线程传递过来的接收线程关闭时间
                   recv_ready_sender:Sender<bool>, recv_close_time_receiver:Receiver<i64>) -> ReceiverInfoV6 {
@@ -80,8 +80,13 @@ impl PcapReceiver {
                     let ip_ver = net_layer_data[0] >> 4;
                     if ip_ver == 6 {
                         // 如果是ipv6的数据包
-                        Self::handle_packet_v6_port(&header,data_link_header,net_layer_data,&aes_rand,
-                                                    &mut bit_map, &mut receiver_info, allow_no_succ, &probe, &mut output);
+                        if let Some(bit_map_) = bit_map.as_mut() {
+                            Self::handle_packet_v6_port(&header, data_link_header, net_layer_data, &aes_rand,
+                                                        Some(bit_map_), &mut receiver_info, allow_no_succ, &probe, &mut output);
+                        } else {
+                            Self::handle_packet_v6_port::<B>(&header, data_link_header, net_layer_data, &aes_rand,
+                                                             None, &mut receiver_info, allow_no_succ, &probe, &mut output);
+                        }
                     }
                     // 如果是 ipv4 的包, 或者其它特殊类型, 不进行处理
 

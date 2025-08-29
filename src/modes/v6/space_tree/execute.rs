@@ -117,7 +117,7 @@ impl ModeMethod for SpaceTree6 {
         let hit_rate = (total_active_num as f64) / (total_send_success as f64);
         
         // 终端显示结果
-        println!("{} {}% {} {} {}", SYS.get_info("print", "ipv6_addrs_gen_finished"), hit_rate * 100.0, total_active_num, total_send_success, total_send_failed);
+        info!("{} {}% {} {} {}", SYS.get_info("print", "ipv6_addrs_gen_finished"), hit_rate * 100.0, total_active_num, total_send_success, total_send_failed);
         
         write_to_summary!(self; "SpaceTree6"; "result";
             [start_time, end_time, running_time, hit_rate, total_active_num, total_send_success, total_send_failed;]

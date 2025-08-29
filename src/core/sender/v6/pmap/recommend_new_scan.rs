@@ -79,25 +79,26 @@ pub fn pmap_recommend_new_scan_send_v6_port(interface_index:usize, mut target_it
     drop(base_conf);
     drop(sender_conf);
 
+    let mut batch_count = 0;
+
     'big_batch:loop {
 
-        for _ in 0..batch_size {
+        if cur_target.0 {
+            // 如果不是最终值
 
-            if cur_target.0 {
-                // 如果不是最终值
+            if blocker.ip_is_avail(cur_target.2) {
+                // 如果没被黑名单阻止
 
-                if blocker.ip_is_avail(cur_target.2) {
-                    // 如果没被黑名单阻止
+                // 注意: 由于在同一网络内第一个推荐端口一致, 这里直接复制
+                // 警告: 请注意 ips_struct 的添加顺序和总数 与 有效ip 保持一致
+                target_iter.ips_struct.push(first_ip_struct.clone());
+                let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
-                    // 注意: 由于在同一网络内第一个推荐端口一致, 这里直接复制
-                    // 警告: 请注意 ips_struct 的添加顺序和总数 与 有效ip 保持一致
-                    target_iter.ips_struct.push(first_ip_struct.clone());
-                    let cur_source_ip = source_ip_iter.get_src_ip_with_change();
+                // 由探测模块生成数据包
+                let packets = probe.make_packet_v6(
+                    cur_source_ip, cur_target.2, first_port, None, &aes_rand);
 
-                    // 由探测模块生成数据包
-                    let packet = probe.make_packet_v6(
-                        cur_source_ip, cur_target.2, first_port, None, &aes_rand);
-
+                for packet in packets {
                     let mut sent_successfully = false;
                     for _ in 0..send_attempts {
                         let res = sender.send_packet(&packet);
@@ -115,29 +116,37 @@ pub fn pmap_recommend_new_scan_send_v6_port(interface_index:usize, mut target_it
                         debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(cur_target.2), first_port);
                         send_failed += 1;
                     }
-                } else {
-                    total_blocked += 1;
+
+                    batch_count += 1;
+                    if batch_count >= batch_size {
+                        rate_controller.sleep();
+                        batch_count = 0;
+                    }
                 }
-
-                // 获取下一个目标
-                cur_target = target_iter.ipv6_guide_iter.get_next_ip();
             } else {
-                // 如果是最终值
+                total_blocked += 1;
+            }
 
-                if cur_target.1 {
-                    // 最终值有效
+            // 获取下一个目标
+            cur_target = target_iter.ipv6_guide_iter.get_next_ip();
+        } else {
+            // 如果是最终值
 
-                    if blocker.ip_is_avail(cur_target.2) {
-                        // 如果当前 ip 被放行
+            if cur_target.1 {
+                // 最终值有效
 
-                        // 注意: 由于在同一网络内第一个推荐端口一致, 这里直接复制
-                        target_iter.ips_struct.push(first_ip_struct.clone());
-                        let cur_source_ip = source_ip_iter.get_src_ip_with_change();
+                if blocker.ip_is_avail(cur_target.2) {
+                    // 如果当前 ip 被放行
 
-                        // 由探测模块生成数据包
-                        let packet = probe.make_packet_v6(
-                            cur_source_ip, cur_target.2, first_port, None, &aes_rand);
+                    // 注意: 由于在同一网络内第一个推荐端口一致, 这里直接复制
+                    target_iter.ips_struct.push(first_ip_struct.clone());
+                    let cur_source_ip = source_ip_iter.get_src_ip_with_change();
 
+                    // 由探测模块生成数据包
+                    let packets = probe.make_packet_v6(
+                        cur_source_ip, cur_target.2, first_port, None, &aes_rand);
+
+                    for packet in packets {
                         let mut sent_successfully = false;
                         for _ in 0..send_attempts {
                             let res = sender.send_packet(&packet);
@@ -155,16 +164,21 @@ pub fn pmap_recommend_new_scan_send_v6_port(interface_index:usize, mut target_it
                             debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(cur_target.2), first_port);
                             send_failed += 1;
                         }
-                    } else {
-                        total_blocked += 1;
-                    }
 
+                        batch_count += 1;
+                        if batch_count >= batch_size {
+                            rate_controller.sleep();
+                            batch_count = 0;
+                        }
+                    }
+                } else {
+                    total_blocked += 1;
                 }
-                // 处理完最终值, 直接退出大循环
-                break 'big_batch;
+
             }
+            // 处理完最终值, 直接退出大循环
+            break 'big_batch;
         }
-        rate_controller.sleep();
     }
 
     // 将 保存所有地址状态信息的向量 中的 冗余容量 进行清除

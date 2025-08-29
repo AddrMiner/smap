@@ -34,7 +34,7 @@ impl ProbeMethodV6 for IcmpEchoV6 {
     }
 
     /// 发送线程 制作数据包
-    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, _dest_port: u16, hop_limit:Option<u8>, aes_rand:&AesRand) -> Vec<u8> {
+    fn make_packet_v6(&self, source_ip: u128, dest_ip: u128, _dest_port: u16, hop_limit:Option<u8>, aes_rand:&AesRand) -> Vec<Vec<u8>> {
         // 按最大数据包长度设置 向量容量
         let mut packet = Vec::with_capacity(70);
 
@@ -87,7 +87,7 @@ impl ProbeMethodV6 for IcmpEchoV6 {
             packet[56] = check_sum_bytes[0];
             packet[57] = check_sum_bytes[1];
         }
-        packet
+        vec![packet]
     }
 
     fn is_successful(&self, _data_link_header:&[u8], ipv6_header:&Ipv6PacketU128, net_layer_data:&[u8], aes_rand:&AesRand) -> bool {

@@ -14,6 +14,9 @@ pub struct ReceiverBaseConf {
     // 允许探测失败的结果输出, 如 icmp差错报文包裹原始数据包, rst标志数据包等
     pub allow_no_succ:bool,
 
+    // 是否 关闭查重器
+    pub close_check_dup:bool,
+
 }
 
 
@@ -65,6 +68,7 @@ impl ReceiverBaseConf {
             output_v6: OutputMod::new(&Self::parse_output_mod(&args.output_mod), None, &args.output_file_v6, true),
             filter,
             allow_no_succ: args.allow_no_succ,
+            close_check_dup: args.close_check_dup,
         }
 
     }

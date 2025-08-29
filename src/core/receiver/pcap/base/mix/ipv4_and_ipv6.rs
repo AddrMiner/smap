@@ -23,7 +23,8 @@ impl PcapReceiver {
                   hash_set_v4_cap:usize, hash_set_v6_cap:usize,
                   // 接收准备完成管道: 用于在接收线程准备好进行接收时,向主线程发送允许执行发送线程的信号
                   // 接收关闭时间管道: 用于接收从主线程传递过来的接收线程关闭时间
-                  recv_ready_sender:Sender<bool>, recv_close_time_receiver:Receiver<i64>) -> (ReceiverInfoV4, ReceiverInfoV6) {
+                  recv_ready_sender:Sender<bool>, recv_close_time_receiver:Receiver<i64>) -> (ReceiverInfoV4, ReceiverInfoV6)
+    {
 
         // 将 两种模块 捕获数据包的最大长度中的最大值 作为 捕获数据包的最大长度
         let snap_len = if probe_mod_v4.snap_len_v4 > probe_mod_v6.snap_len_v6 {
@@ -54,8 +55,9 @@ impl PcapReceiver {
         let mut receiver_info_v6 = ReceiverInfoV6::new();
         
         // 初始化 哈希集合查重器
-        let mut hash_set_v4 = HashSetV4Port::new(hash_set_v4_cap);
-        let mut hash_set_v6 = HashSetV6Port::new(hash_set_v6_cap);
+        let (mut hash_set_v4, mut hash_set_v6) =
+            if receiver_conf.close_check_dup { (None,None) }
+            else { ( Some(HashSetV4Port::new(hash_set_v4_cap)), Some(HashSetV6Port::new(hash_set_v6_cap)) ) };
 
         let aes_rand = base_conf.aes_rand.clone();
 
@@ -92,15 +94,25 @@ impl PcapReceiver {
 
                     let ip_ver = net_layer_data[0] >> 4;
                     if ip_ver == 4 {
-                        Self::handle_packet_v4_port(&header,data_link_header,
-                                               net_layer_data, &aes_rand, &mut hash_set_v4,
-                                               &mut receiver_info_v4, allow_no_succ, &probe_v4, &mut output_v4);
+                        if let Some(bit_map_) = hash_set_v4.as_mut() {
+                            Self::handle_packet_v4_port(&header, data_link_header, net_layer_data, &aes_rand,
+                                                        Some(bit_map_), &mut receiver_info_v4, allow_no_succ, &probe_v4, &mut output_v4);
+                        } else {
+                            Self::handle_packet_v4_port::<HashSetV4Port>(&header, data_link_header, net_layer_data, &aes_rand,
+                                                               None, &mut receiver_info_v4, allow_no_succ, &probe_v4, &mut output_v4);
+                        }
                     }
                     if ip_ver == 6 {
                         // 如果是ipv6的数据包
-                        Self::handle_packet_v6_port(&header,data_link_header,
-                                               net_layer_data, &aes_rand, &mut hash_set_v6,
-                                               &mut receiver_info_v6, allow_no_succ, &probe_v6, &mut output_v6);
+                        if let Some(bit_map_) = hash_set_v6.as_mut() {
+                            Self::handle_packet_v6_port(&header, data_link_header,
+                                                        net_layer_data, &aes_rand, Some(bit_map_),
+                                                        &mut receiver_info_v6, allow_no_succ, &probe_v6, &mut output_v6);
+                        } else {
+                            Self::handle_packet_v6_port::<HashSetV6Port>(&header, data_link_header,
+                                                               net_layer_data, &aes_rand, None,
+                                                               &mut receiver_info_v6, allow_no_succ, &probe_v6, &mut output_v6);
+                        }
                     }
                     // 如果是 其它特殊类型, 不进行处理
 

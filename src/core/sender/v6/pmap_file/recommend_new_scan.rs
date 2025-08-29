@@ -85,36 +85,38 @@ pub fn pmap_file_recommend_new_scan_send_v6_port(
         target_iter.ips_struct.push(first_ip_struct.clone());
 
         // 由探测模块生成数据包
-        let packet = probe.make_packet_v6(
+        let packets = probe.make_packet_v6(
             cur_source_ip, *ip, first_port, None, &aes_rand);
 
-        let mut sent_successfully = false;
-        for _ in 0..send_attempts {
-            let res = sender.send_packet(&packet);
+        for packet in packets {
+            let mut sent_successfully = false;
+            for _ in 0..send_attempts {
+                let res = sender.send_packet(&packet);
 
-            if res >= 0 {
-                sent_successfully = true;
-                break;
+                if res >= 0 {
+                    sent_successfully = true;
+                    break;
+                }
             }
-        }
-        if sent_successfully {
-            // 统计发送成功的数据包
-            send_success += 1;
-        } else {
-            // 统计发送失败的数据包
-            debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(*ip), first_port);
-            send_failed += 1;
-        }
+            if sent_successfully {
+                // 统计发送成功的数据包
+                send_success += 1;
+            } else {
+                // 统计发送失败的数据包
+                debug!("{} {} {}", SYS.get_info("debug", "send_failed"), Ipv6Addr::from(*ip), first_port);
+                send_failed += 1;
+            }
 
-        batch_count += 1;
-        if batch_count % batch_size == 0 {
-            // 当 发送的数量 达到一个批次数量
-            
-            // 批次内计数重置
-            batch_count = 0;
+            batch_count += 1;
+            if batch_count % batch_size == 0 {
+                // 当 发送的数量 达到一个批次数量
 
-            // 批次速率控制
-            rate_controller.sleep();
+                // 批次内计数重置
+                batch_count = 0;
+
+                // 批次速率控制
+                rate_controller.sleep();
+            }
         }
     }
 

@@ -65,6 +65,7 @@ pub fn probe_v4_help(name:&str) -> String {
         "tcp_syn_opt_v4" => probe_modules::probe_mod_v4::TcpSynOptV4::print_help(),
 
         "udp_scan_v4" => probe_modules::probe_mod_v4::UdpScanV4::print_help(),
+        "udp_scan_mul_payload_v4" => probe_modules::probe_mod_v4::UdpScanMulPayloadV4::print_help(),
 
 
         "topo_udp_v4" => probe_modules::topology_probe::topo_mod_v4::TopoUdpV4::print_help(),
@@ -90,6 +91,7 @@ pub fn probe_v6_help(name:&str) -> String {
         "tcp_syn_opt_v6" => probe_modules::probe_mod_v6::TcpSynOptV6::print_help(),
 
         "udp_scan_v6" => probe_modules::probe_mod_v6::UdpScanV6::print_help(),
+        "udp_scan_mul_payload_v6" => probe_modules::probe_mod_v6::UdpScanMulPayloadV6::print_help(),
 
         "topo_udp_v6" => probe_modules::topology_probe::topo_mod_v6::TopoUdpV6::print_help(),
         "topo_icmp_v6" => probe_modules::topology_probe::topo_mod_v6::TopoIcmpV6::print_help(),
